@@ -2,10 +2,11 @@ local modPath = '/mods/EM/'
 local addListener = import(modPath .. 'modules/init.lua').addListener
 
 local pause_prios = {
-	mexes={pause=80},
+	mexes={pause=80, unpause=50},
 	throttle={pause=90, unpause=60},
 	throttlemass={pause=70},
 	user={pause=100},
+	unpause={pause=90, unpause=90},
 }
 
 local states = {}
@@ -55,6 +56,31 @@ function Pause(units, pause, module)
 	SetPaused(paused, true)
 	SetPaused(unpaused, false)
 end
+
+function CanUnpause(unit, module)
+	local id
+	local prio = pause_prios[module]['unpause'] or pause_prios[module]['pause']
+
+	return (not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or (u:IsIdle() or u:GetWorkProgress() == 0))
+end
+
+function CanUnpauseUnits(units, module)
+	local id
+	local prio = pause_prios[module]['unpause'] or pause_prios[module]['pause']
+	local filtered = {}
+
+	for _, u in units do
+		if(not u:IsDead()) then
+			id = u:GetEntityId()
+			if(not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or (u:IsIdle() or u:GetWorkProgress() == 0)) then
+				table.insert(filtered, u)
+			end
+		end
+	end
+
+	return filtered
+end
+
 
 --[[
 function IsPaused(units, module)

@@ -45,7 +45,7 @@ table.insert(options.gameplay.items,
         title = "EM: MEX upgrade-pause",
         key = 'em_mexes',
         type = 'toggle',
-        default = 'auto',
+        default = 0,
         custom = {
             states = {
                 {text = "<LOC _Off>", key = 0 },
@@ -59,7 +59,7 @@ table.insert(options.gameplay.items,
         title = "EM: Throttle energy",
         key = 'em_throttle',
         type = 'toggle',
-        default = 1,
+        default = 0,
         custom = {
             states = {
                 {text = "<LOC _Off>", key = 0 },
@@ -73,7 +73,7 @@ table.insert(options.gameplay.items,
         title = "EM: MEX Upgrade Optimization",
         key = 'em_mexOpti',
         type = 'toggle',
-        default = 'auto',
+        default = 0,
         custom = {
             states = {
                 {text = "<LOC _Off>", key = 0 },

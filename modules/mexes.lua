@@ -14,10 +14,14 @@ local ItemList = import('/lua/maui/itemlist.lua').ItemList
 local Group = import('/lua/maui/group.lua').Group
 local UIUtil = import('/lua/ui/uiutil.lua')
 
-
+local Pause = import(modPath .. 'modules/pause.lua').Pause
 
 local pause_queue = {}
 local overlays = {}
+
+function SetPaused(units, state)
+    Pause(units, state, 'mexes')
+end
 
 function isMexBeingBuilt(mex)
 	if mex:GetEconData().energyRequested ~= 0 then
@@ -80,7 +84,7 @@ function upgradeMexes(mexes, unpause)
 
 			if(not unpause) then
 				table.insert(pause_queue, m)
-				import(modPath .. 'modules/throttle.lua').addExclusion({m})
+				--import(modPath .. 'modules/throttle.lua').addExclusion({m})
 			end
 
 			if(not upgrades[upgrades_to]) then
@@ -106,11 +110,6 @@ function upgradeMexes(mexes, unpause)
 	if(unpause) then
 		SetPaused(mexes, false)
 	end
-	
-
-		
-	
-
 	
 	return true
 end
@@ -273,6 +272,7 @@ function checkMexes()
 		end
 	end
 
+	--[[
 	if(options['em_mexoverlay'] == 1) then
 		for _, m in mexes['all'] do
 			if(m:IsIdle() or m:GetFocus()) then
@@ -280,6 +280,7 @@ function checkMexes()
 			end
 		end
 	end
+	]]
 	
 	for id, overlay in overlays do
 		if(not overlay or overlay.destroy or options['em_mexoverlay'] == 0) then
@@ -289,8 +290,8 @@ function checkMexes()
 	end
 	
 	if(table.getsize(mexes['assisted']) > 0) then
-		SetPaused(mexes['assisted'], false) -- unpause assisted mexes
-		triggerEvent('toggle_pause', mexes['assisted'], false)
+		Pause(mexes['assisted'], false, 'user') -- unpause assisted mexes
+		--triggerEvent('toggle_pause', mexes['assisted'], false)
 	end
 end
 
@@ -298,7 +299,7 @@ function init(isReplay, parent)
 	if(not isReplay) then
 		addListener(checkMexes, 1, 'em_mexes')
 		addListener(pauseMexes, 0.2, 'em_mexes')
-	else
-		addListener(mexOverlay, 1, 'em_mexes')
 	end
+
+	addListener(mexOverlay, 1)
 end

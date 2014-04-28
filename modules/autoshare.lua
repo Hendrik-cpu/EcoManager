@@ -8,6 +8,7 @@ local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
 local getUnits = import(modPath .. 'modules/units.lua').getUnits
 local round = import(modPath .. 'modules/utils.lua').round
 local unum = import(modPath .. 'modules/utils.lua').unum
+local mod = import(modPath .. 'modules/utils.lua').mod
 
 local RegisterChatFunc = import('/lua/ui/game/gamemain.lua').RegisterChatFunc
 local FindClients = import('/lua/ui/game/chat.lua').FindClients
@@ -27,7 +28,7 @@ local HelpText = {
     Mass = {
         Title = "Mass threshold",
         Body = "Autoshare if mass storage contains more than this",
-        },
+    },
     Energy = {
         Title = "Energy threshold",
         Body = "Autoshare if energy storage contains more than this",
@@ -53,7 +54,7 @@ local share_threshold = {MASS=1, ENERGY=1}
 local total_shared = {MASS=0, ENERGY=0}
 
 --auto values
-local MIN_MASS = 4000
+local MIN_MASS = 3000
 local MIN_ENERGY = 1500
 local MIN_ENERGY_RATIO = 0.4
 
@@ -251,43 +252,43 @@ function GetArmyData(army)
 end
 
 function processStored(player, args)
-   players_eco[player]['MASS'] = {stored=tonumber(args[2]), share=tonumber(args[3])}
-   players_eco[player]['ENERGY'] = {stored=tonumber(args[4]), share=tonumber(args[5])}
+    players_eco[player]['MASS'] = {stored=tonumber(args[2]), share=tonumber(args[3])}
+    players_eco[player]['ENERGY'] = {stored=tonumber(args[4]), share=tonumber(args[5])}
 end
 
 function sendStored()
-local status = storageStatus()
-local msg
+    local status = storageStatus()
+    local msg
 
-if(GetGameTimeSeconds() > 60 and (status['MASS']['share'] > 0 or status['ENERGY']['share'] > 0)) then
-    shareStored(status)
-end
+    if(GetGameTimeSeconds() > 60 and (status['MASS']['share'] > 0 or status['ENERGY']['share'] > 0)) then
+        shareStored(status)
+    end
 
-if (status['MASS']['share'] < 0 or status['ENERGY']['share'] < 0) then
-    notifyStored = true
-end
+    if (status['MASS']['share'] < 0 or status['ENERGY']['share'] < 0) then
+        notifyStored = true
+    end
 
-if(notifyStored) then
-    msg = string.format("STORED %d %d %d %d", status['MASS']['stored'], status['MASS']['share'], status['ENERGY']['stored'], status['ENERGY']['share'])
-    sendCommand(msg)
-end
+    if(notifyStored) then
+        msg = string.format("STORED %d %d %d %d", status['MASS']['stored'], status['MASS']['share'], status['ENERGY']['stored'], status['ENERGY']['share'])
+        sendCommand(msg)
+    end
 
-if(notifyStored and status['MASS']['share'] >= 0 and status['ENERGY']['share'] >= 0) then
-    notifyStored = false
-end
+    if(notifyStored and status['MASS']['share'] >= 0 and status['ENERGY']['share'] >= 0) then
+        notifyStored = false
+    end
 end
 
 function sendCommand(msg, id)
-msg = { to = 'allies', text = msg}
+    msg = { to = 'allies', text = msg}
 
-msg[chatChannel] = true
+    msg[chatChannel] = true
 
-SessionSendChatMessage(FindClients(), msg)
+    SessionSendChatMessage(FindClients(), msg)
 end
 
 function processCommand(sender, msg)
-local args = {}
-local commands = {
+    local args = {}
+    local commands = {
 		STORED=processStored -- STORED <m stored> <m share> <e stored> <e share>
 	}
 
@@ -315,66 +316,71 @@ function storageStatus()
 	local status = {
       MASS={stored=eco['MASS']['stored'], share=0},
       ENERGY={stored=eco['ENERGY']['stored'], share=0}
-  }
+    }
+    
+    for _, t in ecotypes do
+        local last_for
 
-  for _, t in ecotypes do
-    local last_for
+        if(eco[t]['avg_net_income'] >= 0) then
+            last_for = 1000
+        else 
+            last_for = round(eco[t]['stored'] / (-eco[t]['avg_net_income'] * tps))
+        end
 
-    if(eco[t]['avg_net_income'] >= 0) then
-        last_for = 1000
-    else 
-        last_for = round(eco[t]['stored'] / (-eco[t]['avg_net_income'] * tps))
+        may_share = true
+    	if(share_threshold[t] == 1) then  -- auto mode
+            if(eco[t]['avg_net_income'] < 0 and eco[t]['ratio'] < 0.95) then
+                if(last_for < 5) then
+				    may_share = false
+                end
+            end
+
+            if(t == 'MASS' and eco[t]['stored'] < MIN_MASS and eco[t]['ratio'] < 0.95) then
+                may_share = false
+            end
+
+            if(t == 'ENERGY' and (eco[t]['ratio'] < MIN_ENERGY_RATIO or eco[t]['stored'] < MIN_ENERGY or eco[t]['avg_income']*tps < 200)) then
+                may_share = false
+            end
+        else  -- manual override
+            if(eco[t]['ratio'] < share_threshold[t]) then
+    			may_share = false
+            end
+        end
+        
+        if(may_share) then
+            if(share_threshold[t] == 1) then -- auto
+                if(t == 'MASS') then
+				    local max_limit = 0.30
+                    if(eco[t]['ratio'] >= 0.95 and eco[t]['max'] < 2000) then
+                        max_limit = 0.05
+                    end
+                    percent = math.max(0.01, math.min(max_limit, eco[t]['ratio']/3))
+                else 
+                    percent = math.max(0.1, math.min(0.3, eco[t]['ratio']/3))
+                end
+            else 
+    			percent = math.min(1, math.max(eco[t]['ratio'] - share_threshold[t], 0.02)) -- always at least 2%
+            end
+
+            status[t]['share'] = round(status[t]['stored'] * percent)
+
+        else
+
+
+            if(t == 'MASS') then
+                if(eco[t]['stored'] < 2000 or last_for < 3) then
+                    status[t]['share'] = -eco['MASS']['max'] * 0.2
+                end
+            else
+                if(eco[t]['ratio'] < 0.40 or last_for < 3) then
+                    status[t]['share']= -eco['ENERGY']['max'] * 0.3
+                end
+            end
+        end
     end
 
-    may_share = true
-	if(share_threshold[t] == 1) then  -- auto mode
-		if(eco[t]['avg_net_income'] < 0 and eco[t]['ratio'] < 0.95) then
-			if(last_for < 5) then
-				may_share = false
-			end
-		end
-
-		if(t == 'MASS' and eco[t]['stored'] < MIN_MASS and eco[t]['ratio'] < 0.95) then
-            may_share = false
-        end
-
-        if(t == 'ENERGY' and (eco[t]['ratio'] < MIN_ENERGY_RATIO or eco['t']['stored'] < MIN_ENERGY or eco[t]['avg_income']*tps < 200)) then
-            may_share = false
-        end
-	else  -- manual override
-		if(eco[t]['ratio'] < share_threshold[t]) then
-			may_share = false
-		end
-	end
-  if(may_share) then
-		if(share_threshold[t] == 1) then -- auto
-			if(t == 'MASS') then
-				local max_limit = 0.30
-             if(eco[t]['ratio'] >= 0.95 and eco[t]['max'] < 2000) then
-                 max_limit = 0.05
-             end
-             percent = math.max(0.01, math.min(max_limit, eco[t]['ratio']/3))
-         else 
-            percent = math.max(0.1, math.min(0.3, eco[t]['ratio']/3))
-        end
-    else 
-			percent = math.min(1, math.max(eco[t]['ratio'] - share_threshold[t], 0.02)) -- always at least 2%
-		end
-       status[t]['share'] = round(status[t]['stored'] * percent)
-   else
-      if(t == 'MASS') then
-       if(eco[t]['stored'] < 2000 or last_for < 3) then
-        status[t]['share'] = -eco['MASS']['max'] * 0.2
-    end
-else
-   if(eco[t]['ratio'] < 0.40 or last_for < 3) then
-    status[t]['share']= -eco['ENERGY']['max'] * 0.3
-end
-end
-end
-end
-
-return status
+    return status
 end
 
 function findArmy(nickname)

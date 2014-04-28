@@ -22,17 +22,15 @@ function boolstr(bool)
 end
 
 function round(num, idp)
-	local mult = 10^(idp or 0)
-	
-	return math.floor(num * mult+.5) / mult
+  return tonumber(string.format("%." .. (idp or 0) .. "f", num))
 end
 
 function round2(val, decimal)
-  if (decimal) then
-    return math.floor( (val * 10^decimal) + 0.5) / (10^decimal)
-  else
-    return math.floor(val+0.5)
-  end
+ 	if (decimal) then
+		return math.floor( (val * 10^decimal) + 0.5) / (10^decimal)
+	else
+    	return math.floor(val+0.5)
+  	end
 end
 
 function unum(n, unit)
@@ -54,4 +52,8 @@ function unum(n, unit)
 	if(pos > 1) then return n..units[pos]
 	else return n end;
 	
+end
+
+function mod(a, b)
+	return a - math.floor(a/b)*b
 end

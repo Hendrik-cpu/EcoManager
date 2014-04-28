@@ -17,6 +17,8 @@ function econData(unit)
 	local econ = unit:GetEconData()
 
 	--if(econ['energyRequested'] and econ['energyRequested'] ~= 0 and not GetIsPaused({unit})) then
+
+
 	if(econ['energyRequested'] ~= 0) then
 		econ_cache[id] = econ
 	else 

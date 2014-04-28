@@ -4,17 +4,24 @@ local addListener = import(modPath .. 'modules/init.lua').addListener
 local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
 local unitsPauseList={}
 local excluded = {}
-local logEnabled=true
-local massStorageThreshold=0.5
+local logEnabled=false
+local massStorageThreshold=0.2
 local addCommand = import(modPath .. 'modules/commands.lua').addCommand
+local Pause = import(modPath .. 'modules/pause.lua').Pause
+local CanUnpause = import(modPath .. 'modules/pause.lua').CanUnpause
 
 function init()
 	addCommand('mt', setMassStorageThreshold)
-	addListener(manageAssistedUpgrade, 6, 'em_mexOpti')
+	addListener(manageAssistedUpgrade, 0.6, 'em_mexOpti')
 end
-function setMassStorageThreshold(value)
-	massStorageThreshold=value
-	print("Mass throttle: Storage threshold set to", value)
+function SetPaused(units, state)
+	Pause(units, state, 'throttlemass')
+end
+
+function setMassStorageThreshold(args)
+	local str = string.lower(args[2])
+	massStorageThreshold=tonumber(str)/100
+	print("Mass throttle: Storage threshold set to" , massStorageThreshold)
 end
 
 function getUnitsPauseList()
@@ -81,13 +88,6 @@ function manageAssistedUpgrade()
 			else -- engineer isn't focusing, walking towards mex?
 				local queue = e:GetCommandQueue()
 				local p = queue[1].position
-
-
-				
---[[
-				LOG(repr(queue))
-				LOG(repr(mexPositions))
-]]
 
 				if(queue[1].type == 'Guard') then
 					if(mexPositions[p[1]] and mexPositions[p[1]][p[3]]) then
@@ -156,10 +156,11 @@ function manageAssistedUpgrade()
 	if assistersExist  then
 		local options = import(modPath .. 'modules/utils.lua').getOptions(true)
 		local massOptions=options['em_mexOpti']
-		LOG("user choose the >", massOptions,"< algorithm") 
+		ILOG("user choose the >", massOptions,"< algorithm") 
 
 		local pausedByMe=getUnitsPauseList()
-		local pausedByClickOrAssist=import(modPath .. 'modules/throttle.lua').getExcluded()
+		--local pausedByClickOrAssist=import(modPath .. 'modules/throttle.lua').getExcluded()
+		local pausedByClickOrAssist = {}
 		
 		--time
 		if (massOptions== 'optimizeTime' or massOptions == 'auto') then
@@ -247,7 +248,7 @@ function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable, resType)
 		for _, e in assisting[m0.unit] do
 			local id = e:GetEntityId()
 			if GetIsPaused({e}) then
-				if pausedByMe[id] and not pausedByClickOrAssist[id] then
+				if pausedByMe[id] and CanUnpause(e) then
 					table.insert(unitsUnPauseList, e)
 					ILOG("I paused this engineer",e:GetEntityId(),", unpausing it")
 				else
@@ -286,9 +287,12 @@ function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable, resType)
 	-- check if unit switched focus and needs to be unpaused
 	local scheduledForPausingNextCycle=getUnitsPauseList()
 	for _, u in lastUnitsPauseList do
-		if not scheduledForPausingNextCycle[u:GetEntityId()] then
-			LOG("Unit has slipped out of my control, I will unpause")
-			table.insert(unitsUnPauseList, u) --This apparently does not work? WHY?
+		local id = u:GetEntityId()
+		if not scheduledForPausingNextCycle[id] then
+			--LOG("Unit has slipped out of my control, I will unpause")
+			if pausedByMe[id] and CanUnpause(u) then
+				table.insert(unitsUnPauseList, u) --This apparently does not work? WHY?
+			end
 		end
 	end
 		
