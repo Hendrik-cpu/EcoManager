@@ -41,6 +41,7 @@ function mainThread()
 
 			if(not options or math.mod(current_tick, 10) == 0) then
 				options = import(modPath .. 'modules/utils.lua').getOptions(true)
+				--options = import(modPath .. 'modules/prefs.lua').getPrefs()
 			end
 
 			if(math.mod(current_second*10, l['wait']*10) == 0 and (not l.option or options[l.option] ~= 0)) then
@@ -72,12 +73,13 @@ function watchdogThread()
 end
 
 function setup(isReplay, parent)
-	local mods = {'economy', 'units', 'pause', 'nuclear', 'options', 'shields', 'mexes'}
+	local mods = {'economy', 'units', 'pause', 'options', 'factories', 'shields', 'mexes', 'buildoverlay'}
 	
 	if(not isReplay) then
 		table.insert(mods, 'autoshare');
 		table.insert(mods, 'throttlemass');
 		table.insert(mods, 'throttle');
+		--table.insert(mods, 'throttler');
 	end
 
 	for _, m in mods do

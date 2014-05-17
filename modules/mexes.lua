@@ -15,6 +15,7 @@ local Group = import('/lua/maui/group.lua').Group
 local UIUtil = import('/lua/ui/uiutil.lua')
 
 local Pause = import(modPath .. 'modules/pause.lua').Pause
+local CanUnpause = import(modPath .. 'modules/pause.lua').CanUnpause
 
 local pause_queue = {}
 local overlays = {}
@@ -39,7 +40,6 @@ function getMexes()
 	local units = getUnits() or {}
 	local all_mexes = EntityCategoryFilterDown(categories.MASSEXTRACTION * categories.STRUCTURE, units)
 	local mexes = {all={}, upgrading={}, idle={}, assisted={}}
-	local pausedByMassThrottle=import(modPath .. 'modules/throttleMass.lua').getUnitsPauseList()
 
 	mexes['all'] = all_mexes
 			
@@ -59,7 +59,7 @@ function getMexes()
 			elseif mex:GetFocus() then
 				table.insert(mexes['upgrading'], mex)
 
-				if(data['assisting'] > 0 and GetIsPaused({mex}) and not pausedByMassThrottle[mex:GetEntityId()]) then
+				if(data['assisting'] > 0 and GetIsPaused({mex}) and CanUnpause(mex, 'mexes')) then
 					table.insert(mexes['assisted'], mex)
 				end
 			end
@@ -84,7 +84,6 @@ function upgradeMexes(mexes, unpause)
 
 			if(not unpause) then
 				table.insert(pause_queue, m)
-				--import(modPath .. 'modules/throttle.lua').addExclusion({m})
 			end
 
 			if(not upgrades[upgrades_to]) then
@@ -259,12 +258,6 @@ function checkMexes()
 		if(not auto_upgrade) then
 			local eco = getEconomy()
 			local tps = GetSimTicksPerSecond()
-
---[[
-			if(GetGameTimeSeconds() > 600) then
-				auto_upgrade = true
-			end
-			]]
 		end
 
 		if(auto_upgrade) then
@@ -272,16 +265,6 @@ function checkMexes()
 		end
 	end
 
-	--[[
-	if(options['em_mexoverlay'] == 1) then
-		for _, m in mexes['all'] do
-			if(m:IsIdle() or m:GetFocus()) then
-				UpdateMexOverlay(m)
-			end
-		end
-	end
-	]]
-	
 	for id, overlay in overlays do
 		if(not overlay or overlay.destroy or options['em_mexoverlay'] == 0) then
 			overlay:Destroy()
@@ -291,7 +274,6 @@ function checkMexes()
 	
 	if(table.getsize(mexes['assisted']) > 0) then
 		Pause(mexes['assisted'], false, 'user') -- unpause assisted mexes
-		--triggerEvent('toggle_pause', mexes['assisted'], false)
 	end
 end
 

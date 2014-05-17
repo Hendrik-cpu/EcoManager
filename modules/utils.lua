@@ -13,6 +13,13 @@ function getOptions(reload)
 	return options
 end
 
+function saveOptions(options)
+	local Prefs = import('/lua/user/prefs.lua')
+	
+	Prefs.SetToCurrentProfile('options', options)
+    Prefs.SavePreferences()
+end
+
 function boolstr(bool)
 	if(bool) then 
 		return "true"
@@ -36,6 +43,8 @@ end
 function unum(n, unit)
 	local units = {"", "k", "m", "g"}
   	local pos = 1
+
+  	n = math.abs(n)
 
   	if (n < 99999) then
   		return math.floor(n+.5)

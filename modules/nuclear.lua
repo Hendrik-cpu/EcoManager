@@ -186,12 +186,32 @@ function CreateNukeOverlay(unit)
     overlay.text:SetDropShadow(true)
 	LayoutHelpers.AtCenterIn(overlay.text, overlay, 0, 0)
 
+	overlay.progress = UIUtil.CreateText(overlay, '0%', 12, UIUtil.bodyFont)
+	overlay.progress:SetColor('white')
+    overlay.progress:SetDropShadow(true)
+	LayoutHelpers.AtCenterIn(overlay.progress, overlay, 15, 0)
+	
+	overlay.eta = UIUtil.CreateText(overlay, 'ETA', 10, UIUtil.bodyFont)
+	overlay.eta:SetColor('white')
+    overlay.eta:SetDropShadow(true)
+	LayoutHelpers.AtCenterIn(overlay.eta, overlay, -15, 0)
+
 	overlay.unit = unit
 	
 	return overlay
 end
 
-function updateNukeOverlay(unit)
+function round(num, idp)
+	if(not idp) then
+		return tonumber(string.format("%." .. (idp or 0) .. "f", num))
+	else
+  		local mult = 10^(idp or 0)
+		return math.floor(num * mult + 0.5) / mult
+  	end
+end
+
+
+function updateNukeOverlay(unit, options)
 	local id = unit:GetEntityId()
 	local info = unit:GetMissileInfo()
 	local count = info.nukeSiloStorageCount + info.tacticalSiloStorageCount
@@ -211,17 +231,42 @@ function updateNukeOverlay(unit)
 
 	overlay.text:SetText(count)
 	overlay.text:SetColor(color)
+
+	local progress = unit:GetWorkProgress()
+	if(progress > 0 and options['em_nukeoverlay'] == 2) then
+		local tick = GameTick()
+
+		if(not overlay.last_progress or overlay.last_progress > progress) then
+			overlay.last_progress = progress
+			overlay.last_tick = GameTick()
+			overlay.current_eta = 0
+		elseif(tick - overlay.last_tick > 20 and progress > overlay.last_progress) then
+			--overlay.current_eta = round(GetGameTimeSeconds() + ((tick - overlay.last_tick) / 10) * ((1 - progress) / (progress - overlay.last_progress)))
+			overlay.current_eta = round(GetGameTimeSeconds() + (((tick - overlay.last_tick)) * ((1 - progress) / (progress - overlay.last_progress)))/10 )
+			overlay.last_progress = unit:GetWorkProgress()
+			overlay.last_tick = tick
+		end
+
+		local eta = math.max(0, overlay.current_eta - GetGameTimeSeconds())
+		overlay.progress:SetText(math.floor(progress*100) .. "%")
+		overlay.eta:SetText("ETA " .. string.format("%.2d:%.2d", eta / 60, math.mod(eta, 60)))
+		overlay.progress:Show()
+		overlay.eta:Show()
+	else
+		overlay.progress:Hide()
+		overlay.eta:Hide()
+	end
 end
 
 function drawOverlays()
 	local options = import(modPath .. 'modules/utils.lua').getOptions(true)
 	
-	if(options['em_nukeoverlay'] == 1) then
+	if(options['em_nukeoverlay'] > 0) then
 		local units = EntityCategoryFilterDown(categories.SILO * (categories.ANTIMISSILE + categories.NUKE), getUnits())
 
 		for _, u in units do
 			if(not u:IsDead()) then
-				updateNukeOverlay(u)
+				updateNukeOverlay(u, options)
 			end
 		end
 	end

@@ -6,6 +6,8 @@ local getPrefs = import(modPath .. 'modules/prefs.lua').getPrefs
 local savePrefs = import(modPath .. 'modules/prefs.lua').savePrefs
 local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
 local getUnits = import(modPath .. 'modules/units.lua').getUnits
+local cleanUnitList = import(modPath .. 'modules/units.lua').cleanUnitList
+local GetScore = import(modPath .. 'modules/score.lua').GetScore
 local round = import(modPath .. 'modules/utils.lua').round
 local unum = import(modPath .. 'modules/utils.lua').unum
 local mod = import(modPath .. 'modules/utils.lua').mod
@@ -54,9 +56,10 @@ local share_threshold = {MASS=1, ENERGY=1}
 local total_shared = {MASS=0, ENERGY=0}
 
 --auto values
-local MIN_MASS = 3000
-local MIN_ENERGY = 1500
-local MIN_ENERGY_RATIO = 0.4
+local MIN_MASS = 8000
+local MIN_ENERGY = 6000
+local MIN_ENERGY_RATIO = 0.5
+
 
 local notifyStored = false
 local players_eco = {}
@@ -69,9 +72,12 @@ local my_acu
 
 local share_mode = 'auto'
 
+local throttled_energy = 0
+
 -- START UI
 
 function throttledEnergyText(amount)
+    throttled_energy = amount
     throttledEnergy:SetText(unum(amount));
 end
 
@@ -251,31 +257,52 @@ function GetArmyData(army)
     return result
 end
 
+function getPlayersEco()
+    return players_eco
+end
+
 function processStored(player, args)
-    players_eco[player]['MASS'] = {stored=tonumber(args[2]), share=tonumber(args[3])}
-    players_eco[player]['ENERGY'] = {stored=tonumber(args[4]), share=tonumber(args[5])}
+    players_eco[player]['MASS'] = {overflow=tonumber(args[2]), share=tonumber(args[3])}
+    players_eco[player]['ENERGY'] = {overflow=tonumber(args[4]), share=tonumber(args[5])}
 end
 
 function sendStored()
     local status = storageStatus()
     local msg
+    local options = import(modPath .. 'modules/utils.lua').getOptions(true)
+    local player_status = getPlayerStatus()
 
-    if(GetGameTimeSeconds() > 60 and (status['MASS']['share'] > 0 or status['ENERGY']['share'] > 0)) then
-        shareStored(status)
+    for _, t in {'MASS', 'ENERGY'} do
+        if(options['em_autoshare'] == 0) then
+            status[t]['share'] = 0
+            --player_status['need'][t] = player_status['n_allies']
+        end
+
+        if(status[t]['overflow'] > 0) then
+            status[t]['overflow'] = status[t]['overflow'] / math.max(1, player_status['need'][t])
+        end
     end
 
-    if (status['MASS']['share'] < 0 or status['ENERGY']['share'] < 0) then
+
+    if(status['MASS']['share'] > 0 or status['ENERGY']['share'] > 0) then
+        shareStored(player_status['players'], status)
+    end
+
+    local my_eco = players_eco[GetFocusArmy()]
+    if(not my_eco or my_eco['MASS']['share'] ~= status['MASS']['share'] or my_eco['ENERGY']['share'] ~= status['ENERGY']['share']) then
         notifyStored = true
     end
 
     if(notifyStored) then
-        msg = string.format("STORED %d %d %d %d", status['MASS']['stored'], status['MASS']['share'], status['ENERGY']['stored'], status['ENERGY']['share'])
+        msg = string.format("STORED %d %d %d %d", math.ceil(status['MASS']['overflow']*10), status['MASS']['share'], math.ceil(status['ENERGY']['overflow']*10), status['ENERGY']['share'])
         sendCommand(msg)
     end
 
+--[[
     if(notifyStored and status['MASS']['share'] >= 0 and status['ENERGY']['share'] >= 0) then
         notifyStored = false
     end
+    ]]
 end
 
 function sendCommand(msg, id)
@@ -312,14 +339,41 @@ end
 
 function storageStatus()
 	local tps = GetSimTicksPerSecond()
-	local may_share
 	local status = {
-      MASS={stored=eco['MASS']['stored'], share=0},
-      ENERGY={stored=eco['ENERGY']['stored'], share=0}
+      MASS={overflow=eco['MASS']['income']-eco['MASS']['use_requested'], share=0},
+      ENERGY={overflow=eco['ENERGY']['income']-eco['ENERGY']['use_requested'], share=0}
     }
-    
+
+    if(eco['ENERGY']['stored'] < 1) then
+        status['MASS']['overflow'] = eco['MASS']['income'] - eco['MASS']['use_actual']
+    else
+        --status['ENERGY']['overflow'] = math.max(0, status['ENERGY']['overflow']) 
+    end
+
+    if(eco['MASS']['stored'] < 1) then
+        status['ENERGY']['overflow'] = eco['ENERGY']['income'] - eco['ENERGY']['use_actual']
+    else
+        --status['MASS']['overflow'] = math.max(0, status['MASS']['overflow'])
+    end
+
+    --[[
+
+    if(eco['ENERGY']['stored'] > 0) then
+        status['ENERGY']['overflow'] = eco['ENERGY']['net_income']
+        status['MASS']['overflow'] = eco['MASS']['net_income']
+    else
+        status['ENERGY']['overflow'] = eco['ENERGY']['income'] - eco['ENERGY']['use_requested']
+        status['MASS']['overflow'] = eco['MASS']['net_income']
+    end
+
+    status['ENERGY']['overflow'] = eco['ENERGY']['income'] - eco['ENERGY']['use_requested']
+    status['MASS']['overflow'] = eco['MASS']['income'] - eco['MASS']['use_requested']
+    ]]
+
+
     for _, t in ecotypes do
         local last_for
+        local threshold = share_threshold[t]
 
         if(eco[t]['avg_net_income'] >= 0) then
             last_for = 1000
@@ -327,57 +381,69 @@ function storageStatus()
             last_for = round(eco[t]['stored'] / (-eco[t]['avg_net_income'] * tps))
         end
 
-        may_share = true
-    	if(share_threshold[t] == 1) then  -- auto mode
-            if(eco[t]['avg_net_income'] < 0 and eco[t]['ratio'] < 0.95) then
-                if(last_for < 5) then
-				    may_share = false
+    	if(threshold == 1) then  -- auto mode
+            threshold = 0
+
+            if(t == 'ENERGY') then
+                threshold = MIN_ENERGY_RATIO
+
+                if(eco[t]['max'] > MIN_ENERGY) then
+                    threshold = math.max(threshold, MIN_ENERGY / eco[t]['max'])
+                end
+
+                if(throttled_energy > 0) then
+                    threshold = math.max(threshold, 0.95)
+                end
+
+                if(eco[t]['avg_income']*tps < 200) then
+                    threshold = 1
+                end
+
+                if(GetGameTimeSeconds() < 60)  then -- no energy share before 1 min
+                    threshold = 1
+                end
+            elseif(t == 'MASS') then
+                threshold = math.max(MIN_MASS / eco[t]['max'], threshold)
+                threshold = math.min(threshold, 0.95) -- share if mass >= 95%
+
+                if(GetGameTimeSeconds() < 60*4)  then -- no mass share first 4 min
+                    threshold = 1
                 end
             end
 
-            if(t == 'MASS' and eco[t]['stored'] < MIN_MASS and eco[t]['ratio'] < 0.95) then
-                may_share = false
-            end
-
-            if(t == 'ENERGY' and (eco[t]['ratio'] < MIN_ENERGY_RATIO or eco[t]['stored'] < MIN_ENERGY or eco[t]['avg_income']*tps < 200)) then
-                may_share = false
-            end
-        else  -- manual override
-            if(eco[t]['ratio'] < share_threshold[t]) then
-    			may_share = false
+            
+            if(eco[t]['avg_net_income'] < 0 and last_for < 5) then
+                threshold = 1
             end
         end
-        
-        if(may_share) then
-            if(share_threshold[t] == 1) then -- auto
-                if(t == 'MASS') then
-				    local max_limit = 0.30
-                    if(eco[t]['ratio'] >= 0.95 and eco[t]['max'] < 2000) then
-                        max_limit = 0.05
-                    end
-                    percent = math.max(0.01, math.min(max_limit, eco[t]['ratio']/3))
-                else 
-                    percent = math.max(0.1, math.min(0.3, eco[t]['ratio']/3))
-                end
-            else 
-    			percent = math.min(1, math.max(eco[t]['ratio'] - share_threshold[t], 0.02)) -- always at least 2%
-            end
 
-            status[t]['share'] = round(status[t]['stored'] * percent)
-
+        if(eco[t]['ratio'] >= threshold) then
+            percent = math.min(1, math.max(eco[t]['ratio'] - threshold, 0.01))
+            status[t]['share'] = round(eco[t]['stored'] * percent)
         else
-
+            request_threshold = threshold-eco[t]['ratio']
 
             if(t == 'MASS') then
-                if(eco[t]['stored'] < 2000 or last_for < 3) then
-                    status[t]['share'] = -eco['MASS']['max'] * 0.2
+                --if(eco[t]['stored'] < 2000 or last_for < 3) then
+                if(eco[t]['ratio'] < math.min(0.10, threshold) or last_for < 3) then
+                    status[t]['share'] = -eco['MASS']['max'] * math.min(0.2, request_threshold)
                 end
             else
-                if(eco[t]['ratio'] < 0.40 or last_for < 3) then
-                    status[t]['share']= -eco['ENERGY']['max'] * 0.3
+                if(eco[t]['ratio'] < math.min(threshold, 0.40) or last_for < 3 or throttled_energy > 0) then
+                    status[t]['share']= -eco['ENERGY']['max'] * math.min(0.5, request_threshold)
                 end
             end
+
         end
+
+        if(status[t]['share'] > 0) then
+            status[t]['overflow'] = math.max(0, status[t]['overflow']) 
+        elseif(status[t]['share'] < 0) then
+            status[t]['overflow'] = math.min(0, status[t]['overflow']) 
+        else
+            status[t]['overflow'] = 0
+        end
+
     end
 
     return status
@@ -400,11 +466,6 @@ end
 function shareWithPlayer(nickname, op)
     local prefs = getPrefs()
     local army = findArmy(nickname)
-
-    if(not army) then
-        print ("No such player")
-        return
-    end
 
     --[[
 
@@ -435,14 +496,14 @@ function shareWithPlayer(nickname, op)
 end
 
 function sortPlayersByNeed(a, b)
-    if(a['ENERGY']['stored'] ~= b['ENERGY']['stored']) then
-        return a['ENERGY']['stored'] < b['ENERGY']['stored']
+    if(a['ENERGY']['overflow'] ~= b['ENERGY']['overflow']) then
+        return a['ENERGY']['overflow'] < b['ENERGY']['overflow']
     end
 
-    return a['MASS']['stored'] < b['MASS']['stored']
+    return a['MASS']['overflow'] < b['MASS']['overflow']
 end
 
-function playersNeedShare()
+function playersNeedShare2()
     local all = table.copy(players_eco)
     local players = {}
     local me = GetFocusArmy()
@@ -475,20 +536,53 @@ function playersNeedShare()
     return players
 end
 
-function shareStored(status)
-    local players = playersNeedShare()
+function getPlayerStatus()
+    local me = GetFocusArmy()
+    local data = {n_allies=0, need={MASS=0, ENERGY=0}}
+    local players = {}
+
+    for id, army in GetArmiesTable().armiesTable do
+        local p=players_eco[id]
+        if(me >= 0 and IsAlly(me, id) and not army.outOfGame) then
+            data['n_allies'] = data['n_allies'] + 1
+        end            
+
+        if(p) then
+            local add = false
+            for _, t in {'MASS', 'ENERGY'} do
+                if(p[t]['share'] < 0) then
+                    add = true
+                    data['need'][t] = data['need'][t] + 1
+                end
+            end
+
+            if(add and me ~= id) then
+                table.insert(players, p)
+            end
+        end
+    end
+
+    table.sort(players, sortPlayersByNeed)
+
+    data['players'] = players
+
+    return data
+end
+
+function shareStored(players, status)
+    
     local share = {MASS=0, ENERGY=0}
     local n = table.getsize(players)
 
+    local stored = {MASS=eco['MASS']['stored'], ENERGY=eco['ENERGY']['stored']}
+
     for _, p in players do
         for _, t in ecotypes do
-
             if(p[t]['share'] < 0 and status[t]['share'] > 0) then
                 local to_share = math.floor(math.min(status[t]['share'] / n, -p[t]['share']))
 
-                share[t] = round(to_share / status[t]['stored'], 2)
-
-                status[t]['stored'] = status[t]['stored'] - to_share
+                share[t] = round(to_share / stored[t], 2)
+                stored[t] = stored[t] - to_share
                 status[t]['share'] = status[t]['share'] - to_share
 
                 total_shared[t] = total_shared[t] + eco[t]['stored'] * share[t]
@@ -522,14 +616,67 @@ function shareResource(player, share)
 )
 end
 
-function shareAllResources()
-    local armies = GetArmiesTable().armiesTable
+function getAllies()
+    local allies = {}
+    local scoreData = GetScore()
+    local ratings = SessionGetScenarioInfo().Options.Ratings
     local me = my_army
 
-    for id, army in armies do 
+    for id, army in GetArmiesTable().armiesTable do
         if(IsAlly(me, id) and id ~= me and not army.outOfGame) then
-            shareResource(id, {MASS=1, ENERGY=1})
+            local ally = {id=id, score=0, rating=0}
+
+            if(scoreData[id] and scoreData[id].general.score) then
+                ally['score'] = scoreData[id].general.score
+            end
+
+            if(ratings[army.nickname]) then
+                ally['rating'] = ratings[army.nickname]
+            end
+
+            table.insert(allies, ally)
         end
+    end
+
+    table.sort(allies, function(a,b)
+        if(a['rating'] == b['rating']) then
+            return a['score'] > b['score']
+        else
+            return a['rating'] > b['rating']
+        end
+     end)
+
+    return allies
+end
+
+function shareAllResources()
+    local allies = getAllies
+    local me = my_army
+
+    allies = getAllies()
+
+    for _, ally in allies do 
+        shareResource(ally['id'], {MASS=1, ENERGY=1})
+    end
+end
+
+function giveAllUnits()
+    local allies = getAllies()
+    local units
+    local me = my_army
+
+    UISelectionByCategory("ALLUNITS", false, false, false, false)
+    units = GetSelectedUnits()
+
+    if(not units) then
+        return
+    end
+
+    units = EntityCategoryFilterDown(categories.ALLUNITS - categories.SILO, units)
+    SelectUnits(units)
+      
+    for _, ally in allies do 
+           SimCallback({Func="GiveUnitsToPlayer", Args={ From=me, To=ally['id']},} , true)
     end
 end
 
@@ -554,18 +701,33 @@ function getAcu()
 end
 
 function checkIfDead()
+    local mode = SessionGetScenarioInfo().Options.Victory
+
+    if(mode ~= "demoralization") then
+        return
+    end
+        
     if(GetFocusArmy() ~= -1) then
         my_army = GetFocusArmy()
     end
 
+    --local scoreData = GetScore()
+
+    --(repr(scoreData))
+
     
     if(not my_acu) then
         my_acu = getAcu()
+
+        if(not my_acu) then
+            return
+        end
     end
     
-    if((not my_acu or my_acu:IsDead()) and not deathShared) then
+    if(my_acu:IsDead() and not deathShared) then
         deathShared = true
         shareAllResources()
+        giveAllUnits()
     end
 end
 
@@ -645,5 +807,6 @@ function init(isReplay, parent)
     addCommand('m', thresholdCommand)
     addCommand('e', thresholdCommand)
     addCommand('as', autoshareCommand)
-    addListener(autoshareThread, 0.4, 'em_autoshare')
+    --addListener(autoshareThread, 0.4, 'em_autoshare')
+    addListener(autoshareThread, 0.4)
 end

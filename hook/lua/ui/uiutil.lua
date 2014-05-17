@@ -1,5 +1,15 @@
 do
+    local oldDiskGetFileInfo = DiskGetFileInfo
     local UIFileCache = {}
+    local FileCache = {}
+
+    function DiskGetFileInfo(file)
+        if(not FileCache[file]) then
+            FileCache[file] = oldDiskGetFileInfo(file)
+        end
+                
+        return FileCache[file]
+    end
 
     --* given a path and name relative to the skin path, returns the full path based on the current skin
     function UIFile(filespec)

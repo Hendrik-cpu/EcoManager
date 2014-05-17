@@ -4,6 +4,9 @@ local IsAutoSelection = import(modPath .. "modules/allunits.lua").IsAutoSelectio
 local originalCreateUI = CreateUI
 
 local unitData = import(modPath ..'modules/units.lua').unitData
+
+local KeyMapper = import('/lua/keymap/keymapper.lua')
+
 --import(modPath .. "modules/init.lua").setup(isReplay, import('/lua/ui/game/borders.lua').GetMapGroup())
 
 
@@ -18,7 +21,8 @@ function OnSelectionChanged(oldSelection, newSelection, added, removed)
 				local mex = mexes[1]
 				local data = unitData(mex)
 
-				if(options['em_mexes'] == 'click' and EntityCategoryContains(categories.TECH1, mex) or data['bonus'] >= 1.5) then
+				if(options['em_mexes'] == 'click' and (EntityCategoryContains(categories.TECH1, mex) or data['bonus'] >= 1.5)) then
+
 					import(modPath ..'modules/mexes.lua').upgradeMexes(mexes, true)
 				end
 			end
@@ -31,7 +35,12 @@ end
 
 
 function CreateUI(isReplay, parent)
+	options.gui_scu_manager=0
     originalCreateUI(isReplay)
     AddBeatFunction(import(modPath .. 'modules/allunits.lua').UpdateAllUnits)
     import(modPath .. "modules/init.lua").init(isReplay, import('/lua/ui/game/borders.lua').GetMapGroup())
+    import(modPath .. 'modules/scumanager.lua').Init()
+    KeyMapper.SetUserKeyAction('scu_upgrade_marker', {action =  'UI_Lua import("' .. modPath .. 'modules/scumanager.lua").CreateMarker()', category = 'user', order = 4})
+
+    import('/lua/ui/game/multifunction.lua').Contract()
 end

@@ -5,7 +5,9 @@ local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
 local unitsPauseList={}
 local excluded = {}
 local logEnabled=false
-local massStorageThreshold=0.2
+local massStorageThreshold=0
+local massInvestmentMultiplier=1
+local minNetIncome=0
 local addCommand = import(modPath .. 'modules/commands.lua').addCommand
 local Pause = import(modPath .. 'modules/pause.lua').Pause
 local CanUnpause = import(modPath .. 'modules/pause.lua').CanUnpause
@@ -17,13 +19,6 @@ end
 function SetPaused(units, state)
 	Pause(units, state, 'throttlemass')
 end
-
-function setMassStorageThreshold(args)
-	local str = string.lower(args[2])
-	massStorageThreshold=tonumber(str)/100
-	print("Mass throttle: Storage threshold set to" , massStorageThreshold)
-end
-
 function getUnitsPauseList()
 	local units={}
 	for k, m in unitsPauseList do
@@ -35,12 +30,18 @@ function getUnitsPauseList()
 	end
 	return units
 end
+function setMassStorageThreshold(args)
+	local str = string.lower(args[2])
+	massStorageThreshold=tonumber(str)/100
+	print("Mass throttle: Storage threshold set to" , massStorageThreshold)
+end
 function ILOG(str)
 	if logEnabled then
 		LOG(str)
 	end
 end
 
+local mexCappedMsgPrinted=false
 function manageAssistedUpgrade()
 	ILOG("started")
 	local eco = getEconomy()
@@ -52,12 +53,10 @@ function manageAssistedUpgrade()
 	end
 
 	local mexes=EntityCategoryFilterDown(categories.MASSEXTRACTION,AllUnits)
-	--local storages=EntityCategoryFilterDown(categories.MASSSTORAGE,AllUnits)
 
 	-- map mexes to positions
 	for _, m in mexes do
 		local pos = m:GetPosition()
-
 		if(not mexPositions[pos[1]]) then
 			mexPositions[pos[1]] = {}
 		end
@@ -66,12 +65,29 @@ function manageAssistedUpgrade()
 	end
 
 
-	-- find upgrading mexes
+	-- find upgrading mexes, check if eco is capped
+	local AllMEXT3Capped=false
+	if table.getsize(mexes)>0 then 
+		AllMEXT3Capped=true
+	end
+
 	engineers = EntityCategoryFilterDown(categories.ENGINEER,AllUnits)
 	for _, m in mexes do
 		if not m:IsIdle() then --and not excluded[m:GetEntityId()] 
 			table.insert(engineers,m)
 		end
+
+		local data=m:GetEconData()
+		if data['massProduced']~=27 then
+			AllMEXT3Capped =false
+		end
+
+	end
+
+	if AllMEXT3Capped and not mexCappedMsgPrinted then
+		local minutes=math.floor(GetGameTimeSeconds()/60)
+		print("All Mexes upgraded to t3 and capped at", minutes .. ":" .. GetGameTimeSeconds()-minutes*60)
+		mexCappedMsgPrinted=true
 	end
 
 	-- find the mex assisting and grab id from there
@@ -116,6 +132,7 @@ function manageAssistedUpgrade()
 	local assistersExist=false
 	local sortTable={}
 	local counter=0
+	local combinedMassDrain=0
 	for k, engineers in assisting do
 		local combinedBuildRate = 0
 		local lastE
@@ -126,6 +143,8 @@ function manageAssistedUpgrade()
 				br = e:GetBlueprint().Economy.BuildRate
 			end
 
+			local eco=e:GetEconData()
+			combinedMassDrain = combinedMassDrain + eco['massRequested']
 			combinedBuildRate = combinedBuildRate + br
 			lastE=e
 		end
@@ -134,7 +153,7 @@ function manageAssistedUpgrade()
 		
 		local massProduction
 		if k:IsInCategory("MASSSTORAGE") then
-			massProduction=0.75 
+			massProduction=0.88 
 		else
 			massProduction=bp.Economy.ProductionPerSecondMass
 		end
@@ -159,91 +178,52 @@ function manageAssistedUpgrade()
 		ILOG("user choose the >", massOptions,"< algorithm") 
 
 		local pausedByMe=getUnitsPauseList()
+		local pausedByMeForPower=getUnitsPauseList()
 		--local pausedByClickOrAssist=import(modPath .. 'modules/throttle.lua').getExcluded()
 		local pausedByClickOrAssist = {}
 		
-		--time
-		if (massOptions== 'optimizeTime' or massOptions == 'auto') then
-			table.sort(sortTable, function(a, b) return a['timeRemaining'] < b['timeRemaining'] end)
-			optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable, "MASS")			
-			
-
-		--mass efficiency for mass cost left
-		elseif (massOptions== 'optimizeMass') then
-			table.sort(sortTable, function(a, b) return a['massTimeEfficiency'] < b['massTimeEfficiency'] end)
-			optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,"MASS")	
-
 		--energy efficiency for mass cost left
-		elseif (massOptions== 'optimizeEnergy') then
-			table.sort(sortTable, function(a, b) return a['energyTimeEfficiency'] < b['energyTimeEfficiency'] end)
-			optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,"ENERGY")	
-
-		-- this is an old/atlernative version i might prefer
-		elseif massOptions == 'simple' then
-				table.sort(sortTable, function(a, b) return a['timeRemaining'] < b['timeRemaining'] end)
-
-				ILOG("using older simple algorithm")
-				local unitsUnPauseList={}
-				local m0 = sortTable[1]
-
-				local bp=m0.unit:GetBlueprint()
-
-				local netIncome=eco['MASS']['net_income']
-				local massStored=eco['MASS']['stored']
-				local massCost=bp.Economy.BuildCostMass
-				local progress=assisting[m0.unit][1]:GetWorkProgress()
-				local massCostRemaining=massCost*(1-progress)
-
-				if massStored<(massCostRemaining) then
-					-- create unpause list
-					for _, e in assisting[m0.unit] do
-						table.insert(unitsUnPauseList, e)
-					end
-
-					-- pausing
-					unitsPauseList={}
-					for i = 2, table.getsize(sortTable) do 
-						
-						local m = sortTable[i].unit
-						for _, e in assisting[m] do
-							table.insert(unitsPauseList, e)
-						end
-					end
-					SetPaused(unitsPauseList, true)
-
-					-- unpausing
-					SetPaused(unitsUnPauseList, false)
-				elseif massStored>(massCostRemaining) and netIncome > 0 then  
-				 	SetPaused(unitsPauseList, false)
-				 	return
-				end
+		if (massOptions== 'optimizeEnergy') then
+			table.sort(sortTable, function(a, b) return a['massTimeEfficiency'] < b['massTimeEfficiency'] end)
+			optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,combinedMassDrain)	
 		end
+
 	end
 
 	ILOG("finished")
 end
 
-function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable, resType)
+local AdditionalOrders=0
+function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,mProdMassDrain)
 	local unitsUnPauseList={}
-	local res=eco[resType]
-	local netIncome=res['net_income']
-	local resStored=res['stored']
-	local resStorageRel=resStored/res['max']
-
+	local resM=eco["MASS"]
+	local massNetIncome=(resM['income'] - eco['MASS']['use_requested'])*GetSimTicksPerSecond()+mProdMassDrain
+	local massStorageMax=resM['max']
+	local originalMassStored=resM['stored']-massStorageMax*massStorageThreshold
+	local massStorageRel=originalMassStored/massStorageMax
+	local resE=eco["ENERGY"]
+	local powerNetIncome=resE['net_income']*GetSimTicksPerSecond()
+	local powerStored=resE['stored']
+	local powerStoredRel=powerStored/resE['max']
+	
 	local lastJ=0
-	for j = 1, table.getsize(sortTable) do
+	local StallingOnPower=false
+
+	local OrdersCount=table.getsize(sortTable)
+	local massStored=originalMassStored
+	for j = 1, OrdersCount do
 
 		local m0 = sortTable[j]
 		local bp=m0.unit:GetBlueprint()
-		local resCost
-		if resType == "MASS" then
-			resCost = bp.Economy.BuildCostMass
-		else
-			resCost = bp.Economy.BuildCostEnergy
-		end 
+		local massCost=bp.Economy.BuildCostMass
+		local powerCost=bp.Economy.BuildCostEnergy
 
 		local progress=assisting[m0.unit][1]:GetWorkProgress()
-		local massCostRemaining=resCost*(1-progress)
+		
+		local massCostRemaining=massCost*(1-progress)
+		local energyCostRemaining=powerCost*(1-progress)
+
+		LOG("j " .. j .. " mexID " .. m0.unit:GetEntityId())
 
 		for _, e in assisting[m0.unit] do
 			local id = e:GetEntityId()
@@ -257,27 +237,74 @@ function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable, resType)
 			end
 		end
 
-		netIncome=netIncome-(massCostRemaining/m0.timeRemaining/10)
-		---ILOG("mass stored:", resStored, "mass cost remaining:", massCostRemaining, "net income:", netIncome, "mass storage relative:", resStorageRel)
-		if resStored > massCostRemaining then
+		--print ("massStored:", massStored, "massCostRemaining:",massCostRemaining,"massNetIncome:",massNetIncome, "StallingOnPower:",StallingOnPower, "drain:",massCostRemaining/m0.timeRemaining)
+		massNetIncome=massNetIncome-(massCostRemaining/m0.timeRemaining)	
+		powerNetIncome=powerNetIncome-(energyCostRemaining/m0.timeRemaining)
+
+		massStored=massStored-massCostRemaining
+		StallingOnPower=powerStored<(powerNetIncome*2*-1) or powerStored<100
+
+		LOG(repr(eco['MASS']))
+		LOG("massNetIncome " .. massNetIncome .. " massStored " .. massStored .. " massCostRemaining " .. massCostRemaining)
+
+		--break if stalling mass or energy
+
+		if massStored > massCostRemaining then
 			---ILOG("we have enough resources, going to unpause more mexes")
-			resStored = resStored - massCostRemaining
-		elseif resStored < massCostRemaining and netIncome<0  and resStorageRel < massStorageThreshold then  
-			--ILOG("resources are going down, I stop here")
+			massStored = massStored - massCostRemaining
+			LOG("stored > cost unpausing")
+		elseif (massStored < massCostRemaining and massNetIncome<0) or StallingOnPower then
+			LOG("massStored < massCost and massNetIncome < 0, lastJ=j where j is " .. j)
 			lastJ=j
 			break
 		end
 		lastJ=j
 	end
 
+
+	LOG("originalMassStored < 500: " .. originalMassStored)
+	if lastJ > 1 and originalMassStored < 500 then
+		lastJ=lastJ-1
+		LOG("TRUE .. lastJ is now " .. lastJ)
+	end
+	
+
+
+--[[
+	--add additional upgrade orders if threshold has not been reached last cycle - if energy is not the problem
+	local orgNetMassIncome=resM['net_income']*GetSimTicksPerSecond()
+	--print (originalMassStored,orgNetMassIncome, (originalMassStored/orgNetMassIncome*-1))
+	if (originalMassStored/orgNetMassIncome*-1)<3 then --threshold hardcoded 
+		AdditionalOrders=0
+	else
+		AdditionalOrders=AdditionalOrders+1
+	end
+	]]
+
+	-- local AddOrders=AdditionalOrders--math.floor(AdditionalOrders/3)
+	-- if not StallingOnPower then
+	-- 	if lastJ+AddOrders>OrdersCount then
+	-- 		lastJ=OrdersCount
+	-- 	else 
+	-- 		lastJ=lastJ+AddOrders
+	-- 	end
+	-- end
+
+	--keep min % in store if enabled
+	 if resM['stored']/massStorageMax<massStorageThreshold then
+	 	lastJ=0
+	 end
+
 	--pausing
 	local lastUnitsPauseList=unitsPauseList
 	unitsPauseList={}
 
+	LOG("and now lastJ is " .. lastJ)
 	local size=table.getsize(sortTable)
 	if lastJ+1<=size then
 		for i = lastJ+1, size do 
 			local m = sortTable[i].unit
+			LOG("PAUSING " .. m:GetEntityId())
 			for _, e in assisting[m] do
 				table.insert(unitsPauseList, e)
 			end
@@ -291,6 +318,7 @@ function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable, resType)
 		if not scheduledForPausingNextCycle[id] then
 			--LOG("Unit has slipped out of my control, I will unpause")
 			if pausedByMe[id] and CanUnpause(u) then
+				
 				table.insert(unitsUnPauseList, u) --This apparently does not work? WHY?
 			end
 		end

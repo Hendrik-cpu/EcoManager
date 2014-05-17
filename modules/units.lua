@@ -16,26 +16,29 @@ function econData(unit)
 	local id = unit:GetEntityId()
 	local econ = unit:GetEconData()
 
-	--if(econ['energyRequested'] and econ['energyRequested'] ~= 0 and not GetIsPaused({unit})) then
-
-
 	if(econ['energyRequested'] ~= 0) then
-		econ_cache[id] = econ
-	else 
-		--if(not econ_cache[id] or econ_cache[id]['energyRequested'] == 0) then
-		if(not econ_cache[id]) then
-			local bp = unit:GetBlueprint()
+		if(unit:GetFocus() and GetIsPaused({unit})) then
+			-- upgrading paused unit but still use energy (i.e. mex), use cached value
+		else
+			econ_cache[id] = econ
+		end
+	end
 
-			if(bp.Economy) then
-				if(bp.Economy.ProductionPerSecondMass > 0) then
-					econ['massProduced'] = bp.Economy.ProductionPerSecondMass
-				end
+	if(not econ_cache[id]) then
+		local bp = unit:GetBlueprint()
 
-				if(bp.Economy.MaintenanceConsumptionPerSecondEnergy > 0) then
-					econ['energyRequested'] = bp.Economy.MaintenanceConsumptionPerSecondEnergy
-				end
+		if(bp.Economy) then
+			if(bp.Economy.ProductionPerSecondMass > 0) then
+				econ['massProduced'] = bp.Economy.ProductionPerSecondMass
+			end
+	
+			if(bp.Economy.MaintenanceConsumptionPerSecondEnergy > 0) then
+				econ['energyRequested'] = bp.Economy.MaintenanceConsumptionPerSecondEnergy
 			end
 
+			if(bp.Economy.MaintenanceConsumptionPerSecondMass > 0) then
+				econ['massRequested'] = bp.Economy.MaintenanceConsumptionPerSecondMass
+			end
 		end
 
 		if(econ['energyRequested'] and econ['energyRequested'] ~= 0) then
@@ -43,6 +46,7 @@ function econData(unit)
 		end
 	end
 
+	
 	return econ_cache[id] or {}
 end
 

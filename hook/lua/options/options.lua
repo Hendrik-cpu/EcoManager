@@ -12,19 +12,22 @@ table.insert(options.ui.items,
         },
     })
 
+--[[
 table.insert(options.ui.items,
     {
         title = "EM: Show nuke-overlay",
         key = 'em_nukeoverlay',
         type = 'toggle',
-        default = 1,
+        default = 2,
         custom = {
             states = {
                 {text = "<LOC _Off>", key = 0 },
-                {text = "<LOC _On>", key = 1 },
+                {text = "Count", key = 1 },
+                {text = "Count+ETA", key = 2 },
             },
         },
     })
+    ]]
 
 table.insert(options.gameplay.items,
     {

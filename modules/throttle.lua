@@ -14,9 +14,13 @@ local CanUnpauseUnits = import(modPath .. 'modules/pause.lua').CanUnpauseUnits
 local throttledEnergyText = import(modPath .. 'modules/autoshare.lua').throttledEnergyText
 
 local throttle_min_storage = 'auto'
+local FAB_RATIO = 0.9
+
+local current_throttle = 0
 
 local constructionCategories = {
-	{name="Mass fabrication", category = categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 1},
+	{name="T3 Mass fabrication", category = categories.TECH3 * categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 0},
+	{name="T2 Mass fabrication", category = categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 1},
 	{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, lasts_for=3, priority = 5},
 	{name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 60},
 	{name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 70},
@@ -44,51 +48,75 @@ local consumptionCategories = {
 	{name="Mass fabrication", category = categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 1}
 }
 
-function SetPaused(units, state)
-	Pause(units, state, 'throttle')
-end
+
 
 function init()
 	addListener(throttleEconomy, 0.6, 'em_throttle')
 	addCommand('t', throttleCommand)
 end
 
+function SetPaused(units, state)
+	Pause(units, state, 'throttle')
+end
+
+function getCurrentThrottle()
+	return current_throttle
+end
+
 function throttleCommand(args)
-	local str = string.lower(args[2])
+	local str
+	local cmd
+	local Prefs = import('/lua/user/prefs.lua')
+	local options = Prefs.GetFromCurrentProfile('options')
 
-	if(str == 'on' or str == 'off') then
-		local getPrefs = import(modPath .. 'modules/prefs.lua').getPrefs
-		local savePrefs = import(modPath .. 'modules/prefs.lua').savePrefs
-
-		prefs = getPrefs()
-		prefs['em_throttle'] = str
-		savePrefs()
-
-		if(str == 'off') then
-			print "Energy throttle disabled"
-			return
+	if(table.getsize(args) < 2) then
+		if(throttle_min_storage == 'auto') then
+			args[2] = '0'
+		else
+			args[2] = 'auto'
 		end
-	elseif(string.lower(args[2]) == 'auto') then
-		throttle_min_storage = 'auto'
-	else
+	end
+	local str_cmd = string.lower(args[2])
+
+	str_cmds = {off=true, on=true, auto=true}
+	
+	if(str_cmd == 'off' or options['em_throttle'] == 0) then
+		local option
+
+		if(str_cmd == 'off') then
+			option = 0
+		else 
+			option = 1
+		end
+		
+		options['em_throttle'] = option
+		Prefs.SetToCurrentProfile('options', options)
+    	Prefs.SavePreferences()
+    end
+
+	if(str_cmd == 'auto') then
+		throttle_min_storage = str_cmd
+	elseif(not str_cmds[str_cmd]) then
 		throttle_min_storage = math.min(math.max(0, tonumber(args[2])/100), 1)
 	end
 
-	local thres
-
-	if(throttle_min_storage == 0) then
+	if(str_cmd == 'off') then 
+		print ("Throttling disabled")
+	elseif(throttle_min_storage == 0) then
 		print ("Throttling disabled (except massfabs)")
-	elseif(throttle_min_storage ~= 'auto')  then
-		thres = round(throttle_min_storage*100)
-		print ("Throttling energy when storage < " .. thres .. " percent")
 	else
-		print ("Throttling energy using auto mode")
+		if(throttle_min_storage == 'auto') then
+			print ("Throttling energy using auto mode")
+		else
+			local thres = round(throttle_min_storage*100)
+			print ("Throttling energy when storage < " .. thres .. " percent")
+		end
 	end
 end
 
 function sortUsers(a, b)
-	local av = a['prio'] * 100000 - a['buildTime']  / a['buildRate']
-	local bv = b['prio'] * 100000 - b['buildTime'] / b['buildRate']
+	local av = a['prio'] * 100000 - ((1-a['workProgress'])*a['buildTime']  / a['buildRate']) + a['massRatio']*100
+	local bv = b['prio'] * 100000 - ((1-b['workProgress'])*b['buildTime'] / b['buildRate']) + b['massRatio']*100
 
 	return av > bv
 end
@@ -146,6 +174,7 @@ function getResourceUsers(res)
 								workProgress = 0,
 								buildRate = 0,
 								buildTime = bp.Economy.BuildTime,
+								massRatio = 0,
 								buildCostEnergy = bp.Economy.BuildCostEnergy
 							}
 							users[id] = user
@@ -154,17 +183,21 @@ function getResourceUsers(res)
 						local energy_use
 						if(is_paused) then
 							energy_use = econ_data['energyRequested'] or 0
-							res['throttle_current'] = res['throttle_current'] + energy_use + 100
+							res['throttle_current'] = res['throttle_current'] + energy_use
 						else
-							energy_use = econ_data['energyConsumed']
+							energy_use = econ_data['energyConsumed'] or 0
 						end
+						
 						res['throttle_total'] = res['throttle_total'] + energy_use
-
 
 						table.insert(users[id]['assisters'], {unit=u, energyUse=energy_use or 0, isPaused=is_paused})
 
 						users[id]['workProgress'] = math.max(users[id]['workProgress'], u:GetWorkProgress())
 						users[id]['buildRate'] = users[id]['buildRate'] + u:GetBuildRate()
+
+						if(econ_data['energyRequested'] > 0 and econ_data['massProduced'] > 0) then
+							users[id]['massRatio'] = econ_data['massProduced'] / econ_data['energyRequested']
+						end
 						break
 					end
 				end
@@ -180,7 +213,6 @@ function getResourceUsers(res)
 	end
 
 	table.sort(sorted, sortUsers)
-	--LOG(repr(sorted))
 
 	if(unpause) then
 		Pause(unpause, false, 'unpause')
@@ -196,7 +228,6 @@ function throttleEconomy()
 	local res
 	local res_users
 
-
 	res = {
 		income = eco['ENERGY']['income']*tps,
 		pre_net_income = eco['ENERGY']['net_income']*tps,
@@ -208,14 +239,20 @@ function throttleEconomy()
 		throttle_total = 0,
 		throttle_current = 0
 	}
-
+--[[
 	if(res['use'] > res['income'] and res['ratio'] >= 0.95) then --overflow from allies
-		res['net_income'] = res['income']
+		--res['net_income'] = res['income']
+		res['net_income'] = res['use']
+		res['income'] = res['use']
+		--print ("Boosting net_income from " .. res['pre_net_income'] .. " to " .. res['net_income'])
 	end
+	]]
 
 	res_users = getResourceUsers(res)
 
 	--LOG(repr(res))
+
+	current_throttle = res['throttle_current']
 
 	throttledEnergyText(res['throttle_current'])
 
@@ -227,7 +264,7 @@ function throttleEconomy()
 	
 	for _, u in res_users do
 		local progress_left = 1-u['workProgress']
-		local lasts_for = math.min(1.5, progress_left*u['buildTime']/u['buildRate'])
+		local lasts_for = math.min(2, (progress_left*u['buildTime'])/u['buildRate'])
 		local min_storage = throttle_min_storage
 		local toggle_key = 'pause'
 
@@ -238,22 +275,31 @@ function throttleEconomy()
 		if(not pause_list[toggle_key]) then
 			pause_list[toggle_key] = {on={}, off={}}
 		end
-
-		
+	
 		if(throttle_min_storage == 'auto') then
-			if(gametime < 180) then -- no throttling first 3 minutes of game
+			if(gametime < 180 or u['prio'] == 100) then -- no throttling first 3 minutes of game / pgens
 				min_storage = 0
 			elseif(u['prio'] == 1) then -- massfabs are on >60% storage in automode
-				min_storage = 0.6
-			elseif(res['income'] > 500) then  -- minimum 5% storage when energy income > 500 (around t2 stage / shields)
-				min_storage = 0.05
+				if(res['ratio'] >= 0.96) then -- overflow from allies
+					min_storage = 0 
+				else
+					min_storage = FAB_RATIO
+				end
+			elseif(res['income'] > 500) then  -- minimum 10% storage when energy income > 500 (around t2 stage / shields)
+				min_storage = 0.10
 			else
 				min_storage = 0.01 -- 1% storage until energy income is high enough
 			end
+		elseif(throttle_min_storage == 0 and u['prio'] == 1) then
+			min_storage = FAB_RATIO
+		end
+
+		if(u['prio'] == 0) then -- t3 mass fabs
+			min_storage = 1
 		end
 
 		for _, a in u['assisters'] do
-			if((min_storage > 0 or u['prio'] == 1) and not pausing) then
+			if(min_storage > 0 and not pausing) then
 				local new_income = res['net_income'] - a['energyUse']
 				local new_stored = res['stored']
 
