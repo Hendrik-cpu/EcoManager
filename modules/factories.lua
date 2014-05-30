@@ -7,6 +7,10 @@ local SelectEnd = import(modPath .. 'modules/allunits.lua').SelectEnd
 function resetOrderQueue(factory)
 	local queue = SetCurrentFactoryForQueueDisplay(factory)
 
+	if(not queue) then
+		return
+	end
+
 	for i = 1, table.getsize(queue) do
 		local count = queue[i].count
 

@@ -38,6 +38,7 @@ function UpdateAllUnits()
 	local score = GetScore()
 	local unitcount = score[army].general.currentunits.count
 
+	--print ("unitcount .. " .. unitcount .. " all units " .. table.getsize(all_units))
 	if(unitcount > table.getsize(all_units) or (current_army ~= army)) then
 		local current_tick = GameTick()
 

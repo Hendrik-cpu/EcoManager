@@ -28,6 +28,7 @@ function econData(unit)
 		local bp = unit:GetBlueprint()
 
 		if(bp.Economy) then
+
 			if(bp.Economy.ProductionPerSecondMass > 0) then
 				econ['massProduced'] = bp.Economy.ProductionPerSecondMass
 			end

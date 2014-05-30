@@ -1,4 +1,4 @@
-local WAIT_TIME  = 0.2
+local WAIT_TIME  = 0.1
 local ECO_DATA_SIZE = 4 --save how many data points
 local eco_tick = 0
 local eco_data = {}
@@ -27,6 +27,12 @@ function updateEconomy()
 				eco[type][t] = data['stored'][type] / data['maxStorage'][type]
 			elseif (t == 'net_income') then
 				eco[type][t] = data['income'][type]-data['lastUseActual'][type]
+
+				--added by SC-Account
+				if eco[type]['net_income']<0 and eco[type]['stored']==0 then
+					eco[type]['stall_seconds']=eco[type]['stall_seconds']+0.1
+				end
+				--added by SC-Account
 			else
 				eco[type][t] = data[f][type]
 			end
@@ -51,6 +57,13 @@ function getEconomy()
 end
 
 function economyThread()
+
+	--added by SC-Account
+	for _, type in eco_types do
+		eco[type]['stall_seconds']=0
+	end
+	--added by SC-Account
+
 	while(true) do
 		updateEconomy()
 		WaitSeconds(WAIT_TIME)
