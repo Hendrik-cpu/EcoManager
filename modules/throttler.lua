@@ -23,76 +23,6 @@ do
    end
 end
 
-local Plugin = Class({
-	__init = function(self)
-		self.projects = {}
-	end,
-	sort = function(self)
-		table.sort(self.projects, self._sortProjects)
-	end,
-})
-
-local EnergyThrottle = Class(Plugin) {
-	constructionCategories = {
-		{name="T3 Mass fabrication", category = categories.TECH3 * categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 0},
-		{name="T2 Mass fabrication", category = categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 1},
-		{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, lasts_for=3, priority = 5},
-		{name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 60},
-		{name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 70},
-		--{name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 80},
-		{name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 10},
-		{name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 70},	
-		{name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 80},
-		{name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 60},
-		{name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 70},
-		{name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 80},
-		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, off=3, priority = 81},
-		{name="ACU/SCU upgrades", category = categories.LAND * categories.MOBILE * (categories.COMMAND + categories.SUBCOMMANDER), off=2, priority = 90},
-		{name="Mass Extractors", category = categories.STRUCTURE * categories.MASSEXTRACTION, priority = 91},
-		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 99},
-		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
-		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 85},
-	},
-	_sortProjects = function(a, b)
-		local av = a['prio'] * 100000 - ((1-a['progress'])*a['buildTime']  / a['buildRate']) + a['massRatio']*100
-		local bv = b['prio'] * 100000 - ((1-b['progress'])*b['buildTime'] / b['buildRate']) + b['massRatio']*100
-
-		return av > bv
-	end,
-	add = function(self, project)
-		local category
-		local u = project.unit
-
-		cats = self.constructionCategories
-		for _, c in cats do
-			if(EntityCategoryContains(c.category, u)) then
-				category = c
-				break
-			end
-		end
-
-		if(category) then
-			project.prio = category['priority']
-			project.massRatio = 0
-			if(project.energyRequested > 0 and project.massProduced > 0) then
-				project.massRatio = project.massProduced / project.energyRequested
-			end
-
-			table.insert(self.projects, project)
-		end
-	end,
-	throttle = function(self, eco, project)
-		local net = eco:energyNet()
-
-		--LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. (net - project.energyRequested))
-
- 		if(net - project.energyRequested < 0) then
-			project:SetEnergyDrain(math.max(0, net))
-		end
-		--LOG("Throttle set to " .. project.throttle.ratio)
-	end,
-}
-
 local Economy = Class({
 	--[[
 	massIncome = 0,
@@ -147,17 +77,27 @@ local Economy = Class({
 		end
 	end,
 
+	net = function(self, type)
+		local stored = self['net' .. Stored]
+		if(stored > 0) then
+			stored = stored / 5
+		end
+
+		return self[type .. 'Income'] - self[type .. 'Actual'] + stored
+	end,
+
 	massNet = function(self)
-		return self.massIncome - self.massActual + self.massStored / 5
+		return self:net('mass')
 	end,
 	energyNet = function(self)
-		return self.energyIncome - self.energyActual + self.energyStored / 5
+		return self:net('energy')
 	end,
 })
 
 local throttleIndex = 0
 
 local Project = Class({
+	id = nil,
 	buildCostMass = 0,
 	buildlCostEnergy = 0,
 	buildTime = 0,
@@ -170,9 +110,12 @@ local Project = Class({
 	assisters = {},
 
 	__init = function(self, unit)
+		local bp = unit:GetBlueprint()
+		self.id = unit:GetEntityId()
 		self.unit = unit
 		self.assisters = {}
 		self.throttle = {ratio=0}
+		self.buildTime = bp.Economy.BuildTime
 	end,
 	
 	GetConsumption = function(self)
@@ -204,16 +147,19 @@ local Project = Class({
 
 		table.bininsert(self.assisters, {energyRequested=data.energyRequested, unit=u}, self._sortAssister)
 	end,
-	SetDrain = function(self, energy, mass)
-		local ratio = 1-math.min(1, math.min(energy / self.energyRequested,  mass / self.massRequested))
-
+	SetThrottleRatio = function(self, ratio)
 		if(not self.throttle) then
 			self.throttle = {index=throttleIndex}
 			throttleIndex = throttleIndex + 1
 		end
+
 		if(ratio > self.throttle.ratio) then
 			self.throttle.ratio = ratio
 		end
+	end,
+	SetDrain = function(self, energy, mass)
+		local ratio = 1-math.min(1, math.min(energy / self.energyRequested,  mass / self.massRequested))
+		self:SetThrottleRatio(ratio)
 	end,
 	SetEnergyDrain = function(self, energy)
 		return self:SetDrain(energy, self.massRequested)
@@ -226,12 +172,14 @@ local Project = Class({
 		local maxEnergyRequested = (1-self.throttle.ratio) * self.energyRequested
 		local currEnergyRequested = 0
 
+		LOG("ID " .. self.id .. " max " .. maxEnergyRequested)
+
 		for _, a in self.assisters do
 			local u = a.unit
 			local is_paused = GetIsPaused({u})
 
 			--LOG("max " .. maxEnergyRequested .. " currEnergy " .. currEnergyRequested)
-			if(currEnergyRequested + a['energyRequested'] < maxEnergyRequested) then
+			if(currEnergyRequested + a['energyRequested'] <= maxEnergyRequested) then
 				if(is_paused) then
 					table.insert(pause_list['pause']['off'], u)
 				end
@@ -303,7 +251,8 @@ function manageEconomy()
 
 	--print ("n_projects " .. table.getsize(all_projects))
 
-	plugins = {EnergyThrottle()}
+	LOG("NEW BALANCE ROUND")
+	plugins = {MinStorage(eco), EnergyThrottle()}
 	for _, plugin in plugins do
 		local pause = false
 
@@ -313,28 +262,33 @@ function manageEconomy()
 	 	end
 	 	
 	 	plugin:sort()
-	 	projects = {}
+
+	 	LOG(repr(plugin.projects))
 
 		--print ("n_plugin_projects " .. table.getsize(plugin.projects))	 	
 	 	for _, p in plugin.projects do
 	 		local ratio_inc
 
-	 		if(not pause) then
-	 			local last_ratio = p.throttle.ratio
-		 		plugin:throttle(eco, p)
-	 			ratio_inc = p.throttle.ratio - last_ratio
-		 		if(p.throttle.ratio < 1) then
-	 				table.insert(projects, p)
-		 		else
-		 			pause = true -- plugin throttles all from here
+	 		if(p.throttle.ratio < 1) then
+		 		if(not pause) then
+	 				local last_ratio = p.throttle.ratio
+		 			plugin:throttle(eco, p)
+	 				ratio_inc = p.throttle.ratio - last_ratio
+		 			if(p.throttle.ratio < 1) then
+		 				--table.insert(projects, p)
+		 			else
+			 			pause = true -- plugin throttles all from here
+		 			end
+		 		
+		 			eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
+		 			eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
 		 		end
-		 	else
-		 		p:SetEnergyDrain(0)
-		 		ratio_inc = 1
-		 	end
 
-		 	eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
-	 		eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
+		 		if(pause) then
+			 		p:SetEnergyDrain(0)
+		 			--projects[p.id] = nil
+		 		end
+		 	end
 	 	end
 	end
 
