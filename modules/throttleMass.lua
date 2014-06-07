@@ -1,22 +1,32 @@
+
 local modPath = '/mods/EM/'
 local getUnits = import(modPath .. 'modules/units.lua').getUnits
 local addListener = import(modPath .. 'modules/init.lua').addListener
 local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
-local unitsPauseList={}
-local excluded = {}
-local logEnabled=false
-local preventM_Stall=1
-local preventE_Stall=0
 local addCommand = import(modPath .. 'modules/commands.lua').addCommand
 local Pause = import(modPath .. 'modules/pause.lua').Pause
 local CanUnpause = import(modPath .. 'modules/pause.lua').CanUnpause
 
+--/settings
+local logEnabled=false
+local preventM_Stall=1
+local preventE_Stall=1
+--\settings
+
+local unitsPauseList={}
+--local excluded = {}
 
 function init()
-	addCommand('mtM', setMassStallMexesOnCount)
-	addCommand('mtE', setEnergyStallMexesOnCount)
+	addCommand('mm', setMassStallMexesOnCount)
+	addCommand('me', setEnergyStallMexesOnCount)
 	addListener(manageAssistedUpgrade, 0.6, 'em_mexOpti')
 end
+function ILOG(str)
+	if logEnabled then
+		LOG(str)
+	end
+end
+
 function SetPaused(units, state)
 	Pause(units, state, 'throttlemass')
 end
@@ -31,6 +41,7 @@ function getUnitsPauseList()
 	end
 	return units
 end
+
 function setMassStallMexesOnCount(args)
 	if not args then
 		preventM_Stall=1
@@ -53,16 +64,166 @@ function setEnergyStallMexesOnCount(args)
 	local eco=getEconomy()
 	print("Number of mass production upgrades to keep on during energy stall set to:" , preventE_Stall, "Stalling eco: ", "mass = ", eco['MASS']['stall_seconds'],"energy = ", eco['ENERGY']['stall_seconds'])
 end
-function ILOG(str)
-	if logEnabled then
-		LOG(str)
+
+local Project = Class({
+
+
+	mCost = 0,
+	eCost = 0,
+	buildTime = 0,
+
+	combinedBuildRate=0,
+	mDrain=0,
+	eDrain=0,
+
+	progress = 0,
+	remaining=0,
+
+	eTimeEfficiency=0,
+	mTimeEfficiency=0,
+	
+	mRemaining=0,
+	eRemaining=0,
+
+	timeRemaining=0,
+
+	throttle = {},
+	unit = nil,
+	assisters = {},
+
+	__init = function(self, unit)
+		local bp=unit.GetBlueprint()
+
+		self.unit = unit
+		self.assisters = {}
+		self.throttle = {ratio=0}
+
+		self.mCost=bp.Economy.BuildCostMass
+		self.eCost=bp.Economy.BuildCostEnergy
+		self.buildTime=bp.Economy.BuildTime
+
+		self.progress=lastE:GetWorkProgress()
+
+		self.remaining=(1-progress)
+		self.mRemaining=mCost*remaining
+		self.eRemaining=eCost*remaining
+		self.buildTimeRemaining=buildTime*remaining
+
+		self.timeRemaining=buildTimeRemaining/combinedBuildRate
+
+		self.mEfficiency=mRemaining/mProduction
+		self.eEfficiency=eCost*remaining/mProduction
+
+		self.mTimeEfficiency=mEfficiency+timeRemaining
+		self.eTimeEfficiency=eEfficiency+timeRemaining
+
+		self.mDrain=mCost/(buildTime/combinedBuildRate)
+		self.eDrain=eCost/(buildTime/combinedBuildRate)
+
+	end,
+	
+	GetDrain = function(self)
+		return {MASS=self.massRequested, ENERGY=energyRequested}
+	end,
+	IsInCategory=function(self,category)
+		return self.unit:IsInCategory(category)
+	end,
+	GetPosition=function(self)
+		return self.unit:GetPosition()
+	end,
+
+})
+
+function setBuildProjects()
+	ILOG("started")
+	
+	-- create table
+	local AllUnits={}
+	for _, u in getUnits() do 
+		table.insert(AllUnits,u) 
 	end
+
+	-- map mexes to positions
+	local mexes=EntityCategoryFilterDown(categories.MASSEXTRACTION,AllUnits)
+	local mexPositions = {}
+	for _, m in mexes do
+		local pos = m:GetPosition()
+		if(not mexPositions[pos[1]]) then
+			mexPositions[pos[1]] = {}
+		end
+
+		mexPositions[pos[1]][pos[3]] = m
+	end
+
+	-- find upgrading mexes, check if eco is capped
+	local AllMEXT3Capped=false
+	if table.getsize(mexes)>0 then 
+		AllMEXT3Capped=true
+	end
+
+	engineers = EntityCategoryFilterDown(categories.ENGINEER,AllUnits)
+	for _, m in mexes do
+		if not m:IsIdle() then --and not excluded[m:GetEntityId()] 
+			table.insert(engineers,m)
+		end
+
+		local data=m:GetEconData()
+		if data['massProduced']~=27 then
+			AllMEXT3Capped =false
+		end
+
+	end
+
+	if AllMEXT3Capped and not mexCappedMsgPrinted then
+		local minutes=math.floor(GetGameTimeSeconds()/60)
+		print("All Mexes upgraded to t3 and capped at", minutes .. ":" .. GetGameTimeSeconds()-minutes*60)
+		mexCappedMsgPrinted=true
+	end
+
+	-- find the mex assisting and grab id from there
+	assisting = {}
+	for _, e in engineers do
+		if not e:IsDead() then 
+			local m
+			local is_idle = e:IsIdle()
+			local focus = e:GetFocus()
+			local assist = true
+
+			if(focus) then
+				m = focus
+			else -- engineer isn't focusing, walking towards mex?
+				local queue = e:GetCommandQueue()
+				local p = queue[1].position
+
+
+				if(queue[1].type == 'Guard') then
+					if(mexPositions[p[1]] and mexPositions[p[1]][p[3]]) then
+						local mex = mexPositions[p[1]][p[3]]
+						m = mex:GetFocus()
+
+						if(m and VDist3(p, e:GetPosition()) > 20) then -- 10 -> buildrange of engineer maybe?
+							assist = false
+						end
+					end
+				end
+			end
+			
+			if m and (m:IsInCategory("MASSEXTRACTION") or m:IsInCategory("MASSSTORAGE")) and assist then --and not excluded[e:GetEntityId()]
+				if not m:IsInCategory("MASSSTORAGE") or  e:GetWorkProgress() > 0.05 then
+					if (not assisting[m]) then
+						assisting[m] = {}
+					end
+					table.insert(assisting[m], e)
+				end 
+			end	
+		end
+	end
+
 end
 
 local mexCappedMsgPrinted=false
 function manageAssistedUpgrade()
 	ILOG("started")
-	local eco = getEconomy()
 	-- create table
 	local AllUnits={}
 	local mexPositions = {}
@@ -123,12 +284,13 @@ function manageAssistedUpgrade()
 				local queue = e:GetCommandQueue()
 				local p = queue[1].position
 
+
 				if(queue[1].type == 'Guard') then
 					if(mexPositions[p[1]] and mexPositions[p[1]][p[3]]) then
 						local mex = mexPositions[p[1]][p[3]]
 						m = mex:GetFocus()
 
-						if(m and VDist3(p, e:GetPosition()) > 10) then -- 10 -> buildrange of engineer maybe?
+						if(m and VDist3(p, e:GetPosition()) > 20) then -- 10 -> buildrange of engineer maybe?
 							assist = false
 						end
 					end
@@ -147,6 +309,7 @@ function manageAssistedUpgrade()
 	end
 
 	--gather economical data for sort list
+	local eco = getEconomy()
 	local assistersExist=false
 	local sortTable={}
 	local counter=0
@@ -232,21 +395,21 @@ function manageAssistedUpgrade()
 
 	-- decide if stuff needs to be paused
 	if assistersExist  then
-		local options = import(modPath .. 'modules/utils.lua').getOptions(true)
-		local massOptions=options['em_mexOpti']
-		ILOG("user choose the >", massOptions,"< algorithm") 
+		-- local options = import(modPath .. 'modules/utils.lua').getOptions(true)
+		-- local massOptions=options['em_mexOpti']
+		--ILOG("user choose the >", massOptions,"< algorithm") 
 
 		local pausedByMe=getUnitsPauseList()
 		local pausedByMeForPower=getUnitsPauseList()
 		local pausedByClickOrAssist = {}
 		
 		--energy efficiency for mass cost left
-		if (massOptions== 'optimizeMass') then
+		--if (massOptions== 'optimizeMass') then
 
 			table.sort(sortTable, function(a, b) return a['mTimeEfficiency'] < b['mTimeEfficiency'] end)
 			optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,combinedMassDrain,combinedEnergyDrain)	
 
-		end
+		--end
 	end
 	ILOG("finished")
 end
@@ -289,9 +452,7 @@ function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,mProd_mDrai
 	-- execute pausing and unpausing
 	SetPaused(unitsPauseList, true)	
 	SetPaused(unitsUnPauseList, false)
-	
 end
-
 function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEntities)
 
 	local res=eco[mode]
@@ -303,11 +464,6 @@ function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEnti
 	local PossibleProjects=0
 	local OrdersCount=table.getsize(sortTable)
 	local CalcStored=Stored
-
-	--debugging
-	-- if mode == "MASS" then
-	-- 	return OrdersCount
-	-- end
 
 	--check how many projects can be started efficiently
 	local lastProjectTimeRemaining=sortTable[1].timeRemaining
@@ -346,7 +502,7 @@ function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEnti
 		--decide wether to pause or continue with upgrades
 		local Problem=(j > MaxStallingEntities and CalcStoredIncome<0 and CalcStored<=0 and Stalling>=0 and not StorageLimitReached) 
 		if Problem then
-		--print(j,string.format("ReserveTime [%0.2f] ProjectETA [%0.2f] PredictedStall [%0.2f]",TimeToUseAllAtCurrentRate, lastProjectTimeRemaining,Stalling) )
+			--print(j,string.format("ReserveTime [%0.2f] ProjectETA [%0.2f] PredictedStall [%0.2f]",TimeToUseAllAtCurrentRate, lastProjectTimeRemaining,Stalling) )
 			PossibleProjects=j-1
 			break
 		end
