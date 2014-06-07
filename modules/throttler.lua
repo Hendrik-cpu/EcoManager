@@ -4,6 +4,9 @@ local addListener = import(modPath .. 'modules/init.lua').addListener
 local getUnits = import(modPath .. 'modules/units.lua').getUnits
 local econData = import(modPath .. 'modules/units.lua').econData
 
+local EnergyPlugin = import(modPath .. 'modules/throttler/EnergyPlugin.lua').EnergyPlugin
+local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').StoragePlugin
+
 --bininsert
 do
    local fcomp_default = function( a,b ) return a < b end
@@ -252,7 +255,7 @@ function manageEconomy()
 	--print ("n_projects " .. table.getsize(all_projects))
 
 	LOG("NEW BALANCE ROUND")
-	plugins = {MinStorage(eco), EnergyThrottle()}
+	plugins = {MinStorage(eco), EnergyPlugin()}
 	for _, plugin in plugins do
 		local pause = false
 
