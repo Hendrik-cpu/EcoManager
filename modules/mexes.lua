@@ -74,7 +74,7 @@ function upgradeMexes(mexes, unpause)
 		return false
 	end
 
-	local old = GetSelectedUnits()
+	--local old = GetSelectedUnits()
 	local upgrades = {}
 
 	for _, m in mexes do
@@ -102,7 +102,7 @@ function upgradeMexes(mexes, unpause)
 			IssueBlueprintCommand("UNITCOMMAND_Upgrade", upgrades_to, 1, false)
 		end
 
-		SelectUnits(old)
+		--SelectUnits(old)
 		SelectEnd()
 	end
 
