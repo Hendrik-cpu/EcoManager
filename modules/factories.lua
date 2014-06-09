@@ -1,8 +1,10 @@
 local modPath = '/mods/EM/'
 
-
+local getUnits = import(modPath .. 'modules/units.lua').getUnits
 local SelectBegin = import(modPath .. 'modules/allunits.lua').SelectBegin
 local SelectEnd = import(modPath .. 'modules/allunits.lua').SelectEnd
+
+local bp2factories = {}
 
 function resetOrderQueue(factory)
 	local queue = SetCurrentFactoryForQueueDisplay(factory)
@@ -35,7 +37,94 @@ function resetOrderQueues()
 	end
 end
 
+function loadFactories()
+	local units = getUnits()
+	local all_factories = EntityCategoryFilterDown(categories.FACTORY, units)
+
+	bp2factories = {}
+
+	for _, tech in {categories.TECH1, categories.TECH2, categories.TECH3} do
+		for _, type in {categories.LAND, categories.AIR, categories.NAVAL} do
+			factories = EntityCategoryFilterDown(tech * type, all_factories)
+			local orders, toggles, categories = GetUnitCommandData(factories)
+			local bps = EntityCategoryGetUnitList(categories)
+
+			for _, bp in bps do
+				if(not bp2factories[bp]) then
+					bp2factories[bp] = {}
+				end
+
+				for _, factory in factories do
+					id = factory:GetEntityId()
+					if(not bp2factories[bp][id]) then
+						bp2factories[bp][id] = factory
+					elseif(bp2factories[bp][id]:IsDead()) then
+						bp2factories[bp][id] = nil
+					end
+				end
+			end
+		end
+	end
+
+--[[
+	for _, factory in factories do
+		orders, toggles, categories = GetUnitCommandData(factories)
+	end
+	]]
+
+end
+
+function factoryData(factory)
+	local queue = SetCurrentFactoryForQueueDisplay(factory)
+
+	--LOG(repr(queue))
+end
+
+function orderFactories()
+	local units = getUnits()
+	local factories = EntityCategoryFilterDown(categories.FACTORY, units)
+	local orders
+	local toggles
+	local categories
+
+	loadFactories()
+
+	orders = {"uel0101", "uea0102"}
+	factory_orders = {}
+
+	for _, o in orders do
+		factories = bp2factories[o]
+
+		if(factories) then
+			tmp = {}
+			for _, f in factories do
+				local data = factoryData(f)
+				table.insert(tmp, f)
+			end
+
+			SelectBegin()
+			SelectUnits(tmp)
+			IssueBlueprintCommand("UNITCOMMAND_BuildFactory", o, 1)
+			SelectEnd()
+		end
+	end
+
+
+
+	--[[
+
+	orders, toggles, categories = GetUnitCommandData(factories)
+
+	LOG(repr(orders))
+	LOG(repr(EntityCategoryGetUnitList(categories)))
+
+	
+	IssueBlueprintCommand("UNITCOMMAND_BuildFactory", orders[1], 1)
+	]]
+end
+
 function init(isReplay, parent)
 	local path = modPath .. 'modules/factories.lua'
 	IN_AddKeyMapTable({['Ctrl-Y'] = {action =  'ui_lua import("' .. path .. '").resetOrderQueues()'},})
+	IN_AddKeyMapTable({['Ctrl-T'] = {action =  'ui_lua import("' .. path .. '").orderFactories()'},})
 end
