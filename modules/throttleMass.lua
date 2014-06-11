@@ -65,75 +65,6 @@ function setEnergyStallMexesOnCount(args)
 	print("Number of mass production upgrades to keep on during energy stall set to:" , preventE_Stall, "Stalling eco: ", "mass = ", eco['MASS']['stall_seconds'],"energy = ", eco['ENERGY']['stall_seconds'])
 end
 
-local Project = Class({
-
-
-	mCost = 0,
-	eCost = 0,
-	buildTime = 0,
-
-	combinedBuildRate=0,
-	mDrain=0,
-	eDrain=0,
-
-	progress = 0,
-	remaining=0,
-
-	eTimeEfficiency=0,
-	mTimeEfficiency=0,
-	
-	mRemaining=0,
-	eRemaining=0,
-
-	timeRemaining=0,
-
-	throttle = {},
-	unit = nil,
-	assisters = {},
-
-	__init = function(self, unit)
-		local bp=unit.GetBlueprint()
-
-		self.unit = unit
-		self.assisters = {}
-		self.throttle = {ratio=0}
-
-		self.mCost=bp.Economy.BuildCostMass
-		self.eCost=bp.Economy.BuildCostEnergy
-		self.buildTime=bp.Economy.BuildTime
-
-		self.progress=lastE:GetWorkProgress()
-
-		self.remaining=(1-progress)
-		self.mRemaining=mCost*remaining
-		self.eRemaining=eCost*remaining
-		self.buildTimeRemaining=buildTime*remaining
-
-		self.timeRemaining=buildTimeRemaining/combinedBuildRate
-
-		self.mEfficiency=mRemaining/mProduction
-		self.eEfficiency=eCost*remaining/mProduction
-
-		self.mTimeEfficiency=mEfficiency+timeRemaining
-		self.eTimeEfficiency=eEfficiency+timeRemaining
-
-		self.mDrain=mCost/(buildTime/combinedBuildRate)
-		self.eDrain=eCost/(buildTime/combinedBuildRate)
-
-	end,
-	
-	GetDrain = function(self)
-		return {MASS=self.massRequested, ENERGY=energyRequested}
-	end,
-	IsInCategory=function(self,category)
-		return self.unit:IsInCategory(category)
-	end,
-	GetPosition=function(self)
-		return self.unit:GetPosition()
-	end,
-
-})
-
 function setBuildProjects()
 	ILOG("started")
 	
@@ -315,7 +246,7 @@ function manageAssistedUpgrade()
 	local counter=0
 	local combinedMassDrain=0
 	local combinedEnergyDrain=0
-	local mProd_mCostRemaining=0
+
 	for k, engineers in assisting do
 		local combinedBuildRate = 0
 		local lastE
@@ -358,58 +289,45 @@ function manageAssistedUpgrade()
         	elseif mexMassProduction==6 then
 	        	mProduction=0.75
 	        end
-	        --print(mexMassProduction,mProduction)
 		else
 			mProduction=bp.Economy.ProductionPerSecondMass
 		end
 
 		if mProduction > 0 then 
-			local mCost=bp.Economy.BuildCostMass
-			local eCost=bp.Economy.BuildCostEnergy
 			local buildTime=bp.Economy.BuildTime
 			local workProgress=lastE:GetWorkProgress()
-
 			local workRemaining=(1-workProgress)
-			local mCostRemaining=mCost*workRemaining
-			local eCostRemaining=eCost*workRemaining
 			local buildTimeRemaining=buildTime*workRemaining
-
 			local timeRemaining=buildTimeRemaining/combinedBuildRate
 
-			local mEfficiency=mCostRemaining/mProduction
-			local eEfficiency=eCost*workRemaining/mProduction
+			local res = {MASS={}, ENERGY={}}
+			res['MASS']['Cost']=bp.Economy.BuildCostMass
+			res['ENERGY']['Cost']=bp.Economy.BuildCostEnergy
 
-			local mTimeEfficiency=mEfficiency+timeRemaining
-			local eTimeEfficiency=eEfficiency+timeRemaining
+			for _, resType in res do
+				local Cost=resType.Cost
+				resType['CostRemaining']=Cost*workRemaining
+				resType['Efficiency']=resType['CostRemaining']/mProduction
+				resType['TimeEfficiency']=resType['Efficiency']+timeRemaining
+				resType['Drain']=Cost/(buildTime/combinedBuildRate)
+			end
 
-			local mDrainPerSec=mCost/(buildTime/combinedBuildRate)
-			local eDrainPerSec=eCost/(buildTime/combinedBuildRate)
-
-			mProd_mCostRemaining=mProd_mCostRemaining+mCostRemaining
-			table.insert(sortTable, {unit=k,combinedBuildRate=combinedBuildRate,mTimeEfficiency=mTimeEfficiency,mCostRemaining=mCostRemaining,eCostRemaining=eCostRemaining,timeRemaining=timeRemaining,mDrainPerSec=mDrainPerSec,eDrainPerSec=eDrainPerSec})
-		
+			table.insert(sortTable, {unit=k,res=res, combinedBuildRate=combinedBuildRate,timeRemaining=timeRemaining,workRemaining=workRemaining})
 			assistersExist=true
+
 		end
 	end
 
-
 	-- decide if stuff needs to be paused
 	if assistersExist  then
-		-- local options = import(modPath .. 'modules/utils.lua').getOptions(true)
-		-- local massOptions=options['em_mexOpti']
-		--ILOG("user choose the >", massOptions,"< algorithm") 
 
 		local pausedByMe=getUnitsPauseList()
 		local pausedByMeForPower=getUnitsPauseList()
 		local pausedByClickOrAssist = {}
 		
-		--energy efficiency for mass cost left
-		--if (massOptions== 'optimizeMass') then
+		table.sort(sortTable, function(a, b) return a['res']['MASS']['TimeEfficiency'] < b['res']['MASS']['TimeEfficiency'] end)
+		optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,combinedMassDrain,combinedEnergyDrain)	
 
-			table.sort(sortTable, function(a, b) return a['mTimeEfficiency'] < b['mTimeEfficiency'] end)
-			optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,combinedMassDrain,combinedEnergyDrain)	
-
-		--end
 	end
 	ILOG("finished")
 end
@@ -436,7 +354,7 @@ function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,mProd_mDrai
 		end
 	end
 
-	-- -- check if unit switched focus and needs to be unpaused
+	-- check if unit switched focus and needs to be unpaused
 	local unitsUnPauseList={}
 	local scheduledForPausingNextCycle=getUnitsPauseList()
 	for _, u in lastUnitsPauseList do
@@ -453,6 +371,7 @@ function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,mProd_mDrai
 	SetPaused(unitsPauseList, true)	
 	SetPaused(unitsUnPauseList, false)
 end
+
 function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEntities)
 
 	local res=eco[mode]
@@ -470,16 +389,8 @@ function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEnti
 	for j = 1, OrdersCount do
 		local m = sortTable[j]
 
-		local DrainPerSec
-		local CostRemaining
-
-		if mode=="MASS" then
-			DrainPerSec=m.mDrainPerSec
-			CostRemaining=m.mCostRemaining
-		else
-			DrainPerSec=m.eDrainPerSec
-			CostRemaining=m.eCostRemaining
-		end
+		local DrainPerSec=m.res[mode].Drain
+		local CostRemaining=m.res[mode].CostRemaining
 
 		--if the primary project can be finished without stalling then use all resources stored to do that
 		local TimeToUseAllAtCurrentRate=Stored/DrainRequested*-1
@@ -500,7 +411,16 @@ function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEnti
 		local StorageLimitReached=Stored >= (Max-DrainRequested)
 
 		--decide wether to pause or continue with upgrades
-		local Problem=(j > MaxStallingEntities and CalcStoredIncome<0 and CalcStored<=0 and Stalling>=0 and not StorageLimitReached) 
+		local Problem=(j > MaxStallingEntities and CalcStoredIncome<0 and CalcStored<=0 and Stalling>=0 and not StorageLimitReached)
+
+		--if a project is 90% completed finish it even if exceeding maximum project count at stall set by user
+		if (MaxStallingEntities+1)==j then
+			if m.workRemaining<0.1 then
+				Problem=false
+			end
+		end
+
+		--remove problematic project and stop adding new projects
 		if Problem then
 			--print(j,string.format("ReserveTime [%0.2f] ProjectETA [%0.2f] PredictedStall [%0.2f]",TimeToUseAllAtCurrentRate, lastProjectTimeRemaining,Stalling) )
 			PossibleProjects=j-1
