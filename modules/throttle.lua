@@ -250,7 +250,7 @@ function throttleEconomy()
 
 	res_users = getResourceUsers(res)
 
-	LOG(repr(res))
+	--LOG(repr(res))
 
 	--LOG(repr(res))
 
@@ -311,13 +311,13 @@ function throttleEconomy()
 
 				if(new_income < 0 and new_stored < min_storage*res['max'] and not first) then
 					pausing = true
-					LOG("PAUSING!")
+					--LOG("PAUSING!")
 				else
 					res['net_income'] = new_income
 					res['stored'] = new_stored
 				end
 
-				LOG("NEW STORED " .. new_stored .. " NEW INCOME " .. new_income)
+				--LOG("NEW STORED " .. new_stored .. " NEW INCOME " .. new_income)
 			end
 			
 			if(pausing) then
