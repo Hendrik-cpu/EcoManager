@@ -280,7 +280,7 @@ function throttleEconomy()
 			if(gametime < 180 or u['prio'] == 100) then -- no throttling first 3 minutes of game / pgens
 				min_storage = 0
 			elseif(u['prio'] == 1) then -- massfabs are on >60% storage in automode
-				if(res['ratio'] >= 0.96) then -- overflow from allies
+				if(res['ratio'] >= 0.96 and false) then -- overflow from allies
 					min_storage = 0 
 				else
 					min_storage = FAB_RATIO
