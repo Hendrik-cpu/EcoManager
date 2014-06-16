@@ -297,12 +297,6 @@ function sendStored()
         msg = string.format("STORED %d %d %d %d", math.ceil(status['MASS']['overflow']*10), status['MASS']['share'], math.ceil(status['ENERGY']['overflow']*10), status['ENERGY']['share'])
         sendCommand(msg)
     end
-
---[[
-    if(notifyStored and status['MASS']['share'] >= 0 and status['ENERGY']['share'] >= 0) then
-        notifyStored = false
-    end
-    ]]
 end
 
 function sendCommand(msg, id)
@@ -346,32 +340,13 @@ function storageStatus()
 
     if(eco['ENERGY']['stored'] < 1) then
         status['MASS']['overflow'] = eco['MASS']['income'] - eco['MASS']['use_actual']
-    else
-        --status['ENERGY']['overflow'] = math.max(0, status['ENERGY']['overflow']) 
     end
 
     if(eco['MASS']['stored'] < 1) then
         status['ENERGY']['overflow'] = eco['ENERGY']['income'] - eco['ENERGY']['use_actual']
-    else
-        --status['MASS']['overflow'] = math.max(0, status['MASS']['overflow'])
     end
 
-    --[[
-
-    if(eco['ENERGY']['stored'] > 0) then
-        status['ENERGY']['overflow'] = eco['ENERGY']['net_income']
-        status['MASS']['overflow'] = eco['MASS']['net_income']
-    else
-        status['ENERGY']['overflow'] = eco['ENERGY']['income'] - eco['ENERGY']['use_requested']
-        status['MASS']['overflow'] = eco['MASS']['net_income']
-    end
-
-    status['ENERGY']['overflow'] = eco['ENERGY']['income'] - eco['ENERGY']['use_requested']
-    status['MASS']['overflow'] = eco['MASS']['income'] - eco['MASS']['use_requested']
-    ]]
-
-
-    for _, t in ecotypes do
+     for _, t in ecotypes do
         local last_for
         local threshold = share_threshold[t]
 
@@ -570,7 +545,6 @@ function getPlayerStatus()
 end
 
 function shareStored(players, status)
-    
     local share = {MASS=0, ENERGY=0}
     local n = table.getsize(players)
 
@@ -606,14 +580,10 @@ function shareResource(player, share)
 		share = {MASS= 0.1, ENERGY=0.1};
 	end
 
-	local retval = SimCallback( { Func="GiveResourcesToPlayer",
-       Args={ From=army,
-       To=player,
-       Mass=share['MASS'],
-       Energy=share['ENERGY'],
-   }
-}
-)
+	local retval = SimCallback({
+        Func="GiveResourcesToPlayer",
+        Args={ From=army, To=player, Mass=share['MASS'], Energy=share['ENERGY']}
+    })
 end
 
 function getAllies()
@@ -807,6 +777,5 @@ function init(isReplay, parent)
     addCommand('m', thresholdCommand)
     addCommand('e', thresholdCommand)
     addCommand('as', autoshareCommand)
-    --addListener(autoshareThread, 0.4, 'em_autoshare')
     addListener(autoshareThread, 0.4)
 end

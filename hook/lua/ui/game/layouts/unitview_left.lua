@@ -6,7 +6,6 @@ local Prefs = import('/lua/user/prefs.lua')
 local options = Prefs.GetFromCurrentProfile('options')
 
 function SetLayout()
-    print "set layout left"
     local controls = import('/lua/ui/game/unitview.lua').controls
     controls.bg:SetTexture(UIUtil.UIFile('/game/unit-build-over-panel/build-over-back_bmp.dds'))
     LayoutHelpers.AtLeftIn(controls.bg, controls.parent)

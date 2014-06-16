@@ -52,18 +52,7 @@ function getConstructions()
 
 	for _, u in units do
 		local focus = nil
-		--[[
-		local focus = u:GetFocus()
-
-		if(not focus and u:GetWorkProgress() > 0) then
-			-- XXX: add support for enhancements
-			focus = u
-		end
-
-		if(EntityCategoryContains(categories.SILO * (categories.ANTIMISSILE + categories.NUKE), u)) then -- always overlay on nukes
-			focus = u
-		end
-		]]
+	
 		if(u:IsInCategory('COMMAND') and not u:GetFocus() and u:GetWorkProgress() > 0) then
 			local queue = u:GetCommandQueue()
 
@@ -76,8 +65,6 @@ function getConstructions()
 
 		if(focus) then
 			local id = focus:GetEntityId()
-			--local econData = econData(u)
-
 
 			if(not cs[id]) then
 				cs[id] = {unit=focus, assisters={}, progress=0, current={}, total={}}
@@ -106,18 +93,12 @@ function getConstructions()
 	return cs
 end
 
---function createBuildtimeOverlay(unit, buildtime)
-
 function createBuildtimeOverlay(data)
 	local worldView = import('/lua/ui/game/worldview.lua').viewLeft
 	local overlay = Bitmap(worldView)
 
 	overlay.id = data.id
 
-	--overlay.data = data
-
-	--overlay:SetSolidColor('99000000')
-	--overlay:SetSolidColor('66000000')
 	overlay.Width:Set(28)
 	overlay.Height:Set(32)
 	overlay:SetNeedsFrameUpdate(true)
@@ -126,7 +107,6 @@ function createBuildtimeOverlay(data)
 
 		if(not data) then
 			overlay:Destroy()
-			print "destroy"
 		else
 			local pos
 
@@ -196,7 +176,6 @@ function updateBuildtimeOverlay(data)
 
 	if(data.eta >= 0) then
 		bitmap.eta:Show()
-		--bitmap.eta:SetText(formatBuildtime(data.eta-GetGameTimeSeconds()))
 	else
 		bitmap.eta:Hide()
 	end

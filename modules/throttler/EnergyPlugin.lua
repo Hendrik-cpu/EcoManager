@@ -1,7 +1,7 @@
 local modPath = '/mods/EM/'
-local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin').ThrottlerPlugin
+local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
-local EnergyPlugin = Class(ThrottlerPlugin) {
+EnergyPlugin = Class(ThrottlerPlugin) {
 	first = true,
 	constructionCategories = {
 		{name="T3 Mass fabrication", category = categories.TECH3 * categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 0},
