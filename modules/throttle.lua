@@ -239,6 +239,12 @@ function throttleEconomy()
 		throttle_total = 0,
 		throttle_current = 0
 	}
+
+	if(res['use'] >= res['income'] and res['ratio'] >= 0.97 and res['net_income'] > 0) then -- seems like overflow, test with +10% income
+		local increase = res['income'] * 1.1
+		res['income'] = res['income'] + increase
+		res['net_income'] = res['net_income'] + increase
+	end
 --[[
 	if(res['use'] > res['income'] and res['ratio'] >= 0.95) then --overflow from allies
 		--res['net_income'] = res['income']
@@ -309,7 +315,7 @@ function throttleEconomy()
 					new_stored = new_stored - math.abs(new_income*lasts_for)
 				end
 
-				if(new_income < 0 and new_stored < min_storage*res['max'] and not first) then
+				if((new_income < 0 or u['prio'] == 1) and new_stored < min_storage*res['max'] and not first) then
 					pausing = true
 					--LOG("PAUSING!")
 				else
