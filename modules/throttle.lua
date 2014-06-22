@@ -14,7 +14,7 @@ local CanUnpauseUnits = import(modPath .. 'modules/pause.lua').CanUnpauseUnits
 local throttledEnergyText = import(modPath .. 'modules/autoshare.lua').throttledEnergyText
 
 local throttle_min_storage = 'auto'
-local FAB_RATIO = 0.8
+local FAB_RATIO = 0.7
 
 local current_throttle = 0
 
@@ -240,8 +240,11 @@ function throttleEconomy()
 		throttle_current = 0
 	}
 
-	if(res['use'] >= res['income'] and res['ratio'] >= 0.97 and res['net_income'] > 0) then -- seems like overflow, test with +10% income
-		local increase = res['income'] * 1.1
+	--LOG(repr(res))
+
+	if(res['use'] >= res['income'] and res['ratio'] >= 0.97) then -- seems like overflow, test with +10% income
+		--LOG("OVERFLOW INC")
+		local increase = res['income'] * 1.2
 		res['income'] = res['income'] + increase
 		res['net_income'] = res['net_income'] + increase
 	end
@@ -315,15 +318,15 @@ function throttleEconomy()
 					new_stored = new_stored - math.abs(new_income*lasts_for)
 				end
 
-				if((new_income < 0 or u['prio'] == 1) and new_stored < min_storage*res['max'] and not first) then
+				--if((new_income < 0 or u['prio'] == 1) and new_stored < min_storage*res['max'] and not first) then
+				if(new_stored < min_storage*res['max'] and not first) then
 					pausing = true
 					--LOG("PAUSING!")
 				else
+					--LOG("NEW STORED " .. new_stored .. " NEW INCOME " .. new_income)
 					res['net_income'] = new_income
 					res['stored'] = new_stored
 				end
-
-				--LOG("NEW STORED " .. new_stored .. " NEW INCOME " .. new_income)
 			end
 			
 			if(pausing) then
