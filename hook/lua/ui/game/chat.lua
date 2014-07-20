@@ -96,6 +96,7 @@ function ReceiveChatFromSim(sender, msg)
 
 	if msg.echo then
 		if msg.from and SessionIsReplay() then
+			armyData = GetArmyData(msg.from)
 			name = string.format("%s %s %s:", msg.from, LOC(ToStrings.to.text), GetArmyData(msg.to).nickname)
 			--name = string.format("%s %s:", LOC(ToStrings.to.text), sender)
 			--name = msg.from.." "..name

@@ -273,6 +273,7 @@ function _OnBeat()
 	end
 
 	local armiesInfo = GetArmiesTable().armiesTable
+
 	if currentScores then
 		for index, scoreData in currentScores do
 			for _, line in controls.armyLines do
