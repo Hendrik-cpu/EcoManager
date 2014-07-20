@@ -17,6 +17,7 @@ local channel = 'Overlay'
 
 local msgProtocol = {'id', 'progress', 'eta', 'eff', 'silo', 'x', 'y', 'z'}
 
+local worldView
 local overlays = {}
 
 function effColor(eff)
@@ -94,7 +95,7 @@ function getConstructions()
 end
 
 function createBuildtimeOverlay(data)
-	local worldView = import('/lua/ui/game/worldview.lua').viewLeft
+	worldView = import('/lua/ui/game/worldview.lua').viewLeft
 	local overlay = Bitmap(worldView)
 
 	overlay.id = data.id
@@ -214,7 +215,11 @@ end
 
 function checkConstructions()
 	local constructions = getConstructions()
-	
+
+	if(worldView ~= import('/lua/ui/game/worldview.lua').viewLeft and table.getsize(overlays) > 0) then
+		overlays = {} -- new viewLeft, reset overlays
+	end
+
 	for _, c in constructions do
 		local u = c['unit']
 		local id = u:GetEntityId()
@@ -272,18 +277,25 @@ function checkConstructions()
 		end
 	end
 
+	
 	for id, o in overlays do -- clean overlays
+		local destroy = false
+
 		if(tonumber(id) >= 0) then
 			if(not constructions[id]) then
-				o['bitmap']:Destroy()
-				overlays[id] = nil
+				destroy = true
 			end
 		else
 			if(GetSystemTimeSeconds() - o['last_update'] > 2 or o['eta'] == 0) then
-				o['bitmap']:Destroy()
-				overlays[id] = nil
+				destroy = true
 			end
 		end
+
+		if(destroy) then
+			o['bitmap']:Destroy()
+			overlays[id] = nil
+		end
+
 	end
 
 end

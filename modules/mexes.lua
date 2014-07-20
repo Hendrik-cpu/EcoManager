@@ -265,12 +265,14 @@ function checkMexes()
 		end
 	end
 
+--[[
 	for id, overlay in overlays do
 		if(not overlay or overlay.destroy or options['em_mexoverlay'] == 0) then
 			overlay:Destroy()
 			overlays[id] = nil
 		end
 	end
+	]]
 	
 	if(table.getsize(mexes['assisted']) > 0) then
 		Pause(mexes['assisted'], false, 'user') -- unpause assisted mexes
