@@ -56,9 +56,9 @@ local share_threshold = {MASS=1, ENERGY=1}
 local total_shared = {MASS=0, ENERGY=0}
 
 --auto values
-local MIN_MASS = 8000
-local MIN_ENERGY = 6000
-local MIN_ENERGY_RATIO = 0.5
+local MIN_MASS = 15000
+local MIN_ENERGY = 7000
+local MIN_ENERGY_RATIO = 0.6
 
 
 local notifyStored = false

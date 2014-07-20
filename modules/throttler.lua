@@ -81,7 +81,7 @@ local Economy = Class({
 	end,
 
 	net = function(self, type)
-		local stored = self['net' .. Stored]
+		local stored = self[type .. 'Stored']
 		if(stored > 0) then
 			stored = stored / 5
 		end

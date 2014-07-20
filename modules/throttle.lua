@@ -242,7 +242,7 @@ function throttleEconomy()
 
 	--LOG(repr(res))
 
-	if(res['use'] >= res['income'] and res['ratio'] >= 0.97) then -- seems like overflow, test with +10% income
+	if(res['use'] >= res['income'] and res['ratio'] >= 0.96) then -- seems like overflow, test with +10% income
 		--LOG("OVERFLOW INC")
 		local increase = res['income'] * 1.2
 		res['income'] = res['income'] + increase
