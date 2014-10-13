@@ -13,6 +13,8 @@ local CanUnpauseUnits = import(modPath .. 'modules/pause.lua').CanUnpauseUnits
 
 local throttledEnergyText = import(modPath .. 'modules/autoshare.lua').throttledEnergyText
 
+local overflow_income = 0
+
 local throttle_min_storage = 'auto'
 local FAB_RATIO = 0.7
 
@@ -242,26 +244,16 @@ function throttleEconomy()
 
 	--LOG(repr(res))
 
-	if(res['use'] >= res['income'] and res['ratio'] >= 0.96) then -- seems like overflow, test with +10% income
+	if(res['use'] >= res['income'] and res['ratio'] >= 0.95) then -- seems like overflow, test with +10% income
 		--LOG("OVERFLOW INC")
-		local increase = res['income'] * 1.2
-		res['income'] = res['income'] + increase
-		res['net_income'] = res['net_income'] + increase
+		overflow_income = overflow_income + res['income']*0.1
+		res['income'] = res['income'] + overflow_income
+		res['net_income'] = res['net_income'] + overflow_income
+	elseif res['ratio'] < 0.95 then
+		overflow_income = 0
 	end
---[[
-	if(res['use'] > res['income'] and res['ratio'] >= 0.95) then --overflow from allies
-		--res['net_income'] = res['income']
-		res['net_income'] = res['use']
-		res['income'] = res['use']
-		--print ("Boosting net_income from " .. res['pre_net_income'] .. " to " .. res['net_income'])
-	end
-	]]
 
 	res_users = getResourceUsers(res)
-
-	--LOG(repr(res))
-
-	--LOG(repr(res))
 
 	current_throttle = res['throttle_current']
 

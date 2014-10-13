@@ -58,7 +58,7 @@ local total_shared = {MASS=0, ENERGY=0}
 --auto values
 local MIN_MASS = 15000
 local MIN_ENERGY = 7000
-local MIN_ENERGY_RATIO = 0.6
+local MIN_ENERGY_RATIO = 0.8
 
 
 local notifyStored = false
@@ -385,14 +385,13 @@ function storageStatus()
                     threshold = 1
                 end
             end
-
             
             if(eco[t]['avg_net_income'] < 0 and last_for < 5) then
                 threshold = 1
             end
         end
 
-        if(eco[t]['ratio'] >= threshold) then
+        if(eco[t]['ratio'] > threshold) then
             percent = math.min(1, math.max(eco[t]['ratio'] - threshold, 0.01))
             status[t]['share'] = round(eco[t]['stored'] * percent)
         else
@@ -697,6 +696,7 @@ function checkIfDead()
     if(my_acu:IsDead() and not deathShared) then
         deathShared = true
         shareAllResources()
+        WaitSeconds(0.2)
         giveAllUnits()
     end
 end
