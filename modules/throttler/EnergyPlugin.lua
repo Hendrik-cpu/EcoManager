@@ -57,11 +57,11 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		local net = eco:energyNet()
 		local new_net = net - project.energyRequested
 
-		LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net)
+		--LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net)
 
 		if new_net < 0 then
 			project:SetEnergyDrain(math.max(0, net))
-			LOG("Throttle set to " .. project.throttle)
+			--LOG("Throttle set to " .. project.throttle)
 		end
 
 	end,

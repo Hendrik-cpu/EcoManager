@@ -109,7 +109,7 @@ Project = Class({
 		local currEnergyRequested = 0
 		local key = nil
 
-		LOG("Checking pause for project " .. self.id .. " Max use is " .. maxEnergyRequested)
+		--LOG("Checking pause for project " .. self.id .. " Max use is " .. maxEnergyRequested)
 
 		for _, a in self.assisters do
 			local u = a.unit
@@ -123,7 +123,7 @@ Project = Class({
 
 			if not pause_list[key] then pause_list[key] = {pause={}, no_pause={}} end
 
-			LOG("Assister " .. u:GetEntityId() .. " requesting " .. a.energyRequested .. " is_paused " .. tostring(is_paused))
+			--LOG("Assister " .. u:GetEntityId() .. " requesting " .. a.energyRequested .. " is_paused " .. tostring(is_paused))
 			if currEnergyRequested + a['energyRequested'] <= maxEnergyRequested or firstAssister then
 				if is_paused then
 					table.insert(pause_list[key]['no_pause'], u)
@@ -133,7 +133,7 @@ Project = Class({
 				firstAssister = false
 			else
 				if not is_paused then
-					LOG("Pausing assister by using key " .. key)
+					--LOG("Pausing assister by using key " .. key)
 					table.insert(pause_list[key]['pause'], u)
 				end
 			end
