@@ -2,7 +2,6 @@ local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
 EnergyPlugin = Class(ThrottlerPlugin) {
-	first = true,
 	constructionCategories = {
 		{name="T3 Mass fabrication", category = categories.TECH3 * categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 0},
 		{name="T2 Mass fabrication", category = categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 1},
@@ -56,17 +55,14 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 
 	throttle = function(self, eco, project)
 		local net = eco:energyNet()
+		local new_net = net - project.energyRequested
 
-		LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. (net - project.energyRequested))
-		if self.first then
-			LOG("FIRST PROJECT")
-			self.first = false
-			return
-		end
+		LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net)
 
-		if net - project.energyRequested < 0 then
+		if new_net < 0 then
 			project:SetEnergyDrain(math.max(0, net))
+			LOG("Throttle set to " .. project.throttle)
 		end
-		--LOG("Throttle set to " .. project.throttle.ratio)
+
 	end,
 }
