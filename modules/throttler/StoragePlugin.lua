@@ -19,7 +19,7 @@ StoragePlugin = Class(ThrottlerPlugin) {
 			local net = eco[t .. 'Income'] - eco[t .. 'Actual'] - project[t .. 'Requested']
 
 			if(eco[t .. 'Stored'] - net < min[t]) then
-				
+
 			end
 		end
 		]]
