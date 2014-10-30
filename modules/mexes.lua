@@ -28,11 +28,11 @@ function isMexBeingBuilt(mex)
 	if mex:GetEconData().energyRequested ~= 0 then
 		return false
 	end
-		
+
 	if mex:GetHealth() == mex:GetMaxHealth() then
 		return false
 	end
-	
+
 	return true
 end
 
@@ -42,15 +42,15 @@ function getMexes()
 	local mexes = {all={}, upgrading={}, idle={}, assisted={}}
 
 	mexes['all'] = all_mexes
-			
+
 	for _, mex in all_mexes do
-		if(not mex:IsDead()) then
+		if not mex:IsDead() then
 			data = unitData(mex)
-	
-			if(data['is_idle']) then -- Idling mex, should be upgraded / paused
+
+			if data['is_idle'] then -- Idling mex, should be upgraded / paused
 				for _, category in {categories.TECH1, categories.TECH2} do
-					if(EntityCategoryContains(category, mex)) then
-						if(category == categories.TECH1 or data['bonus'] >= 1.5) then -- upgrade T1 and T2 with MS
+					if EntityCategoryContains(category, mex) then
+						if category == categories.TECH1 or data['bonus'] >= 1.5 then -- upgrade T1 and T2 with MS
 							--table.insert(mexes['idle'][category], mex)
 							table.insert(mexes['idle'], mex)
 						end
@@ -59,7 +59,7 @@ function getMexes()
 			elseif mex:GetFocus() then
 				table.insert(mexes['upgrading'], mex)
 
-				if(data['assisting'] > 0 and GetIsPaused({mex}) and CanUnpause(mex, 'mexes')) then
+				if data['assisting'] > 0 and GetIsPaused({mex}) and CanUnpause(mex, 'mexes') then
 					table.insert(mexes['assisted'], mex)
 				end
 			end
@@ -69,7 +69,7 @@ function getMexes()
 	return mexes
 end
 
-function upgradeMexes(mexes, unpause) 
+function upgradeMexes(mexes, unpause)
 	if not mexes or table.getsize(mexes) == 0 then
 		return false
 	end
@@ -78,15 +78,15 @@ function upgradeMexes(mexes, unpause)
 	local upgrades = {}
 
 	for _, m in mexes do
-		if(m:IsIdle()) then
+		if m:IsIdle() then
 			local bp = m:GetBlueprint()
 			local upgrades_to = bp.General.UpgradesTo
 
-			if(not unpause) then
+			if not unpause then
 				table.insert(pause_queue, m)
 			end
 
-			if(not upgrades[upgrades_to]) then
+			if not upgrades[upgrades_to] then
 				upgrades[upgrades_to] = {}
 			end
 
@@ -94,7 +94,7 @@ function upgradeMexes(mexes, unpause)
 		end
 	end
 
-	if(table.getsize(upgrades) > 0) then
+	if table.getsize(upgrades) > 0 then
 		SelectBegin()
 
 		for upgrades_to, up_mexes in upgrades do
@@ -106,31 +106,29 @@ function upgradeMexes(mexes, unpause)
 		SelectEnd()
 	end
 
-	if(unpause) then
+	if unpause then
 		SetPaused(mexes, false)
 	end
-	
+
 	return true
 end
 
 function upgradeMexById(id)
 	local units = getUnits()
 
-	if not units then
-		return
-	end
-
 	for k, u in units do
-		if(u:IsDead()) then
+		if u:IsDead() then
 			units[k] = nil
 		end
 	end
 
+	if not units then return end
+
 	local all_mexes = EntityCategoryFilterDown(categories.MASSEXTRACTION * categories.STRUCTURE, units)
-	
+
 	for _, m in all_mexes do
-		if(m:GetEntityId() == id) then
-			if(not m:GetFocus()) then
+		if m:GetEntityId() == id then
+			if not m:GetFocus() then
 				upgradeMexes({m})
 			end
 
@@ -143,13 +141,13 @@ function pauseMexes()
 	local pause = {}
 
 	for k, m in pause_queue do
-		if(not m:IsDead() and m:GetFocus()) then
+		if not m:IsDead() and m:GetFocus() then
 			table.insert(pause, m)
 			pause_queue[k] = nil
 		end
 	end
 
-	if(table.getsize(pause) > 0) then
+	if table.getsize(pause) > 0 then
 		triggerEvent('toggle_pause', pause, true)
 		SetPaused(pause, true)
 	end
@@ -158,14 +156,14 @@ end
 function CreateMexOverlay(unit)
 	local overlay = Bitmap(GetFrame(0))
 	local id = unit:GetEntityId()
-		
+
 	overlay:SetSolidColor('black')
 	overlay.Width:Set(10)
 	overlay.Height:Set(10)
-	
+
 	overlay:SetNeedsFrameUpdate(true)
 	overlay.OnFrame = function(self, delta)
-		if(not unit:IsDead()) then
+		if not unit:IsDead() then
 			local worldView = import('/lua/ui/game/worldview.lua').viewLeft
 			local pos = worldView:Project(unit:GetPosition())
 			LayoutHelpers.AtLeftTopIn(overlay, worldView, pos.x - overlay.Width() / 2, pos.y - overlay.Height() / 2 + 1)
@@ -174,7 +172,7 @@ function CreateMexOverlay(unit)
 			overlay:Hide()
 		end
 	end
-		
+
 	overlay.id = unit:GetEntityId()
 	overlay.destroy = false
 	overlay.text = UIUtil.CreateText(overlay, '0', 10, UIUtil.bodyFont)
@@ -195,21 +193,21 @@ function UpdateMexOverlay(mex)
 		return false
 	end
 
-	if(not overlays[id]) then
+	if not overlays[id] then
 		overlays[id] = CreateMexOverlay(mex)
 	end
 
 	local overlay = overlays[id]
 
-	if(EntityCategoryContains(categories.TECH1, mex)) then
+	if EntityCategoryContains(categories.TECH1, mex) then
 		tech = 1
-	elseif(EntityCategoryContains(categories.TECH2, mex)) then
+	elseif EntityCategoryContains(categories.TECH2, mex) then
 		tech = 2
 	else
 		tech = 3
 	end
 
-	if(data['is_idle'] or (mex:GetWorkProgress() < 0.02)) then
+	if data['is_idle'] or (mex:GetWorkProgress() < 0.02) then
 		if(tech >= 2 and data['bonus'] < 1.5) then
 			color = 'red'
 		elseif(tech == 3) then
@@ -229,16 +227,16 @@ function mexOverlay()
 	options = import(modPath .. 'modules/utils.lua').getOptions(true)
 	mexes = getMexes()
 
-	if(options['em_mexoverlay'] == 1) then
+	if options['em_mexoverlay'] == 1 then
 		for _, m in mexes['all'] do
-			if(m:IsIdle() or m:GetFocus()) then
+			if m:IsIdle() or m:GetFocus() then
 				UpdateMexOverlay(m)
 			end
 		end
 	end
-	
+
 	for id, overlay in overlays do
-		if(not overlay or overlay.destroy or options['em_mexoverlay'] == 0) then
+		if not overlay or overlay.destroy or options['em_mexoverlay'] == 0 then
 			overlay:Destroy()
 			overlays[id] = nil
 		end
@@ -252,15 +250,15 @@ function checkMexes()
 
 	options = import(modPath .. 'modules/utils.lua').getOptions(true)
 
-	if(table.getsize(mexes['idle']) > 0) then
+	if table.getsize(mexes['idle']) > 0 then
 		local auto_upgrade = options['em_mexes'] == 'auto';
 
-		if(not auto_upgrade) then
+		if not auto_upgrade then
 			local eco = getEconomy()
 			local tps = GetSimTicksPerSecond()
 		end
 
-		if(auto_upgrade) then
+		if auto_upgrade then
 			upgradeMexes(mexes['idle'])
 		end
 	end
@@ -273,14 +271,14 @@ function checkMexes()
 		end
 	end
 	]]
-	
-	if(table.getsize(mexes['assisted']) > 0) then
+
+	if table.getsize(mexes['assisted']) > 0 then
 		Pause(mexes['assisted'], false, 'user') -- unpause assisted mexes
 	end
 end
 
 function init(isReplay, parent)
-	if(not isReplay) then
+	if not isReplay then
 		addListener(checkMexes, 1, 'em_mexes')
 		addListener(pauseMexes, 0.2, 'em_mexes')
 	end

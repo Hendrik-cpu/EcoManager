@@ -74,12 +74,12 @@ end
 
 function setup(isReplay, parent)
 	local mods = {'economy', 'units', 'pause', 'options', 'factories', 'shields', 'mexes', 'buildoverlay'}
-	
+
 	if(not isReplay) then
 		table.insert(mods, 'autoshare');
 		table.insert(mods, 'throttlemass');
-		table.insert(mods, 'throttle');
-		--table.insert(mods, 'throttler');
+		--table.insert(mods, 'throttle');
+		table.insert(mods, 'throttler');
 	end
 
 	for _, m in mods do
@@ -87,7 +87,7 @@ function setup(isReplay, parent)
 	end
 end
 
-function initThreads() 
+function initThreads()
 	ForkThread(mainThread)
 	ForkThread(watchdogThread)
 end

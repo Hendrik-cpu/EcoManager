@@ -54,7 +54,7 @@ local Economy = Class({
 		local types = {'MASS', 'ENERGY'}
 		local mapping = {maxStorage="Max", stored="Stored", income="Income", lastUseRequested="Requested", lastUseActual="Actual", ratio="ratio", net_income="net_income"}
 		local per_tick = {income=true, lastUseRequested=true, lastUseActual=true}
-		
+
 		tps = GetSimTicksPerSecond()
 		data = GetEconomyTotals()
 
@@ -62,7 +62,7 @@ local Economy = Class({
 			local prefix = string.lower(t)
 
 			for k, m in mapping do
-				if(per_tick[k]) then -- convert data in tick -> seconds
+				if per_tick[k] then -- convert data in tick -> seconds
 					data[k][t] = data[k][t] * tps
 				end
 
@@ -71,7 +71,7 @@ local Economy = Class({
 
 			self[prefix .. "Ratio"] = data['stored'][t] / data['maxStorage'][t]
 
-			if(self[prefix .. 'Stored'] < 1) then
+			if self[prefix .. 'Stored'] < 1 then
 				self[prefix .. 'Actual'] = math.min(self[prefix .. 'Actual'], self[prefix .. 'Income']) -- mex bug
 			end
 
@@ -82,7 +82,7 @@ local Economy = Class({
 
 	net = function(self, type)
 		local stored = self[type .. 'Stored']
-		if(stored > 0) then
+		if stored > 0 then
 			stored = stored / 5
 		end
 
@@ -120,26 +120,28 @@ local Project = Class({
 		self.throttle = {ratio=0}
 		self.buildTime = bp.Economy.BuildTime
 	end,
-	
+
 	GetConsumption = function(self)
 		return {mass=self.massRequested, energy=energyRequested}
 	end,
+
 	_sortAssister = function(a, b)
 		return a.unit:GetBuildRate() > b.unit:GetBuildRate()
 	end,
+
 	AddAssister = function(self, eco, u)
 		local data = econData(u)
 
-		if(table.getsize(data) == 0) then
+		if table.getsize(data) == 0 then
 			return
 		end
-		
+
 		self.buildRate = self.buildRate + u:GetBuildRate()
 		self.progress = math.max(self.progress, u:GetWorkProgress())
 		self.energyRequested = self.energyRequested + data.energyRequested
 		self.massRequested = self.massRequested + data.massRequested
 
-		if(not GetIsPaused({u})) then
+		if not GetIsPaused({u}) then
 			--[[
 			eco.massActual = eco.massActual + data.massConsumed
 			eco.energyActual = eco.energyActual + data.energyConsumed
@@ -150,27 +152,32 @@ local Project = Class({
 
 		table.bininsert(self.assisters, {energyRequested=data.energyRequested, unit=u}, self._sortAssister)
 	end,
+
 	SetThrottleRatio = function(self, ratio)
-		if(not self.throttle) then
+		if not self.throttle then
 			self.throttle = {index=throttleIndex}
 			throttleIndex = throttleIndex + 1
 		end
 
-		if(ratio > self.throttle.ratio) then
+		if ratio > self.throttle.ratio then
 			self.throttle.ratio = ratio
 		end
 	end,
+
 	SetDrain = function(self, energy, mass)
 		local ratio = 1-math.min(1, math.min(energy / self.energyRequested,  mass / self.massRequested))
 		self:SetThrottleRatio(ratio)
 	end,
+
 	SetEnergyDrain = function(self, energy)
 		return self:SetDrain(energy, self.massRequested)
 	end,
+
 	SetMassDrain = function(self, mass)
 		return self:SetDrain(self.energyRequested, mass)
 	end,
-	pause = function(self, pause_list) 
+
+	pause = function(self, pause_list)
 		--print ("n_assisters " .. table.getsize(self.assisters))
 		local maxEnergyRequested = (1-self.throttle.ratio) * self.energyRequested
 		local currEnergyRequested = 0
@@ -182,14 +189,14 @@ local Project = Class({
 			local is_paused = GetIsPaused({u})
 
 			--LOG("max " .. maxEnergyRequested .. " currEnergy " .. currEnergyRequested)
-			if(currEnergyRequested + a['energyRequested'] <= maxEnergyRequested) then
-				if(is_paused) then
+			if currEnergyRequested + a['energyRequested'] <= maxEnergyRequested then
+				if is_paused then
 					table.insert(pause_list['pause']['off'], u)
 				end
 
 				currEnergyRequested = currEnergyRequested + a['energyRequested']
 			else
-				if(not is_paused) then
+				if not is_paused then
 					table.insert(pause_list['pause']['on'], u)
 				end
 			end
@@ -203,23 +210,23 @@ local EcoManager = Class({
 
 	LoadProjects = function(self, eco)
 		self.projects = {}
-		units = getUnits()
+		units = getUnits() -- FIXME: Filter out ENGINEER and FACTORY here?
 
 		--print "Load projects"
 		for _, u in units do
 			local project
 
-			if(not u:IsDead()) then
+			if not u:IsDead() then
 				local focus = u:GetFocus()
 
-				if(focus) then
+				if focus then
 					local id = focus:GetEntityId()
 					project = self.projects[id]
-					if(not project) then
+					if not project then
 						project = Project(focus)
 						self.projects[id] = project
 					end
-				
+
 					project:AddAssister(eco, u)
 				end
 			end
@@ -229,18 +236,18 @@ local EcoManager = Class({
 	end,
 })
 
-function setPause(units, toggle, pause) 
-	if(toggle == 'pause') then
+function setPause(units, toggle, pause)
+	if toggle == 'pause' then
 		SetPaused(units, pause)
 	else
 		local bit = GetScriptBit(units, toggle)
 		local is_paused = bit
 
-		if(toggle == 0)  then
+		if toggle == 0  then
 			is_paused = not is_paused
 		end
 
-		if(pause ~= is_paused) then
+		if pause ~= is_paused then
 			ToggleScriptBit(units, toggle, bit)
 		end
 	end
@@ -255,7 +262,7 @@ function manageEconomy()
 	--print ("n_projects " .. table.getsize(all_projects))
 
 	LOG("NEW BALANCE ROUND")
-	plugins = {MinStorage(eco), EnergyPlugin()}
+	plugins = {StoragePlugin(eco), EnergyPlugin(eco)}
 	for _, plugin in plugins do
 		local pause = false
 
@@ -263,26 +270,26 @@ function manageEconomy()
 		for _, p in projects do
 			plugin:add(p)
 	 	end
-	 	
+
 	 	plugin:sort()
 
 	 	LOG(repr(plugin.projects))
 
-		--print ("n_plugin_projects " .. table.getsize(plugin.projects))	 	
+		--print ("n_plugin_projects " .. table.getsize(plugin.projects))
 	 	for _, p in plugin.projects do
 	 		local ratio_inc
 
-	 		if(p.throttle.ratio < 1) then
-		 		if(not pause) then
+	 		if p.throttle.ratio < 1 then
+		 		if not pause then
 	 				local last_ratio = p.throttle.ratio
 		 			plugin:throttle(eco, p)
 	 				ratio_inc = p.throttle.ratio - last_ratio
-		 			if(p.throttle.ratio < 1) then
+		 			if p.throttle.ratio < 1 then
 		 				--table.insert(projects, p)
 		 			else
 			 			pause = true -- plugin throttles all from here
 		 			end
-		 		
+
 		 			eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
 		 			eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
 		 		end
@@ -300,11 +307,11 @@ function manageEconomy()
 	end
 
 	--LOG(repr(pause_list))
-	
+
 	for toggle_key, modes in pause_list do
 		local toggle = toggle_key
 
-		if(toggle ~= 'pause') then
+		if toggle ~= 'pause' then
 			toggle = tonumber(string.sub(toggle, 8))
 		end
 
