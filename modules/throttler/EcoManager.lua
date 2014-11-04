@@ -1,5 +1,33 @@
 local modPath = '/mods/EM/'
-local isPaused = import(modPath .. 'modules/throttler.lua').isPaused
+
+function isPaused(u)
+	local is_paused
+	if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
+		is_paused = GetScriptBit({u}, 4)
+	else
+		is_paused = GetIsPaused({u})
+	end
+
+	return is_paused
+end
+
+function setPause(units, toggle, pause)
+	if toggle == 'pause' then
+		SetPaused(units, pause)
+	else
+		local bit = GetScriptBit(units, toggle)
+		local is_paused = bit
+
+		if toggle == 0  then
+			is_paused = not is_paused
+		end
+
+		if pause ~= is_paused then
+			ToggleScriptBit(units, toggle, bit)
+		end
+	end
+end
+
 local Project = import(modPath .. 'modules/throttler/Project.lua').Project
 local Economy = import(modPath .. 'modules/throttler/Economy.lua').Economy
 local EnergyPlugin = import(modPath .. 'modules/throttler/EnergyPlugin.lua').EnergyPlugin
@@ -8,15 +36,21 @@ local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').S
 local getUnits = import(modPath .. 'modules/units.lua').getUnits
 local econData = import(modPath .. 'modules/units.lua').econData
 
+
 EcoManager = Class({
 	eco = nil,
 	projects = {},
+	plugins = {},
+
+	__init = function(self)
+		self.eco = Economy()
+	end,
 
 	LoadProjects = function(self, eco)
 		local unpause = {}
 
 		self.projects = {}
-		units = EntityCategoryFilterDown(categories.STRUCTURE + categories.ENGINEER, getUnits())
+		local units = EntityCategoryFilterDown(categories.STRUCTURE + categories.ENGINEER, getUnits())
 
 		for _, u in units do
 			local project
@@ -29,9 +63,9 @@ EcoManager = Class({
 
 					if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
 						data = econData(u)
-						if data.energyRequested == 0 and not isPaused(u) then
+						--if not (data.energyRequested == 0 and not isPaused(u)) then
 							focus = u
-						end
+						--end
 					elseif is_paused and (u:IsIdle() or u:GetWorkProgress() == 0) then
 						table.insert(unpause, u)
 					end
@@ -56,28 +90,43 @@ EcoManager = Class({
 		end
 
 		if unpause then
-			import(modPath .. 'modules/throttler.lua').setPause(unpause, 'pause', false)
+			setPause(unpause, 'pause', false)
 		end
 
 		return self.projects
 	end,
+
+	addPlugin = function(self, name)
+		--local plugin = _G[name .. 'Plugin'](self.eco)
+		name = name .. 'Plugin'
+		local plugin = import(modPath .. 'modules/throttler/' .. name .. '.lua')[name](self.eco)
+		table.insert(self.plugins, plugin)
+	end,
+
 	manageEconomy = function(self)
-		local eco = Economy()
-		local projects = manager:LoadProjects(eco)
+		local eco
+		local projects
 		local all_projects = {}
 
+		self.eco = Economy()
+		eco = self.eco
+		projects = self:LoadProjects(eco)
+
 		for _, p in projects do
+			p:LoadFinished()
 			table.insert(all_projects, p)
 		end
 
 		--print ("n_projects " .. table.getsize(all_projects))
 
-		--LOG("NEW BALANCE ROUND")
-		plugins = {StoragePlugin(eco), EnergyPlugin(eco)}
+		LOG("NEW BALANCE ROUND")
+
+		LOG(repr(all_projects))
+
 		import(modPath .. 'modules/throttler/Project.lua').throttleIndex = 0
 		import(modPath .. 'modules/throttler/Project.lua').firstAssister = true
 
-		for _, plugin in plugins do
+		for _, plugin in self.plugins do
 			local pause = false
 
 			plugin.projects = {}
@@ -114,7 +163,6 @@ EcoManager = Class({
 		 		end
 	 		end
 		end
-
 
 		table.sort(all_projects, function(a, b) return a.index < b.index end)
 

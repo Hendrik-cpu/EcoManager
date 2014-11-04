@@ -1,5 +1,5 @@
 local modPath = '/mods/EM/'
-local isPaused = import(modPath .. 'modules/throttler.lua').isPaused
+local isPaused = import(modPath .. 'modules/throttler/ecomanager.lua').isPaused
 local econData = import(modPath .. 'modules/units.lua').econData
 
 throttleIndex = 0
@@ -25,118 +25,147 @@ do
 end
 
 Project = Class({
-	id = nil,
-	buildCostMass = 0,
-	buildlCostEnergy = 0,
-	buildTime = 0,
-	progress = 0,
-	buildRate = 0,
-	energyRequested = 0,
-	massRequested = 0,
-	throttle = {},
-	index = nil,
-	unit = nil,
-	assisters = {},
+    id = -1,
 
-	__init = function(self, unit)
-		local bp = unit:GetBlueprint()
-		self.id = unit:GetEntityId()
-		self.unit = unit
-		self.assisters = {}
-		self.throttle = 0
-		self.buildTime = bp.Economy.BuildTime
-	end,
+    buildTime = 0,
+    workProgress = 0,
+    workLeft = 0,
+    buildRate = 0,
+    massBuildCost = 0,
+    energyBuildCost = 0,
+    massRequested = 0,
+    energyRequested = 0,
+    massDrain = 0,
+    energyDrain = 0,
+    massCostRemaining = 0,
+    energyCostRemaining = 0,
+    massProduction = 0,
+    energyProduction = 0,
+    massTimeEfficiency = 0,
+    energyTimeEfficency = 0,
 
-	GetConsumption = function(self)
-		return {mass=self.massRequested, energy=energyRequested}
-	end,
+    throttle = {},
+    index = 0,
+    unit = nil,
+    assisters = {},
 
-	_sortAssister = function(a, b)
-		return a.unit:GetBuildRate() > b.unit:GetBuildRate()
-	end,
+    __init = function(self, unit)
+        local bp = unit:GetBlueprint()
+        self.id = unit:GetEntityId()
+        self.unit = unit
+        self.assisters = {}
+        self.throttle = 0
+        self.buildTime = bp.Economy.BuildTime
+        self.massBuildCost = bp.Economy.BuildCostMass
+        self.energyBuildCost = bp.Economy.BuildCostEnergy
+        self.massProduction = bp.Economy.ProductionPerSecondMass
+        self.energyProduction = bp.Economy.EnergyPerSecondMass
 
-	AddAssister = function(self, eco, u)
-		local data = econData(u)
+    end,
 
-		if table.getsize(data) == 0 then
-			return
-		end
+    LoadFinished = function(self)
+        self.workLeft = 1 - self.workProgress
+        self.timeLeft = self.workLeft * self.buildTime
 
-		self.buildRate = self.buildRate + u:GetBuildRate()
-		self.progress = math.max(self.progress, u:GetWorkProgress())
-		self.energyRequested = self.energyRequested + data.energyRequested
-		self.massRequested = self.massRequested + data.massRequested
+        for _, t in {'mass', 'energy'} do
+            self[t .. 'Drain'] = self[t .. 'BuildCost'] / (self.buildTime / self.buildRate)
+            self[t .. 'CostRemaining'] = self[t .. 'BuildCost'] * self.workLeft
+            if self[t .. 'Production'] then
+                self[t .. 'TimeEfficiency'] = self[t .. 'CostRemaining'] / self[t .. 'Production']
+            else
+                selft[t .. 'TimeEfficiency'] = 0
+            end
+        end
+    end,
 
-		if not isPaused(u) then
-			--[[
-			eco.massActual = eco.massActual + data.massConsumed
-			eco.energyActual = eco.energyActual + data.energyConsumed
-			]]
-			eco.massActual = eco.massActual - data.massConsumed
-			eco.energyActual = eco.energyActual - data.energyConsumed
-		end
+    GetConsumption = function(self)
+        return {mass=self.massRequested, energy=energyRequested}
+    end,
 
-		table.bininsert(self.assisters, {energyRequested=data.energyRequested, unit=u}, self._sortAssister)
-	end,
+    _sortAssister = function(a, b)
+        return a.unit:GetBuildRate() > b.unit:GetBuildRate()
+    end,
 
-	SetThrottleRatio = function(self, ratio)
-		if not self.index then
-			self.index = throttleIndex
-			throttleIndex = throttleIndex + 1
-		end
+    AddAssister = function(self, eco, u)
+        local data = econData(u)
 
-		if ratio > self.throttle then
-			self.throttle = ratio
-		end
-	end,
+        if table.getsize(data) == 0 then
+            return
+        end
 
-	SetDrain = function(self, energy, mass)
-		local ratio = 1-math.min(1, math.min(energy / self.energyRequested,  mass / self.massRequested))
-		self:SetThrottleRatio(ratio)
-	end,
+        self.buildRate = self.buildRate + u:GetBuildRate()
+        self.workProgress = math.max(self.workProgress, u:GetWorkProgress())
+        self.energyRequested = self.energyRequested + data.energyRequested
+        self.massRequested = self.massRequested + data.massRequested
 
-	SetEnergyDrain = function(self, energy)
-		return self:SetDrain(energy, self.massRequested)
-	end,
+        if not isPaused(u) then
+            eco.massActual = eco.massActual - data.massConsumed
+            eco.energyActual = eco.energyActual - data.energyConsumed
+        end
 
-	SetMassDrain = function(self, mass)
-		return self:SetDrain(self.energyRequested, mass)
-	end,
+        table.bininsert(self.assisters, {energyRequested=data.energyRequested, unit=u}, self._sortAssister)
+    end,
 
-	pause = function(self, pause_list)
-		--print ("n_assisters " .. table.getsize(self.assisters))
-		local maxEnergyRequested = (1-self.throttle) * self.energyRequested
-		local currEnergyRequested = 0
-		local key = nil
+    SetThrottleRatio = function(self, ratio)
+        if not self.index then
+            self.index = throttleIndex
+            throttleIndex = throttleIndex + 1
+        end
 
-		--LOG("Checking pause for project " .. self.id .. " Max use is " .. maxEnergyRequested)
+        if ratio > self.throttle then
+            self.throttle = ratio
+        end
+    end,
 
-		for _, a in self.assisters do
-			local u = a.unit
-			local is_paused = isPaused(u)
+    SetDrain = function(self, energy, mass)
+        local ratio = 1-math.min(1, math.min(energy / self.energyRequested,  mass / self.massRequested))
+        self:SetThrottleRatio(ratio)
+    end,
 
-			if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
-				key = 'toggle_4'
-			else
-				key = 'pause'
-			end
+    SetEnergyDrain = function(self, energy)
+        return self:SetDrain(energy, self.massRequested)
+    end,
 
-			if not pause_list[key] then pause_list[key] = {pause={}, no_pause={}} end
+    SetMassDrain = function(self, mass)
+        return self:SetDrain(self.energyRequested, mass)
+    end,
 
-			--LOG("Assister " .. u:GetEntityId() .. " requesting " .. a.energyRequested .. " is_paused " .. tostring(is_paused))
-			if currEnergyRequested + a['energyRequested'] <= maxEnergyRequested or firstAssister then
-				if is_paused then
-					table.insert(pause_list[key]['no_pause'], u)
-				end
+    pause = function(self, pause_list)
+        --print ("n_assisters " .. table.getsize(self.assisters))
+        local maxEnergyRequested = (1-self.throttle) * self.energyRequested
+        local currEnergyRequested = 0
+        local key = nil
 
-				currEnergyRequested = currEnergyRequested + a['energyRequested']
-				firstAssister = false
-			else
-				if not is_paused then
-					--LOG("Pausing assister by using key " .. key)
-					table.insert(pause_list[key]['pause'], u)
-				end
-			end
-		end
-	end,
+        --LOG("Checking pause for project " .. self.id .. " Max use is " .. maxEnergyRequested)
+
+        for _, a in self.assisters do
+            local u = a.unit
+            local is_paused = isPaused(u)
+
+            if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
+                key = 'toggle_4'
+            else
+                key = 'pause'
+            end
+
+            if not pause_list[key] then pause_list[key] = {pause={}, no_pause={}} end
+
+            --LOG("Assister " .. u:GetEntityId() .. " requesting " .. a.energyRequested .. " maxEnergyRequested " .. maxEnergyRequested .. " is_paused " .. tostring(is_paused))
+            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or firstAssister then
+                if is_paused then
+                    table.insert(pause_list[key]['no_pause'], u)
+                end
+
+                currEnergyRequested = currEnergyRequested + a.energyRequested
+                firstAssister = false
+            else
+                if not is_paused then
+                    --LOG("Pausing assister by using key " .. key)
+                    table.insert(pause_list[key]['pause'], u)
+                end
+            end
+        end
+
+        --LOG(repr(pause_list))
+    end,
 })

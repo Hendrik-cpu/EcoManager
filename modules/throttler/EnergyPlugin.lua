@@ -24,8 +24,8 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	},
 
 	_sortProjects = function(a, b)
-		local av = a['prio'] * 100000 - ((1-a['progress'])*a['buildTime']  / a['buildRate']) + a['massRatio']*100
-		local bv = b['prio'] * 100000 - ((1-b['progress'])*b['buildTime'] / b['buildRate']) + b['massRatio']*100
+		local av = a['prio'] * 100000 + a['massRatio']*100 - (a['timeLeft'])
+		local bv = b['prio'] * 100000 + b['massRatio']*100 - (b['timeLeft'])
 
 		return av > bv
 	end,
@@ -57,11 +57,11 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		local net = eco:energyNet()
 		local new_net = net - project.energyRequested
 
-		--LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net)
+		LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net)
 
 		if new_net < 0 then
 			project:SetEnergyDrain(math.max(0, net))
-			--LOG("Throttle set to " .. project.throttle)
+			LOG("Throttle set to " .. project.throttle)
 		end
 
 	end,

@@ -64,6 +64,7 @@ Economy = Class({
 	massNet = function(self)
 		return self:net('mass')
 	end,
+
 	energyNet = function(self)
 		return self:net('energy')
 	end,
