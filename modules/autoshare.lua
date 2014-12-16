@@ -658,10 +658,10 @@ end
 function getAcu()
     local units = getUnits()
 
-    if(units) then
+    if units then
         local acus = EntityCategoryFilterDown(categories.COMMAND, units)
 
-        if(acus) then
+        if acus then
             local acu = acus[1]
 
             return acu
@@ -677,6 +677,9 @@ function checkIfDead()
     end
         
     if(GetFocusArmy() ~= -1) then
+        if my_army ~= GetFocusArmy() then
+            my_acu = nil
+        end
         my_army = GetFocusArmy()
     end
 
@@ -685,7 +688,7 @@ function checkIfDead()
     --(repr(scoreData))
 
     
-    if(not my_acu) then
+    if not my_acu then
         my_acu = getAcu()
 
         if(not my_acu) then
@@ -693,7 +696,7 @@ function checkIfDead()
         end
     end
     
-    if(my_acu:IsDead() and not deathShared) then
+    if my_acu:IsDead() and not deathShared then
         deathShared = true
         shareAllResources()
         WaitSeconds(0.2)

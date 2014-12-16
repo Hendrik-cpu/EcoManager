@@ -130,7 +130,21 @@ Project = Class({
         return self:SetDrain(self.energyRequested, mass)
     end,
 
-    pause = function(self, pause_list)
+    adjust_throttle = function(self)
+        local maxEnergyRequested = (1-self.throttle) * self.energyRequested
+        local currEnergyRequested = 0
+
+        for _, a in self.assisters do
+            local u = a.unit
+            local is_paused = isPaused(u)
+
+            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested then
+                currEnergyRequested = currEnergyRequested + a.energyRequested
+            end
+        end
+
+        self:SetEnergyDrain(currEnergyRequested)
+    --[[
         --print ("n_assisters " .. table.getsize(self.assisters))
         local maxEnergyRequested = (1-self.throttle) * self.energyRequested
         local currEnergyRequested = 0
@@ -167,5 +181,36 @@ Project = Class({
         end
 
         --LOG(repr(pause_list))
+        ]]
+    end,
+
+    pause = function(self, pause_list)
+        local maxEnergyRequested = (1-self.throttle) * self.energyRequested
+        local currEnergyRequested = 0
+
+        for _, a in self.assisters do
+            local u = a.unit
+            local is_paused = isPaused(u)
+
+            if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
+                key = 'toggle_4'
+            else
+                key = 'pause'
+            end
+
+            if not pause_list[key] then pause_list[key] = {pause={}, no_pause={}} end
+
+            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or firstAssister then
+                if is_paused then
+                    table.insert(pause_list[key]['no_pause'], u)
+                end
+                currEnergyRequested = currEnergyRequested + a.energyRequested
+                firstAssister = false
+            else
+                if not is_paused then
+                    table.insert(pause_list[key]['pause'], u)
+                end
+            end
+        end
     end,
 })

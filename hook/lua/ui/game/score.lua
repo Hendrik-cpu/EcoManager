@@ -1,6 +1,6 @@
 do
-
 local modPath = '/mods/EM/'
+local replayID = -1
 
 
 function unum(n, unit)
@@ -90,7 +90,7 @@ function SetupPlayerLines()
 			group.energy_in:SetColor('fff7c70f')
 		else
 			group.faction = Bitmap(group)
-			if armyIndex != 0 then
+			if armyIndex ~= 0 then
 				group.faction:SetTexture(UIUtil.UIFile(UIUtil.GetFactionIcon(data.faction)))
 			else
 				group.faction:SetTexture(UIUtil.UIFile('/widgets/faction-icons-alpha_bmp/observer_ico.dds'))
@@ -248,7 +248,21 @@ function SetupPlayerLines()
 
     mapData = {}	
     mapData.mapname = LOCF("<LOC gamesel_0002>Map: %s", sessionInfo.name)
-    controls.armyLines[index] = CreateMapNameLine(mapData, 0)
+	if replayID == -1 then -- only do this once
+    	if HasCommandLineArg("/syncreplay") and HasCommandLineArg("/gpgnet") and
+	   	   GetFrontEndData('syncreplayid') ~= nil and GetFrontEndData('syncreplayid') ~= 0 then
+			replayID = GetFrontEndData('syncreplayid')
+	    elseif HasCommandLineArg("/savereplay") then
+        	local url = GetCommandLineArg("/savereplay", 1)[1]
+        	local lastpos = string.find(url, "/", 20)
+        	replayID = string.sub(url, 20, lastpos-1)
+    	elseif HasCommandLineArg("/replayid") then
+	        replayID =  GetCommandLineArg("/replayid", 1)[1]
+	    end
+	end
+    
+    if tonumber(replayID) > 0 then mapData.mapname = mapData.mapname .. ', ID: ' .. replayID end
+	controls.armyLines[index] = CreateMapNameLine(mapData, 0)
 end
 
 function _OnBeat()
@@ -261,7 +275,7 @@ function _OnBeat()
 
 	controls.time:SetText(string.format("%s (%+d / %+d) Q: %s", GetGameTime(), gameSpeed, GetSimRate(), quality))
 
-	if sessionInfo.Options.NoRushOption and sessionInfo.Options.NoRushOption != 'Off' then
+	if sessionInfo.Options.NoRushOption and sessionInfo.Options.NoRushOption ~= 'Off' then
 		if tonumber(sessionInfo.Options.NoRushOption) * 60 > GetGameTimeSeconds() then
 			local time = (tonumber(sessionInfo.Options.NoRushOption) * 60) - GetGameTimeSeconds()
 			controls.time:SetText(LOCF('%02d:%02d:%02d', math.floor(time / 3600), math.floor(time/60), math.mod(time, 60)))

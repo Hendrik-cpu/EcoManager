@@ -45,8 +45,8 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		if category then
 			project.prio = category['priority']
 			project.massRatio = 0
-			if project.energyRequested > 0 and project.massProduced > 0 then
-				project.massRatio = project.massProduced / project.energyRequested
+			if project.energyRequested > 0 and project.massProduction > 0 then
+				project.massRatio = project.massProduction / project.energyRequested
 			end
 
 			table.insert(self.projects, project)
@@ -55,9 +55,13 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 
 	throttle = function(self, eco, project)
 		local net = eco:energyNet()
+		if project.prio <= 1 then
+			net = net - (eco.energyMax/5) * 0.7
+		end
+
 		local new_net = net - project.energyRequested
 
-		LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net)
+		LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net .. " MASS RATIO " .. project.massRatio)
 
 		if new_net < 0 then
 			project:SetEnergyDrain(math.max(0, net))

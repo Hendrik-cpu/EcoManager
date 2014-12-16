@@ -154,8 +154,8 @@ function pauseMexes()
 end
 
 function CreateMexOverlay(unit)
-	local worldView = import('/lua/ui/game/worldview.lua').viewLeft
-	local overlay = Bitmap(worldView)
+	--local worldView = import('/lua/ui/game/worldview.lua').viewLeft
+	local overlay = Bitmap(GetFrame(0))
 	local id = unit:GetEntityId()
 
 	overlay:SetSolidColor('black')

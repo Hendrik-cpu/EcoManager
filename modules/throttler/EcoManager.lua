@@ -93,6 +93,10 @@ EcoManager = Class({
 			setPause(unpause, 'pause', false)
 		end
 
+		for _, p in self.projects do
+			p:LoadFinished()
+		end
+
 		return self.projects
 	end,
 
@@ -105,23 +109,19 @@ EcoManager = Class({
 
 	manageEconomy = function(self)
 		local eco
-		local projects
-		local all_projects = {}
+		local all_projects
+
+		self.pause_list = {}
 
 		self.eco = Economy()
 		eco = self.eco
-		projects = self:LoadProjects(eco)
+		all_projects = self:LoadProjects(eco)
 
-		for _, p in projects do
-			p:LoadFinished()
-			table.insert(all_projects, p)
-		end
+
 
 		--print ("n_projects " .. table.getsize(all_projects))
 
 		LOG("NEW BALANCE ROUND")
-
-		LOG(repr(all_projects))
 
 		import(modPath .. 'modules/throttler/Project.lua').throttleIndex = 0
 		import(modPath .. 'modules/throttler/Project.lua').firstAssister = true
@@ -130,7 +130,7 @@ EcoManager = Class({
 			local pause = false
 
 			plugin.projects = {}
-			for _, p in projects do
+			for _, p in all_projects do
 				plugin:add(p)
 	 		end
 
@@ -142,6 +142,30 @@ EcoManager = Class({
 		 		local ratio_inc
 
 	 			if p.throttle < 1 then
+	 				if not pause then
+	 					local last_ratio = p.throttle
+	 					plugin:throttle(eco, p)
+	 					if p.throttle > 0 and p.throttle < 1 then 
+	 						LOG("ADJUST THIS SHIT")
+	 						p:adjust_throttle(eco) -- round throttle to nearest assister
+	 						LOG("ADJUSTED TO " .. p.throttle)
+	 					end
+	 					
+	 					if p.throttle == 1 then
+	 						pause = true
+	 					end
+
+	 					ratio_inc = p.throttle - last_ratio
+	 					eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
+		 				eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
+	 				end
+
+	 				if pause then
+	 					p:SetEnergyDrain(0)
+	 				end
+
+
+	 				--[[
 			 		if not pause then
 	 					local last_ratio = p.throttle
 		 				plugin:throttle(eco, p)
@@ -160,20 +184,19 @@ EcoManager = Class({
 				 		p:SetEnergyDrain(0)
 		 				--projects[p.id] = nil
 		 			end
+		 			]]
 		 		end
 	 		end
 		end
 
 		table.sort(all_projects, function(a, b) return a.index < b.index end)
 
-		local pause_list = {}
-
-		--LOG(repr(all_projects))
 		for _, p in all_projects do
-			p:pause(pause_list)
+			p:pause(self.pause_list)
 		end
+		
 
-		for toggle_key, modes in pause_list do
+		for toggle_key, modes in self.pause_list do
 			local toggle = toggle_key
 
 			if toggle ~= 'pause' then
