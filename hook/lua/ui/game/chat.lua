@@ -30,8 +30,8 @@ function CreateChatEdit()
 end
 
 function ActivateChat(modifiers)
-    if GetFocusArmy() != -1 then
-        if type(ChatTo()) != 'number' then
+    if GetFocusArmy() ~= -1 then
+        if type(ChatTo()) ~= 'number' then
             if modifiers.Shift then
                 ChatTo:Set('allies')
             else
@@ -73,11 +73,11 @@ function ReceiveChatFromSim(sender, msg)
 	end
 	if type(msg) == 'string' then
 		msg = { text = msg }
-	elseif type(msg) != 'table' then
+	elseif type(msg) ~= 'table' then
 		msg = { text = repr(msg) }
 	end
 	local armyData = GetArmyData(sender)
-	if not armyData and GetFocusArmy() != -1 and not SessionIsReplay() then
+	if not armyData and GetFocusArmy() ~= -1 and not SessionIsReplay() then
 		return
 	end
 	local towho = LOC(ToStrings[msg.to].text) or LOC(ToStrings['private'].text)
@@ -110,15 +110,15 @@ function ReceiveChatFromSim(sender, msg)
 		tempText = {""}
 	end
 	local entry = {
-					name = name,
-					tokey = tokey,
-					color = (armyData.color or "ffffffff"),
-					armyID = (armyData.ArmyID or 1),
-					faction = (armyData.faction or (table.getn(FactionsIcon)-1))+1,
-					text = msg.text,
-					wrappedtext = tempText,
-					new = true
-				}
+		name = name,
+		tokey = tokey,
+		color = (armyData.color or "ffffffff"),
+		armyID = (armyData.ArmyID or 1),
+		faction = (armyData.faction or (table.getn(FactionsIcon)-1))+1,
+		text = msg.text,
+		wrappedtext = tempText,
+		new = true
+	}
 
 	if msg.camera then
 		entry.camera = msg.camera

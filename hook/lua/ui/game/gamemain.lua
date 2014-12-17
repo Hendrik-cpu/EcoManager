@@ -7,9 +7,6 @@ local unitData = import(modPath ..'modules/units.lua').unitData
 
 local KeyMapper = import('/lua/keymap/keymapper.lua')
 
---import(modPath .. "modules/init.lua").setup(isReplay, import('/lua/ui/game/borders.lua').GetMapGroup())
-
-
 local originalOnSelectionChanged = OnSelectionChanged
 function OnSelectionChanged(oldSelection, newSelection, added, removed)
 	if not IsAutoSelection() then
@@ -22,7 +19,6 @@ function OnSelectionChanged(oldSelection, newSelection, added, removed)
 				local data = unitData(mex)
 
 				if(options['em_mexes'] == 'click' and (EntityCategoryContains(categories.TECH1, mex) or data['bonus'] >= 1.5)) then
-
 					import(modPath ..'modules/mexes.lua').upgradeMexes(mexes, true)
 				end
 			end
@@ -31,8 +27,6 @@ function OnSelectionChanged(oldSelection, newSelection, added, removed)
 		originalOnSelectionChanged(oldSelection, newSelection, added, removed)
 	end
 end
-
-
 
 function CreateUI(isReplay, parent)
 	options.gui_scu_manager=0

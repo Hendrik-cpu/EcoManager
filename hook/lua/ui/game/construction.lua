@@ -5,13 +5,6 @@ function SetPaused(units, state)
     import(modPath .. 'modules/pause.lua').Pause(units, state, 'user')
 end
 
---[[
-function OnQueueChanged(newQueue)
-    print "OnQueueChanged"
-    currentCommandQueue = newQueue
-end
-]]
-
 function CreateExtraControls(controlType)
     if controlType == 'construction' or controlType == 'templates' then
         Tooltip.AddCheckboxTooltip(controls.extraBtn1, 'construction_infinite')
