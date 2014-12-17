@@ -56,9 +56,9 @@ local share_threshold = {MASS=1, ENERGY=1}
 local total_shared = {MASS=0, ENERGY=0}
 
 --auto values
-local MIN_MASS = 7000
+local MIN_MASS = 3000
 local MIN_ENERGY = 6000
-local MIN_ENERGY_RATIO = 0.5
+local MIN_ENERGY_RATIO = 0.4
 
 local notifyStored = false
 local players_eco = {}
@@ -333,7 +333,7 @@ function storageStatus()
 	local status = {}
 
     for _, t in ecotypes do
-        status[t] = {share=0, eco[t]['income'] - eco[t]['use_requested']}
+        status[t] = {share=0, overflow=eco[t]['income'] - eco[t]['use_requested']}
     end
 
     if eco['ENERGY']['stored'] < 1 then
