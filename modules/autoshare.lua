@@ -56,10 +56,9 @@ local share_threshold = {MASS=1, ENERGY=1}
 local total_shared = {MASS=0, ENERGY=0}
 
 --auto values
-local MIN_MASS = 8000
+local MIN_MASS = 7000
 local MIN_ENERGY = 6000
-local MIN_ENERGY_RATIO = 0.7
-
+local MIN_ENERGY_RATIO = 0.5
 
 local notifyStored = false
 local players_eco = {}
@@ -82,7 +81,7 @@ function throttledEnergyText(amount)
 end
 
 function initUI(isReplay)
-	if(isReplay) then
+	if isReplay then
 		return
 	end
 
@@ -105,7 +104,6 @@ function initUI(isReplay)
     AutoshareContainer.Depth:Set(10000)
 
     LayoutHelpers.AtLeftTopIn(AutoshareContainer, GetFrame(0), 425, 8)
-
     
     AutoshareContainer.HandleEvent = function(self, event)
         if event.Type == 'ButtonPress' then
@@ -130,111 +128,110 @@ function initUI(isReplay)
             end
             PostDragger(self:GetRootFrame(), event.KeyCode, drag)
         elseif event.Type == 'MouseExit' then
-                    --CloseToolTip()
-                end
+            --CloseToolTip()
+        end
+    end
+
+    local OptionsButton = Button(AutoshareContainer, modPath .. 'textures/options_up.dds', modPath .. 'textures/options_down.dds', modPath .. 'textures/options_over.dds', modPath .. 'textures/options_up.dds', "UI_Menu_MouseDown_Sml", "UI_Tab_Rollover_01")
+    LayoutHelpers.AtLeftTopIn(OptionsButton, AutoshareContainer, 19, 30)
+
+    OptionsButton.oldHandleEvent = OptionsButton.HandleEvent
+    OptionsButton.HandleEvent = function(self, event)
+        if event.Type == 'ButtonPress' then
+            if not options_window then
+                options_window = OptionsPanel(AutoshareContainer)
             end
+        elseif event.Type == 'MouseEnter' then
+        end
+        OptionsButton.oldHandleEvent(self, event)
+    end
 
-            local OptionsButton = Button(AutoshareContainer, modPath .. 'textures/options_up.dds', modPath .. 'textures/options_down.dds', modPath .. 'textures/options_over.dds', modPath .. 'textures/options_up.dds', "UI_Menu_MouseDown_Sml", "UI_Tab_Rollover_01")
-            LayoutHelpers.AtLeftTopIn(OptionsButton, AutoshareContainer, 19, 30)
-
-            OptionsButton.oldHandleEvent = OptionsButton.HandleEvent
-            OptionsButton.HandleEvent = function(self, event)
-                if event.Type == 'ButtonPress' then
-                    if(not options_window) then
-                        options_window = OptionsPanel(AutoshareContainer)
-                    end
-                elseif event.Type == 'MouseEnter' then
-           end
-           OptionsButton.oldHandleEvent(self, event)
-       end
-
-       sharedMass = UIUtil.CreateText(AutoshareContainer, 0, 11, UIUtil.bodyFont)
-       sharedMass:SetColor('ffb7e75f')
-       LayoutHelpers.AtLeftTopIn(sharedMass, AutoshareContainer, 1, 0)
-       sharedEnergy = UIUtil.CreateText(AutoshareContainer, 0, 11, UIUtil.bodyFont)
-       sharedEnergy:SetColor('fff7c70f')
-       LayoutHelpers.AtLeftTopIn(sharedEnergy, AutoshareContainer, 1, 10)
-       throttledEnergy = UIUtil.CreateText(AutoshareContainer, 0, 11, UIUtil.bodyFont)
-       throttledEnergy:SetColor('red')
-       LayoutHelpers.AtLeftTopIn(throttledEnergy, AutoshareContainer, 1, 20)
+    sharedMass = UIUtil.CreateText(AutoshareContainer, 0, 11, UIUtil.bodyFont)
+    sharedMass:SetColor('ffb7e75f')
+    LayoutHelpers.AtLeftTopIn(sharedMass, AutoshareContainer, 1, 0)
+    sharedEnergy = UIUtil.CreateText(AutoshareContainer, 0, 11, UIUtil.bodyFont)
+    sharedEnergy:SetColor('fff7c70f')
+    LayoutHelpers.AtLeftTopIn(sharedEnergy, AutoshareContainer, 1, 10)
+    throttledEnergy = UIUtil.CreateText(AutoshareContainer, 0, 11, UIUtil.bodyFont)
+    throttledEnergy:SetColor('red')
+    LayoutHelpers.AtLeftTopIn(throttledEnergy, AutoshareContainer, 1, 20)
        
+end
+
+function savePreferences()
+    Prefs.SetToCurrentProfile("Autoshare_settings", savedPrefs)
+    Prefs.SavePreferences()
+
+    share_threshold['ENERGY'] = tonumber(savedPrefs['ENERGY'])
+    share_threshold['MASS'] = tonumber(savedPrefs['MASS'])
+end
+
+function OptionsPanel(parent)
+    local window = Bitmap(parent)
+    window:SetTexture(modPath .. 'textures/configwindow.dds')
+    LayoutHelpers.AtLeftTopIn(window, parent, 0, 100)
+    window.Depth:Set(function() return parent.Depth() + 10 end)
+
+    CreateOptionsSlider(window, "Mass", 5, 20, 100)
+    CreateOptionsSlider(window, "Energy", 5, 50, 100)
+
+    local okButton = UIUtil.CreateButtonStd(window, '/widgets/small', 'OK', 16)
+    LayoutHelpers.AtLeftTopIn(okButton, window, 160, 103)
+    okButton.OnClick = function(self)
+        savePreferences();
+        window:Destroy()
+        options_window = nil
     end
 
-    function savePreferences()
-         Prefs.SetToCurrentProfile("Autoshare_settings", savedPrefs)
-         Prefs.SavePreferences()
-
-         share_threshold['ENERGY'] = tonumber(savedPrefs['ENERGY'])
-         share_threshold['MASS'] = tonumber(savedPrefs['MASS'])
-     end
-
-     function OptionsPanel(parent)
-        local window = Bitmap(parent)
-        window:SetTexture(modPath .. 'textures/configwindow.dds')
-        LayoutHelpers.AtLeftTopIn(window, parent, 0, 100)
-        window.Depth:Set(function() return parent.Depth() + 10 end)
-
-        CreateOptionsSlider(window, "Mass", 5, 20, 100)
-        CreateOptionsSlider(window, "Energy", 5, 50, 100)
-
-        local okButton = UIUtil.CreateButtonStd(window, '/widgets/small', 'OK', 16)
-        LayoutHelpers.AtLeftTopIn(okButton, window, 160, 103)
-        okButton.OnClick = function(self)
-            savePreferences();
-            window:Destroy()
-            options_window = nil
-        end
-
-        local cancelButton = UIUtil.CreateButtonStd(window, '/widgets/small', 'Cancel', 16)
-        LayoutHelpers.AtLeftTopIn(cancelButton, window, 8, 103)
-        cancelButton.OnClick = function(self)
-            window:Destroy()
-            options_window = nil
-        end
-
-        return window
+    local cancelButton = UIUtil.CreateButtonStd(window, '/widgets/small', 'Cancel', 16)
+    LayoutHelpers.AtLeftTopIn(cancelButton, window, 8, 103)
+    cancelButton.OnClick = function(self)
+        window:Destroy()
+        options_window = nil
     end
 
-    function CreateOptionsSlider(parent, option, left, top, dividefactor)
-        local title = UIUtil.CreateText(parent, option, 14, UIUtil.titleFont)
-        LayoutHelpers.AtLeftTopIn(title, parent, left, top)
-        title.HandleEvent = function(self, event)
-            if event.Type == 'MouseEnter' then
-                    --CreateToolTip(parent, {Title = HelpText[option].Title, Body = HelpText[option].Body})
-                end
-            end
+    return window
+end
 
-            local gfxs = {MASS='slider-mass', ENERGY='slider-energy', DEFAULT='slider'}
-            local slider_gfx =gfxs[string.upper(option)]
+function CreateOptionsSlider(parent, option, left, top, dividefactor)
+    local title = UIUtil.CreateText(parent, option, 14, UIUtil.titleFont)
+    LayoutHelpers.AtLeftTopIn(title, parent, left, top)
+    title.HandleEvent = function(self, event)
+        if event.Type == 'MouseEnter' then
+            --CreateToolTip(parent, {Title = HelpText[option].Title, Body = HelpText[option].Body})
+        end
+    end
 
-            local slider = IntegerSlider(parent, false, 1,100, 1,
-             UIUtil.UIFile('/game/slider-btn/' .. slider_gfx .. '_btn_up.dds'),
-             UIUtil.UIFile('/game/slider-btn/' .. slider_gfx .. '_btn_over.dds'), 
-             UIUtil.UIFile('/game/slider-btn/' .. slider_gfx .. '_btn_down.dds'),
-             UIUtil.SkinnableFile('/slider02/slider-back_bmp.dds'))
+    local gfxs = {MASS='slider-mass', ENERGY='slider-energy', DEFAULT='slider'}
+    local slider_gfx =gfxs[string.upper(option)]
 
-            LayoutHelpers.AtLeftTopIn(slider, parent, left + 85, top)
-            local value = UIUtil.CreateText(parent, "0", 14, UIUtil.bodyFont)
-            LayoutHelpers.RightOf(value, slider)
+    local slider = IntegerSlider(parent, false, 1,100, 1,
+    UIUtil.UIFile('/game/slider-btn/' .. slider_gfx .. '_btn_up.dds'),
+    UIUtil.UIFile('/game/slider-btn/' .. slider_gfx .. '_btn_over.dds'), 
+    UIUtil.UIFile('/game/slider-btn/' .. slider_gfx .. '_btn_down.dds'),
+    UIUtil.SkinnableFile('/slider02/slider-back_bmp.dds'))
 
-            p = round(share_threshold[string.upper(option)]*100, 2);
-            slider:SetValue(p);
+    LayoutHelpers.AtLeftTopIn(slider, parent, left + 85, top)
+    local value = UIUtil.CreateText(parent, "0", 14, UIUtil.bodyFont)
+    LayoutHelpers.RightOf(value, slider)
 
-            if(p == 100) then
-             p = "auto"
-         end
+    p = round(share_threshold[string.upper(option)]*100, 2);
+    slider:SetValue(p);
 
-         value:SetText(p);
+    if p == 100 then
+        p = "auto"
+    end
 
-         slider.OnValueChanged = function(self, newValue)
-             savedPrefs[string.upper(option)] = newValue/100
-             if(newValue == 100) then
-               newValue = "auto"
-           end
+    value:SetText(p);
 
-           value:SetText(newValue)
-       end
-   end
+    slider.OnValueChanged = function(self, newValue)
+        savedPrefs[string.upper(option)] = newValue/100
+        if newValue == 100 then
+            newValue = "auto"
+        end
+        value:SetText(newValue)
+    end
+end
 
 -- END UI
 
@@ -333,20 +330,21 @@ end
 
 function storageStatus()
 	local tps = GetSimTicksPerSecond()
-	local status = {
-      MASS={overflow=eco['MASS']['income']-eco['MASS']['use_requested'], share=0},
-      ENERGY={overflow=eco['ENERGY']['income']-eco['ENERGY']['use_requested'], share=0}
-    }
+	local status = {}
 
-    if(eco['ENERGY']['stored'] < 1) then
+    for _, t in ecotypes do
+        status[t] = {share=0, eco[t]['income'] - eco[t]['use_requested']}
+    end
+
+    if eco['ENERGY']['stored'] < 1 then
         status['MASS']['overflow'] = eco['MASS']['income'] - eco['MASS']['use_actual']
     end
 
-    if(eco['MASS']['stored'] < 1) then
+    if eco['MASS']['stored'] < 1 then
         status['ENERGY']['overflow'] = eco['ENERGY']['income'] - eco['ENERGY']['use_actual']
     end
 
-     for _, t in ecotypes do
+    for _, t in ecotypes do
         local last_for
         local threshold = share_threshold[t]
 
@@ -377,6 +375,8 @@ function storageStatus()
                 if GetGameTimeSeconds() < 60  then -- no energy share before 1 min
                     threshold = 1
                 end
+
+                threshold = math.min(threshold, 0.95) -- share if energy >= 95%
             elseif t == 'MASS' then
                 threshold = math.max(MIN_MASS / eco[t]['max'], threshold)
                 threshold = math.min(threshold, 0.95) -- share if mass >= 95%
@@ -390,6 +390,7 @@ function storageStatus()
                 threshold = 1
             end
         end
+
 
         if eco[t]['ratio'] > threshold then
             percent = math.min(1, math.max(eco[t]['ratio'] - threshold, 0.01))
