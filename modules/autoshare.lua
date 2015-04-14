@@ -1,16 +1,15 @@
 local modPath = '/mods/EM/'
 
+local Units = import('/mods/common/units.lua')
+
 local addListener = import(modPath .. 'modules/init.lua').addListener
 local addCommand = import(modPath .. 'modules/commands.lua').addCommand
 local getPrefs = import(modPath .. 'modules/prefs.lua').getPrefs
 local savePrefs = import(modPath .. 'modules/prefs.lua').savePrefs
 local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
-local getUnits = import(modPath .. 'modules/units.lua').getUnits
-local cleanUnitList = import(modPath .. 'modules/units.lua').cleanUnitList
 local GetScore = import(modPath .. 'modules/score.lua').GetScore
 local round = import(modPath .. 'modules/utils.lua').round
 local unum = import(modPath .. 'modules/utils.lua').unum
-local mod = import(modPath .. 'modules/utils.lua').mod
 
 local RegisterChatFunc = import('/lua/ui/game/gamemain.lua').RegisterChatFunc
 local FindClients = import('/lua/ui/game/chat.lua').FindClients
@@ -56,9 +55,9 @@ local share_threshold = {MASS=1, ENERGY=1}
 local total_shared = {MASS=0, ENERGY=0}
 
 --auto values
-local MIN_MASS = 3000
-local MIN_ENERGY = 6000
-local MIN_ENERGY_RATIO = 0.4
+local MIN_MASS = 10000
+local MIN_ENERGY = 7000
+local MIN_ENERGY_RATIO = 0.7
 
 local notifyStored = false
 local players_eco = {}
@@ -104,7 +103,7 @@ function initUI(isReplay)
     AutoshareContainer.Depth:Set(10000)
 
     LayoutHelpers.AtLeftTopIn(AutoshareContainer, GetFrame(0), 425, 8)
-    
+
     AutoshareContainer.HandleEvent = function(self, event)
         if event.Type == 'ButtonPress' then
             local drag = Dragger()
@@ -155,7 +154,7 @@ function initUI(isReplay)
     throttledEnergy = UIUtil.CreateText(AutoshareContainer, 0, 11, UIUtil.bodyFont)
     throttledEnergy:SetColor('red')
     LayoutHelpers.AtLeftTopIn(throttledEnergy, AutoshareContainer, 1, 20)
-       
+
 end
 
 function savePreferences()
@@ -207,7 +206,7 @@ function CreateOptionsSlider(parent, option, left, top, dividefactor)
 
     local slider = IntegerSlider(parent, false, 1,100, 1,
     UIUtil.UIFile('/game/slider-btn/' .. slider_gfx .. '_btn_up.dds'),
-    UIUtil.UIFile('/game/slider-btn/' .. slider_gfx .. '_btn_over.dds'), 
+    UIUtil.UIFile('/game/slider-btn/' .. slider_gfx .. '_btn_over.dds'),
     UIUtil.UIFile('/game/slider-btn/' .. slider_gfx .. '_btn_down.dds'),
     UIUtil.SkinnableFile('/slider02/slider-back_bmp.dds'))
 
@@ -350,7 +349,7 @@ function storageStatus()
 
         if eco[t]['avg_net_income'] >= 0 then
             last_for = 1000
-        else 
+        else
             last_for = round(eco[t]['stored'] / (-eco[t]['avg_net_income'] * tps))
         end
 
@@ -368,15 +367,15 @@ function storageStatus()
                     threshold = math.max(threshold, 0.95)
                 end
 
-                if eco[t]['avg_income']*tps < 200 then
-                    threshold = 1
-                end
-
-                if GetGameTimeSeconds() < 60  then -- no energy share before 1 min
+                if eco[t]['avg_income']*tps < 300 then
                     threshold = 1
                 end
 
                 threshold = math.min(threshold, 0.95) -- share if energy >= 95%
+
+                if GetGameTimeSeconds() < 300  then -- no energy share before 5 min
+                    threshold = 1
+                end
             elseif t == 'MASS' then
                 threshold = math.max(MIN_MASS / eco[t]['max'], threshold)
                 threshold = math.min(threshold, 0.95) -- share if mass >= 95%
@@ -385,7 +384,7 @@ function storageStatus()
                     threshold = 1
                 end
             end
-            
+
             if eco[t]['avg_net_income'] < 0 and last_for < 5 then
                 threshold = 1
             end
@@ -411,9 +410,9 @@ function storageStatus()
         end
 
         if status[t]['share'] > 0 then
-            status[t]['overflow'] = math.max(0, status[t]['overflow']) 
+            status[t]['overflow'] = math.max(0, status[t]['overflow'])
         elseif status[t]['share'] < 0 then
-            status[t]['overflow'] = math.min(0, status[t]['overflow']) 
+            status[t]['overflow'] = math.min(0, status[t]['overflow'])
         else
             status[t]['overflow'] = 0
         end
@@ -498,7 +497,7 @@ function playersNeedShare2()
                     share = false
                 end
             end
-            
+
             if(share) then
                 table.insert(players, p)
             end
@@ -519,7 +518,7 @@ function getPlayerStatus()
         local p=players_eco[id]
         if me >= 0 and IsAlly(me, id) and not army.outOfGame then
             data['n_allies'] = data['n_allies'] + 1
-        end            
+        end
 
         if p then
             local add = false
@@ -560,13 +559,13 @@ function shareStored(players, status)
 
                 total_shared[t] = total_shared[t] + eco[t]['stored'] * share[t]
 
-                if t == 'MASS' then 
+                if t == 'MASS' then
                     sharedMass:SetText(unum(total_shared[t]))
                 else
                     sharedEnergy:SetText(unum(total_shared[t]))
                 end
 
-                shareResource(p.id, share)                            
+                shareResource(p.id, share)
             end
         end
     end
@@ -624,7 +623,7 @@ function shareAllResources()
 
     allies = getAllies()
 
-    for _, ally in allies do 
+    for _, ally in allies do
         shareResource(ally['id'], {MASS=1, ENERGY=1})
     end
 end
@@ -643,8 +642,8 @@ function giveAllUnits()
 
     units = EntityCategoryFilterDown(categories.ALLUNITS - categories.SILO, units)
     SelectUnits(units)
-      
-    for _, ally in allies do 
+
+    for _, ally in allies do
            SimCallback({Func="GiveUnitsToPlayer", Args={ From=me, To=ally['id']},} , true)
     end
 end
@@ -656,16 +655,10 @@ function autoshareThread()
 end
 
 function getAcu()
-    local units = getUnits()
+    local acus = Units.Get(categories.COMMAND)
 
-    if units then
-        local acus = EntityCategoryFilterDown(categories.COMMAND, units)
-
-        if acus then
-            local acu = acus[1]
-
-            return acu
-        end
+    if acus then
+        return acus[1]
     end
 end
 
@@ -675,7 +668,7 @@ function checkIfDead()
     if mode ~= "demoralization" then
         return
     end
-        
+
     if GetFocusArmy() ~= -1 then
         if my_army ~= GetFocusArmy() then
             my_acu = nil
@@ -690,7 +683,7 @@ function checkIfDead()
             return
         end
     end
-    
+
     if my_acu:IsDead() and not deathShared then
         deathShared = true
         shareAllResources()
@@ -740,14 +733,14 @@ function autoshareCommand(args)
             nickname = string.sub(nickname, 2)
             op = c
         end
-        
+
         print_players = shareWithPlayer(nickname, op)
     end
 
     if print_players then
         local str = ''
 
-        prefs = getPrefs()    
+        prefs = getPrefs()
 
         for nickname, _ in prefs['as_players'] do
             str = str .. ", " .. nickname

@@ -1,8 +1,8 @@
 local modPath = '/mods/EM/'
 
+local Units = import('/mods/common/units.lua')
+
 local addListener = import(modPath .. 'modules/init.lua').addListener
-local getUnits = import(modPath .. 'modules/units.lua').getUnits
-local getAssisting = import(modPath .. 'modules/units.lua').getAssisting
 local econData = import(modPath .. 'modules/units.lua').econData
 
 local RegisterChatFunc = import('/lua/ui/game/gamemain.lua').RegisterChatFunc
@@ -25,7 +25,7 @@ function effColor(eff)
 
 	if(eff == 1) then
 		color = 'white'
-	else	
+	else
 		r = math.min(510-eff*255, 255)
 		g = math.min(eff*255, 255)
 		b = 0
@@ -37,7 +37,7 @@ function effColor(eff)
 end
 
 function round(num, idp)
-	if(not idp) then
+	if not idp then
 		return tonumber(string.format("%." .. (idp or 0) .. "f", num))
 	else
   		local mult = 10^(idp or 0)
@@ -46,28 +46,27 @@ function round(num, idp)
 end
 
 function getConstructions()
-	--local units = getUnits()
-	local units = getUnits()
+	local units = Units.Get()
 	local array = {mr='massRequested', mc='massConsumed', er='energyRequested', ec='energyConsumed'}
 	local cs = {}
 
 	for _, u in units do
 		local focus = nil
-	
-		if(u:IsInCategory('COMMAND') and not u:GetFocus() and u:GetWorkProgress() > 0) then
+
+		if u:IsInCategory('COMMAND') and not u:GetFocus() and u:GetWorkProgress() > 0 then
 			local queue = u:GetCommandQueue()
 
-			if(queue[1] and queue[1].type == 'Script') then -- Enhancement
+			if queue[1] and queue[1].type == 'Script' then -- Enhancement
 				focus = u
 			end
-		elseif(EntityCategoryContains(categories.SILO * (categories.ANTIMISSILE + categories.NUKE), u)) then -- always overlay on nukes
+		elseif EntityCategoryContains(categories.SILO * (categories.ANTIMISSILE + categories.NUKE), u) then -- always overlay on nukes
 			focus = u
 		end
 
-		if(focus) then
+		if focus then
 			local id = focus:GetEntityId()
 
-			if(not cs[id]) then
+			if not cs[id] then
 				cs[id] = {unit=focus, assisters={}, progress=0, current={}, total={}}
 
 				for k,v in array do
@@ -76,13 +75,13 @@ function getConstructions()
 				end
 			end
 
-			if(u:GetWorkProgress() > 0) then
+			if u:GetWorkProgress() > 0 then
 				local econData = u:GetEconData()
 				table.insert(cs[id]['assisters'], u)
 				cs[id]['progress'] = math.max(cs[id]['progress'], u:GetWorkProgress())
 
 				for k,v in array do
-					if(econData[v]) then
+					if econData[v] then
 						cs[id]['current'][k] = cs[id]['current'][k] + econData[v]
 						cs[id]['total'][k] = cs[id]['total'][k] + econData[v]
 					end
@@ -106,22 +105,22 @@ function createBuildtimeOverlay(data)
 	overlay.OnFrame = function(self, delta)
 		local data = overlays[overlay.id]
 
-		if(not data) then
+		if not data then
 			overlay:Destroy()
 		else
 			local pos
 
-			if(data.eta and math.mod(GameTick(), 5) == 0) then
+			if data.eta and math.mod(GameTick(), 5) == 0 then
 				overlay.eta:SetText(formatBuildtime(math.max(0, data.eta-GetGameTimeSeconds())))
 			end
 
-			if(data.unit and false) then
+			if data.unit and false then
 				pos = data.unit:GetPosition()
-			else 
+			else
 				pos = data.pos
 			end
 
-			pos = worldView:Project(pos) 
+			pos = worldView:Project(pos)
 			LayoutHelpers.AtLeftTopIn(overlay, worldView, pos.x - overlay.Width() / 2, pos.y - overlay.Height() / 2 + 1)
 		end
 	end
@@ -135,7 +134,7 @@ function createBuildtimeOverlay(data)
 	overlay.progress:SetColor('white')
     overlay.progress:SetDropShadow(true)
 	LayoutHelpers.AtCenterIn(overlay.progress, overlay, 10, 0)
-	
+
     overlay.silo = Bitmap(overlay)
     overlay.silo:SetSolidColor('black')
 	overlay.silo.Width:Set(12)
@@ -151,12 +150,8 @@ function createBuildtimeOverlay(data)
 	return overlay
 end
 
-function mod(a, b)
-	return a - math.floor(a/b)*b
-end
-
 function formatBuildtime(buildtime)
-	return string.format("%.2d:%.2d", buildtime/60, mod(buildtime, 60))
+	return string.format("%.2d:%.2d", buildtime/60, math.mod(buildtime, 60))
 end
 
 function updateBuildtimeOverlay(data)
@@ -164,7 +159,7 @@ function updateBuildtimeOverlay(data)
 
 	if not overlays[id] then
 		overlays[id] = data
-		overlays[id]['bitmap'] = createBuildtimeOverlay(data) 
+		overlays[id]['bitmap'] = createBuildtimeOverlay(data)
 		overlays[id]['last_tick'] = GameTick()
 		overlays[id]['last_progress'] = data['progress']
 	end
@@ -172,35 +167,35 @@ function updateBuildtimeOverlay(data)
 	for k,v in data do
 		overlays[id][k] = v
 	end
-	
+
 	local bitmap = overlays[id]['bitmap']
 
-	if(data.eta >= 0) then
+	if data.eta >= 0 then
 		bitmap.eta:Show()
 	else
 		bitmap.eta:Hide()
 	end
 
-	if(data.progress >= 0) then
+	if data.progress >= 0 then
 		bitmap.progress:Show()
 		bitmap.progress:SetText(math.floor(data.progress*100) .. "%")
 	else
 		bitmap.progress:Hide()
 	end
 
-	if(data.silo >= 0) then
+	if data.silo >= 0 then
 		bitmap.silo:Show()
 		bitmap.silo.text:SetText(data.silo)
 		if(data.silo > 0) then
 			bitmap.silo.text:SetColor('green')
-		else 
+		else
 			bitmap.silo.text:SetColor('red')
 		end
-	else 
+	else
 		bitmap.silo:Hide()
 	end
 
-	if(data.eff >= 0) then
+	if data.eff >= 0 then
 		local color = effColor(data.eff)
 		bitmap.progress:SetColor(color)
 		bitmap.eta:SetColor(color)
@@ -216,7 +211,7 @@ end
 function checkConstructions()
 	local constructions = getConstructions()
 
-	if(worldView ~= import('/lua/ui/game/worldview.lua').viewLeft and table.getsize(overlays) > 0) then
+	if worldView ~= import('/lua/ui/game/worldview.lua').viewLeft and table.getsize(overlays) > 0 then
 		overlays = {} -- new viewLeft, reset overlays
 	end
 
@@ -229,8 +224,8 @@ function checkConstructions()
 		local eta = -1
 		local silo = -1
 		local eff = -1
-		
-		if(table.getsize(c['assisters']) > 0) then
+
+		if table.getsize(c['assisters']) > 0 then
 			local tick = GameTick()
 			local last_tick
 			local last_progress
@@ -240,58 +235,58 @@ function checkConstructions()
 				progress = math.max(progress, e:GetWorkProgress())
 			end
 
-			if(overlays[id]) then
+			if overlays[id] then
 				last_tick = overlays[id]['last_tick']
 				last_progress = overlays[id]['last_progress']
 
 				if(progress > last_progress) then
 					eta = math.ceil(GetGameTimeSeconds() + ((tick - last_tick) / 10) * ((1 - progress) / (progress - last_progress)))
-				else 
+				else
 					eta = -1
 				end
 
 				overlays[id]['last_tick'] = tick
 				overlays[id]['last_progress'] = progress
 			end
-		end			
+		end
 
-		if(EntityCategoryContains(categories.SILO * (categories.ANTIMISSILE + categories.NUKE), u)) then
+		if EntityCategoryContains(categories.SILO * (categories.ANTIMISSILE + categories.NUKE), u) then
 			local info = u:GetMissileInfo()
 			silo = info.nukeSiloStorageCount + info.tacticalSiloStorageCount
 			send_msg = true
 		end
 
-		if(u:IsInCategory('COMMAND') and not u:GetFocus() and u:GetWorkProgress() > 0) then
+		if u:IsInCategory('COMMAND') and not u:GetFocus() and u:GetWorkProgress() > 0 then
 			send_msg = true
 		end
 
-		if(progress > 0) then
+		if progress > 0 then
 			eff = calcEff(c.current)
 		end
-	
+
 		local data = {id=u:GetEntityId(), unit=u, pos=u:GetPosition(), eta=eta, progress=progress, silo=silo, eff=eff}
-		
+
 		updateBuildtimeOverlay(data)
-		if(send_msg) then
+		if send_msg then
 			sendOverlayMsg(data)
 		end
 	end
 
-	
+
 	for id, o in overlays do -- clean overlays
 		local destroy = false
 
-		if(tonumber(id) >= 0) then
-			if(not constructions[id]) then
+		if tonumber(id) >= 0 then
+			if not constructions[id] then
 				destroy = true
 			end
 		else
-			if(GetSystemTimeSeconds() - o['last_update'] > 2 or o['eta'] == 0) then
+			if (GetSystemTimeSeconds() - o['last_update']) > 2 or o['eta'] == 0 then
 				destroy = true
 			end
 		end
 
-		if(destroy) then
+		if destroy then
 			o['bitmap']:Destroy()
 			overlays[id] = nil
 		end
@@ -308,7 +303,7 @@ function sendOverlayMsg(data)
 
 	for _, v in msgProtocol do
 		local d = data[v]
-		
+
 		text = text .. d .. ' '
 	end
 
@@ -321,15 +316,15 @@ function processOverlayMsg(player, msg)
 	local data = {}
 	local me = GetFocusArmy()
 
-	if(GetArmiesTable().armiesTable[me].nickname == player) then
-		return 
+	if GetArmiesTable().armiesTable[me].nickname == player then
+		return
 	end
 
 	i = 1
 	for v in string.gfind(msg.text, "%S+") do
 		v = tonumber(v)
-		
-		if(msgProtocol[i]) then
+
+		if msgProtocol[i] then
 			data[msgProtocol[i]] = v
 		end
 
@@ -342,7 +337,7 @@ function processOverlayMsg(player, msg)
 	data['y'] = nil
 	data['z'] = nil
 
-	ForkThread(function() 
+	ForkThread(function()
 		updateBuildtimeOverlay(data)
 	end)
 end

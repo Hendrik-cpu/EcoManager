@@ -7,23 +7,6 @@ local listeners = {}
 
 local mThread = nil
 
-local mciPath = nil
-
-function getMCIPath()
-	if(mciPath == nil) then
-		mciPath = modPath
-		LOG(repr(__active_mods))
-
-		for i, m in __active_mods do
-		   	if(m['uid'] == '89BF1572-9EA8-11DC-1313-635F56D89591') then
-   				mciPath = m['location'] .. '/'
-   			end
-		end
-	end
-
-	return string.lower(mciPath)
-end
-
 function currentTick()
 	return current_tick
 end
@@ -35,16 +18,16 @@ end
 function mainThread()
 	local options
 
-	while(true)  do
+	while true do
 		for _, l in listeners do
 			local current_second = current_tick * WAIT_SECONDS
 
-			if(not options or math.mod(current_tick, 10) == 0) then
+			if not options or math.mod(current_tick, 10) == 0 then
 				options = import(modPath .. 'modules/utils.lua').getOptions(true)
 				--options = import(modPath .. 'modules/prefs.lua').getPrefs()
 			end
 
-			if(math.mod(current_second*10, l['wait']*10) == 0 and (not l.option or options[l.option] ~= 0)) then
+			if math.mod(current_second*10, l['wait']*10) == 0 and (not l.option or options[l.option] ~= 0) then
 				l['callback']()
 			end
 		end
@@ -55,11 +38,11 @@ function mainThread()
 end
 
 function watchdogThread()
-	while(true) do
-		if(watch_tick == current_tick) then -- main thread has died
+	while true do
+		if watch_tick == current_tick then -- main thread has died
 			--print "EM: mainThread crashed! Restarting..."
 
-			if(mThread) then
+			if mThread then
 				KillThread(mThread)
 			end
 
@@ -73,9 +56,9 @@ function watchdogThread()
 end
 
 function setup(isReplay, parent)
-	local mods = {'economy', 'units', 'pause', 'options', 'factories', 'shields', 'mexes', 'buildoverlay'}
+	local mods = {'economy', 'pause', 'options', 'shields', 'mexes', 'buildoverlay'}
 
-	if(not isReplay) then
+	if not isReplay then
 		table.insert(mods, 'autoshare');
 		table.insert(mods, 'throttlemass');
 		table.insert(mods, 'throttle');

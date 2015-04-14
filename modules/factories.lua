@@ -1,8 +1,7 @@
 local modPath = '/mods/EM/'
 
-local getUnits = import(modPath .. 'modules/units.lua').getUnits
-local SelectBegin = import(modPath .. 'modules/allunits.lua').SelectBegin
-local SelectEnd = import(modPath .. 'modules/allunits.lua').SelectEnd
+local Units = import('/mods/common/units.lua')
+local Select = import('/mods/common/units.lua').Select
 
 local bp2factories = {}
 
@@ -28,18 +27,16 @@ function resetOrderQueues()
 	local old = GetSelectedUnits()
 
 	if(factories) then
-		SelectBegin()
-
-		for _, factory in factories do
-			resetOrderQueue(factory)
-		end
-		SelectEnd()
+		Select.Hidden(function()
+			for _, factory in factories do
+				resetOrderQueue(factory)
+			end
+		end)
 	end
 end
 
 function loadFactories()
-	local units = getUnits()
-	local all_factories = EntityCategoryFilterDown(categories.FACTORY, units)
+	local all_factories = Units.Get(categories.FACTORY)
 
 	bp2factories = {}
 
@@ -81,8 +78,7 @@ function factoryData(factory)
 end
 
 function orderFactories()
-	local units = getUnits()
-	local factories = EntityCategoryFilterDown(categories.FACTORY, units)
+	local factories = Units.Get(categories.FACTORY)
 	local orders
 	local toggles
 	local categories
@@ -102,10 +98,10 @@ function orderFactories()
 				table.insert(tmp, f)
 			end
 
-			SelectBegin()
-			SelectUnits(tmp)
-			IssueBlueprintCommand("UNITCOMMAND_BuildFactory", o, 1)
-			SelectEnd()
+			Select.Hidden(function ()
+				SelectUnits(tmp)
+				IssueBlueprintCommand("UNITCOMMAND_BuildFactory", o, 1)
+			end)
 		end
 	end
 
@@ -118,7 +114,7 @@ function orderFactories()
 	LOG(repr(orders))
 	LOG(repr(EntityCategoryGetUnitList(categories)))
 
-	
+
 	IssueBlueprintCommand("UNITCOMMAND_BuildFactory", orders[1], 1)
 	]]
 end

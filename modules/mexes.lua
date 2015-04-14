@@ -1,12 +1,10 @@
 local modPath = '/mods/EM/'
-local SelectBegin = import(modPath .. 'modules/allunits.lua').SelectBegin
-local SelectEnd = import(modPath .. 'modules/allunits.lua').SelectEnd
+local Select = import('/mods/common/select.lua')
+local Units = import('/mods/common/units.lua')
 
 local triggerEvent = import(modPath .. 'modules/events.lua').triggerEvent
 local addListener = import(modPath .. 'modules/init.lua').addListener
 local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
-local getUnits = import(modPath .. 'modules/units.lua').getUnits
-local unitData = import(modPath ..'modules/units.lua').unitData
 
 local LayoutHelpers = import('/lua/maui/layouthelpers.lua')
 local Bitmap = import('/lua/maui/bitmap.lua').Bitmap
@@ -37,15 +35,14 @@ function isMexBeingBuilt(mex)
 end
 
 function getMexes()
-	local units = getUnits() or {}
-	local all_mexes = EntityCategoryFilterDown(categories.MASSEXTRACTION * categories.STRUCTURE, units)
+	local all_mexes = Units.Get(categories.MASSEXTRACTION * categories.STRUCTURE)
 	local mexes = {all={}, upgrading={}, idle={}, assisted={}}
 
 	mexes['all'] = all_mexes
 
 	for _, mex in all_mexes do
 		if not mex:IsDead() then
-			data = unitData(mex)
+			data = Units.Data(mex)
 
 			if data['is_idle'] then -- Idling mex, should be upgraded / paused
 				for _, category in {categories.TECH1, categories.TECH2} do
@@ -95,15 +92,12 @@ function upgradeMexes(mexes, unpause)
 	end
 
 	if table.getsize(upgrades) > 0 then
-		SelectBegin()
-
-		for upgrades_to, up_mexes in upgrades do
-			SelectUnits(up_mexes)
-			IssueBlueprintCommand("UNITCOMMAND_Upgrade", upgrades_to, 1, false)
-		end
-
-		--SelectUnits(old)
-		SelectEnd()
+		Select.Hidden(function()
+			for upgrades_to, up_mexes in upgrades do
+				SelectUnits(up_mexes)
+				IssueBlueprintCommand("UNITCOMMAND_Upgrade", upgrades_to, 1, false)
+			end
+		end)
 	end
 
 	if unpause then
@@ -114,7 +108,7 @@ function upgradeMexes(mexes, unpause)
 end
 
 function upgradeMexById(id)
-	local units = getUnits()
+	local units = Units.Get()
 
 	for k, u in units do
 		if u:IsDead() then
@@ -186,11 +180,11 @@ end
 
 function UpdateMexOverlay(mex)
 	local id = mex:GetEntityId()
-	local data = unitData(mex)
+	local data = Units.Data(mex)
 	local tech = 0
 	local color = 'green'
 
-	if(isMexBeingBuilt(mex)) then
+	if isMexBeingBuilt(mex) then
 		return false
 	end
 
@@ -263,15 +257,6 @@ function checkMexes()
 			upgradeMexes(mexes['idle'])
 		end
 	end
-
---[[
-	for id, overlay in overlays do
-		if(not overlay or overlay.destroy or options['em_mexoverlay'] == 0) then
-			overlay:Destroy()
-			overlays[id] = nil
-		end
-	end
-	]]
 
 	if table.getsize(mexes['assisted']) > 0 then
 		Pause(mexes['assisted'], false, 'user') -- unpause assisted mexes

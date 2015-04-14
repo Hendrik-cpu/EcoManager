@@ -21,23 +21,23 @@ function Pause(units, pause, module)
 	local paused = {}
 	local unpaused = {}
 
-	if(pause) then
+	if pause then
 		prio = pause_prios[module]['pause']
 	else
 		prio = pause_prios[module]['unpause'] or pause_prios[module]['pause']
 	end
 
-	if(not prio) then
+	if not prio then
 		prio = 50
 	end
 
 	for _, u in units do
 		local id = u:GetEntityId()
 
-		if(not states[id] or states[id]['paused'] ~= pause) then
-			if(not states[id] or states[id]['module'] == module or prio >= states[id]['prio']) then
-				if(pause and not states[id]['paused']) then
-					if(not states[id]) then
+		if not states[id] or states[id]['paused'] ~= pause then
+			if not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] then
+				if pause and not states[id]['paused'] then
+					if not states[id] then
 						states[id] = {unit=u,prio=prio,module=module}
 					end
 
@@ -61,7 +61,7 @@ function CanUnpause(unit, module)
 	local id
 	local prio = pause_prios[module]['unpause'] or pause_prios[module]['pause']
 
-	return (not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or (u:IsIdle() or u:GetWorkProgress() == 0))
+	return not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or u:IsIdle() or u:GetWorkProgress() == 0
 end
 
 function CanUnpauseUnits(units, module)
@@ -70,9 +70,9 @@ function CanUnpauseUnits(units, module)
 	local filtered = {}
 
 	for _, u in units do
-		if(not u:IsDead()) then
+		if not u:IsDead() then
 			id = u:GetEntityId()
-			if(not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or (u:IsIdle() or u:GetWorkProgress() == 0)) then
+			if not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or u:IsIdle() or u:GetWorkProgress() == 0 then
 				table.insert(filtered, u)
 			end
 		end

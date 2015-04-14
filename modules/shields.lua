@@ -1,10 +1,8 @@
 local modPath = '/mods/EM/'
 local addListener = import(modPath .. 'modules/init.lua').addListener
-local getUnits = import(modPath .. 'modules/units.lua').getUnits
+local Units = import('/mods/common/units.lua')
 
-local SelectBegin = import(modPath .. 'modules/allunits.lua').SelectBegin
-local SelectEnd = import(modPath .. 'modules/allunits.lua').SelectEnd
-
+local Select = import('/mods/common/select.lua')
 
 function upgradeShields()
 	local upgrades = {}
@@ -13,39 +11,33 @@ function upgradeShields()
 	for i, shield in shields do
 		local upgrades_to = nil
 
-		if(not shield:IsDead()) then
+		if not shield:IsDead() then
 			local bp = shield:GetBlueprint()
 			upgrades_to = bp.General.UpgradesTo
 
-			if(upgrades_to) then
+			if upgrades_to then
 				table.insert(upgrades, shield)
 			end
 		end
 	end
 
-	if(upgrades) then
-		local selection = GetSelectedUnits()
-
-		SelectBegin()
-		SelectUnits(upgrades)
-		IssueBlueprintCommand("UNITCOMMAND_Upgrade", 'urb4204', 1, false)
-		IssueBlueprintCommand("UNITCOMMAND_Upgrade", 'urb4205', 1, false)
-		IssueBlueprintCommand("UNITCOMMAND_Upgrade", 'urb4206', 1, false)
-		IssueBlueprintCommand("UNITCOMMAND_Upgrade", 'urb4207', 1, false)
-		SelectUnits(selection)
-		SelectEnd()
+	if upgrades then
+		Select.Hidden(function()
+			SelectUnits(upgrades)
+			IssueBlueprintCommand("UNITCOMMAND_Upgrade", 'urb4204', 1, false)
+			IssueBlueprintCommand("UNITCOMMAND_Upgrade", 'urb4205', 1, false)
+			IssueBlueprintCommand("UNITCOMMAND_Upgrade", 'urb4206', 1, false)
+			IssueBlueprintCommand("UNITCOMMAND_Upgrade", 'urb4207', 1, false)
+		end)
 	end
 end
 
 function addShields()
-	local units = getUnits()
-	local shields = EntityCategoryFilterDown(categories.SHIELD * categories.STRUCTURE, units)
+	local shields = Units.Get(categories.SHIELD * categories.STRUCTURE)
 
 	for _, s in shields do
 		addShield(s)
 	end
-
-	
 end
 
 function init(isReplay, parent)

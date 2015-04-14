@@ -7,11 +7,11 @@ end
 function runCommand(args)
 	local command = string.lower(args[1])
 
-	if(command_table[command]) then
+	if command_table[command] then
 		command_table[command](args)
 		return true
 	end
-	
+
 	return false
 end
 

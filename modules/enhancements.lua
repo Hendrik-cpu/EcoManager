@@ -1,10 +1,10 @@
 local enhTable = {}
 
 function canUpgrade(unit, enhancement)
-	local enhancements = unit:GetBlueprint().Enhancements 
+	local enhancements = unit:GetBlueprint().Enhancements
     local e = enhancements[enhancement]
 
-    if(e) then
+    if e then
     	local enhCommon = import('/lua/enhancementcommon.lua')
    		local existing = enhCommon.GetEnhancements(unit:GetEntityId())
 

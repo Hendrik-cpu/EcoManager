@@ -561,6 +561,10 @@ function PlaceMarker(upgradeType, position)
 	end
 	--position each frame to keep same world position
 	markerTable[index].OnFrame = function(self)
+		if not worldview or worldview:BeenDestroyed() then
+			worldview = import('/lua/ui/game/worldview.lua').viewLeft
+		end
+		
 		self.Left:Set(function() return worldview:Project(self.position)[1]  - (self.Width()/2) +worldview.Left() end)
 		self.Top:Set(function() return worldview:Project(self.position)[2] - (self.Height()/2) +worldview.Top() end)
 	end

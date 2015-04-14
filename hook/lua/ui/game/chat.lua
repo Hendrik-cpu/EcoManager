@@ -5,7 +5,7 @@ local runCommand = import(modPath .. 'modules/commands.lua').runCommand
 local oldCreateChatEdit = import('/lua/ui/game/chat.lua').CreateChatEdit
 local oldOnEnterPressed
 
-function CreateChatEdit() 
+function CreateChatEdit()
 	local group = oldCreateChatEdit()
 
 	oldOnEnterPressed= group.edit.OnEnterPressed
@@ -110,6 +110,7 @@ function ReceiveChatFromSim(sender, msg)
 		tempText = {""}
 	end
 	local entry = {
+		time = GetGameTimeSeconds(),
 		name = name,
 		tokey = tokey,
 		color = (armyData.color or "ffffffff"),

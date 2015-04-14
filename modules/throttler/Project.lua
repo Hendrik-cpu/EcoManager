@@ -107,7 +107,7 @@ Project = Class({
     end,
 
     SetThrottleRatio = function(self, ratio)
-        if not self.index then
+        if self.index == 0 then
             self.index = throttleIndex
             throttleIndex = throttleIndex + 1
         end

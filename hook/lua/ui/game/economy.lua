@@ -29,6 +29,9 @@ local filteredMass = 1
 local fullFlag = false
 local emptyFlag = false
 
+local Reclaim = {focus=-1, MASS={rate=0, history={}}, ENERGY={rate=0, history={}}}
+
+TeamEco = {allies={}, overflow={MASS=0, ENERGY=0}}
 
 group = false
 savedParent = false
@@ -87,28 +90,28 @@ function unum(n, decimals, unit)
 
     local value = math.abs(n)
 
-    if (value > 9999) then
-        while (value >= 1000) do
-            if(unit and units[pos] == unit) then break end
+    if value > 9999 then
+        while value >= 1000 do
+            if unit and units[pos] == unit then break end
             value = value / 1000
             pos = pos + 1
         end
     end
 
-    if(decimals) then
+    if decimals then
         value = round(value, decimals)
     end
           
     str = string.format("%g", value)
     local sign = '+'
-    if(n < 0) then 
+    if n < 0 then 
         sign = '-'
     end
 
     str = sign .. str
 
     if(pos > 1) then
-        return str..units[pos]
+        return str .. units[pos]
     else
         return str
     end
@@ -138,7 +141,7 @@ function CreateUI()
         group.warningBG.flashMod = 1
         group.warningBG.warningBitmap = warningBitmap
         group.warningBG.SetToState = function(self, state)
-            if self.State != state then
+            if self.State ~= state then
                 if state == 'red' then
                     self:SetTexture(UIUtil.UIFile('/game/resource-panel/alert-'..self.warningBitmap..'-panel_bmp.dds'))
                     self.flashMod = 1.6
@@ -221,20 +224,25 @@ function CreateUI()
         ecostats:SetTexture('/textures/ui/common/game/economic-overlay/econ_bmp_m.dds')
         ecostats.Depth:Set(99)
         LayoutHelpers.AtLeftTopIn(ecostats, GetFrame(0), 340, 8)
-        ecostats.Height:Set(36)
+        ecostats.Height:Set(60)
         ecostats.Width:Set(80)
         ecostats:DisableHitTest(true)
-        local TextLine01 = UIUtil.CreateText(ecostats, 'reclaimed', 10, UIUtil.bodyFont)
-        LayoutHelpers.CenteredAbove(TextLine01, ecostats, -12)
+        local RatioTitle = UIUtil.CreateText(ecostats, 'E/M', 10, UIUtil.bodyFont)
+        LayoutHelpers.CenteredAbove(RatioTitle, ecostats, -12)
+        RatioText = UIUtil.CreateText(ecostats, '0', 14, UIUtil.bodyFont)
+        LayoutHelpers.CenteredBelow(RatioText, RatioTitle)
+
+        local TextLine01 = UIUtil.CreateText(ecostats, 'Reclaimed', 10, UIUtil.bodyFont)
+        LayoutHelpers.CenteredBelow(TextLine01, RatioTitle, 15)
         TextLine02 = UIUtil.CreateText(ecostats, '', 10, UIUtil.bodyFont)
         TextLine02:SetColor('FFB8F400')
-        LayoutHelpers.AtRightTopIn(TextLine02, ecostats, 4, 10)
+        LayoutHelpers.AtRightTopIn(TextLine02, ecostats, 4, 35)
         TextLine03 = UIUtil.CreateText(ecostats, '', 10, UIUtil.bodyFont)
         TextLine03:SetColor('FFF8C000')
         TextLine01:DisableHitTest(true)
         TextLine02:DisableHitTest(true)
         TextLine03:DisableHitTest(true)
-        LayoutHelpers.AtRightTopIn(TextLine03, ecostats, 4, 20)
+        LayoutHelpers.AtRightTopIn(TextLine03, ecostats, 4, 45)
     end
 end
 
@@ -322,9 +330,53 @@ function CommonLogic()
     return GUI.mass, GUI.energy
 end
 
+function UpdateReclaim(econData)
+    local INTERVAL = 10
+    local HISTORY_SIZE = 5
+    local focus = GetFocusArmy()
+    local simFrequency = GetSimTicksPerSecond()
+    if Reclaim.focus ~= focus then
+        Reclaim = {focus=focus, MASS={rate=0, history={}}, ENERGY={rate=0, history={}}}
+    end
+
+    if not Reclaim.MASS.history or math.mod(GameTick(), INTERVAL) == 0 then
+        for _, t in {'MASS', 'ENERGY'} do
+            local reclaimed = econData.reclaimed[t]
+
+            table.insert(Reclaim[t].history, 1, reclaimed)
+            Reclaim[t].history[HISTORY_SIZE + 1] = nil
+
+            local n = table.getsize(Reclaim[t].history)
+            Reclaim[t].rate = math.floor(.5 + ((reclaimed - Reclaim[t].history[n]) / (n / (10 / INTERVAL))))
+        end
+    end
+
+    TextLine02:SetText(string.format("%d (%d/s)", econData.reclaimed['MASS'], Reclaim['MASS'].rate))
+    TextLine03:SetText(string.format("%d (%d/s)", econData.reclaimed['ENERGY'], Reclaim['ENERGY'].rate))
+
+    local ratio
+    local tps = GetSimTicksPerSecond()
+    --local mass = econData.income.MASS + math.min(econData.stored.MASS, (econData.stored.MASS / (econData.income.MASS*tps)))
+    --local energy = econData.income.ENERGY + math.min(econData.stored.ENERGY, (econData.stored.ENERGY / (econData.income.ENERGY*tps)))
+    local energy = econData.income.ENERGY
+    local mass = econData.income.MASS
+
+    
+    
+    if mass > 0 then
+        ratio = (energy / mass)
+    else
+        ratio = 0
+    end
+
+    ratio = math.floor(0.5+100*ratio)/100
+    RatioText:SetText(string.format("%.2f", ratio))
+end
+
 function _BeatFunction()
     local econData = GetEconomyTotals()
     local simFrequency = GetSimTicksPerSecond()
+    local allyOverflow = TeamEco['overflow']
     if options.gui_display_reclaim_totals == 1 then
     -- fetch & format reclaim values
         reclaimedTotalsMass = math.ceil(econData.reclaimed.MASS)
@@ -343,13 +395,20 @@ function _BeatFunction()
             local requestedAvg = math.min(lastRequestedVal * simFrequency, 99999999)
             local actualAvg = math.min(lastActualVal * simFrequency, 99999999)
             local incomeAvg = math.min(incomeVal * simFrequency, 99999999)
+            local overflow = math.ceil(math.min(allyOverflow[tableID] * simFrequency, 99999999))
+
 
             controls.storageBar:SetRange(0, maxStorageVal)
             controls.storageBar:SetValue(storedVal)
             controls.curStorage:SetText(math.ceil(storedVal))
             controls.maxStorage:SetText(math.ceil(maxStorageVal))
 
-            controls.income:SetText(string.format("+%d", math.ceil(incomeAvg)))
+            if overflow > 0 then
+                controls.income:SetText(string.format("+%d (+%d)", math.ceil(incomeAvg), overflow))
+            else
+                controls.income:SetText(string.format("+%d", math.ceil(incomeAvg)))
+            end
+
             if (storedVal > 0.5) then
                 controls.expense:SetText(string.format("-%d", math.ceil(actualAvg)))
             else
@@ -362,6 +421,7 @@ function _BeatFunction()
             else
                 rateVal = math.ceil(incomeAvg - requestedAvg)
             end
+            rateVal = rateVal + overflow 
 
 
             -- CHANGED by THYGRRR: Effective value calculation and rate calculation separated.
@@ -493,8 +553,7 @@ function _BeatFunction()
             return filtered
         end        
         if options.gui_display_reclaim_totals == 1 then
-            TextLine02:SetText(reclaimedTotalsMass)
-            TextLine03:SetText(reclaimedTotalsEnergy)
+            UpdateReclaim(econData)
         end
         filteredEnergy = DisplayEconData(GUI.energy, 'ENERGY', 'energyViewState', filteredEnergy, false)
         filteredMass = DisplayEconData(GUI.mass, 'MASS', 'massViewState', filteredMass, true)        
@@ -529,13 +588,19 @@ function _BeatFunction()
             local requestedAvg = math.min(lastRequestedVal * simFrequency, 99999999)
             local actualAvg = math.min(lastActualVal * simFrequency, 9999999)
             local incomeAvg = math.min(incomeVal * simFrequency, 99999999)
+            local overflow = math.ceil(math.min(allyOverflow[tableID] * simFrequency, 99999999))
             
             controls.storageBar:SetRange(0, maxStorageVal)
             controls.storageBar:SetValue(storedVal)
             controls.curStorage:SetText(math.ceil(storedVal))
             controls.maxStorage:SetText(math.ceil(maxStorageVal))
             
-            controls.income:SetText(string.format("+%d", math.ceil(incomeAvg)))
+            if overflow > 0 then
+                controls.income:SetText(string.format("+%d (+%d)", math.ceil(incomeAvg), overflow))
+            else
+                controls.income:SetText(string.format("+%d", math.ceil(incomeAvg)))
+            end
+
             if storedVal > 0.5 then
                 controls.expense:SetText(string.format("-%d", math.ceil(actualAvg)))
             else
@@ -548,6 +613,7 @@ function _BeatFunction()
             else
                 rateVal = math.ceil(incomeAvg - requestedAvg)
             end
+            rateVal = rateVal + overflow 
             --local rateStr = string.format('%+d', math.min(math.max(rateVal, -99999999), 99999999))
             local rateStr, effVal = FormatRateString2(rateVal, storedVal, incomeAvg, actualAvg, requestedAvg)
 
@@ -613,14 +679,13 @@ function _BeatFunction()
         DisplayEconData(GUI.energy, 'ENERGY', 'energyViewState')
 
         if options.gui_display_reclaim_totals == 1 then
-            TextLine02:SetText(reclaimedTotalsMass)
-            TextLine03:SetText(reclaimedTotalsEnergy)
+            UpdateReclaim(econData)
         end
     end
 end
 
 function ToggleEconPanel(state)
-    if import('/lua/ui/game/gamemain.lua').gameUIHidden and state != nil then
+    if import('/lua/ui/game/gamemain.lua').gameUIHidden and state ~= nil then
         return
     end
     import(UIUtil.GetLayoutFilename('economy')).TogglePanelAnimation(state)

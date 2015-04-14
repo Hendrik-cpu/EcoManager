@@ -5,9 +5,9 @@ local PREFS_KEY = 'EM_Settings'
 local preferences = nil
 
 function getPrefs(key)
-	if(preferences == nil) then
-		preferences = Prefs.GetFromCurrentProfile(PREFS_KEY)	
-		if(not preferences) then
+	if preferences == nil then
+		preferences = Prefs.GetFromCurrentProfile(PREFS_KEY)
+		if not preferences then
 			preferences = {}
 		end
 	end

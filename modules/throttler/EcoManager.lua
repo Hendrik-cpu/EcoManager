@@ -109,15 +109,15 @@ EcoManager = Class({
 
 	manageEconomy = function(self)
 		local eco
-		local all_projects
+		local all_projects = {}
 
 		self.pause_list = {}
 
 		self.eco = Economy()
 		eco = self.eco
-		all_projects = self:LoadProjects(eco)
-
-
+		for _, p in self:LoadProjects(eco) do
+			table.insert(all_projects, p)
+		end
 
 		--print ("n_projects " .. table.getsize(all_projects))
 
@@ -136,7 +136,6 @@ EcoManager = Class({
 
 	 		plugin:sort()
 
-	 		--LOG(repr(plugin.projects))
 			--print ("n_plugin_projects " .. table.getsize(plugin.projects))
 	 		for _, p in plugin.projects do
 		 		local ratio_inc
@@ -190,6 +189,7 @@ EcoManager = Class({
 		end
 
 		table.sort(all_projects, function(a, b) return a.index < b.index end)
+		LOG(repr(all_projects))
 
 		for _, p in all_projects do
 			p:pause(self.pause_list)

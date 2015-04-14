@@ -14,18 +14,18 @@ function updateEconomy()
 	data = GetEconomyTotals()
 
 	eco_tick = eco_tick + 1
-	if(eco_tick > ECO_DATA_SIZE) then
+	if eco_tick > ECO_DATA_SIZE then
 		eco_tick = 1
 	end
-	
+
 	for _, type in eco_types do
 		for f,t in mapping do
 			local n = 1
 			local avg_key = 'avg_'..t
-			
-			if(t == 'ratio') then
+
+			if t == 'ratio' then
 				eco[type][t] = data['stored'][type] / data['maxStorage'][type]
-			elseif (t == 'net_income') then
+			elseif t == 'net_income' then
 				eco[type][t] = data['income'][type]-data['lastUseActual'][type]
 
 				--added by SC-Account
@@ -39,7 +39,7 @@ function updateEconomy()
 
 			eco[type][avg_key] = eco[type][t]
 
-			for _, ed in eco_data do 
+			for _, ed in eco_data do
 				eco[type][avg_key] = eco[type][avg_key] + ed[type][t]
 				n = n + 1
 			end
@@ -50,7 +50,7 @@ function updateEconomy()
 	end
 
 	eco_data[eco_tick] = table.deepcopy(eco)
-end	
+end
 
 function getEconomy()
 	return eco_data[eco_tick]
@@ -64,7 +64,7 @@ function economyThread()
 	end
 	--added by SC-Account
 
-	while(true) do
+	while true do
 		updateEconomy()
 		WaitSeconds(WAIT_TIME)
 	end

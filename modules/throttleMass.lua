@@ -1,6 +1,6 @@
 
 local modPath = '/mods/EM/'
-local getUnits = import(modPath .. 'modules/units.lua').getUnits
+local Units = import('/mods/common/units.lua')
 local addListener = import(modPath .. 'modules/init.lua').addListener
 local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
 local addCommand = import(modPath .. 'modules/commands.lua').addCommand
@@ -30,6 +30,7 @@ end
 function SetPaused(units, state)
 	Pause(units, state, 'throttlemass')
 end
+
 function getUnitsPauseList()
 	local units={}
 	for k, m in unitsPauseList do
@@ -53,6 +54,7 @@ function setMassStallMexesOnCount(args)
 	local eco=getEconomy()
 	print("Number of mass production upgrades to keep on during mass stall set to:" , preventM_Stall, "Stalling eco: ", "mass = ", eco['MASS']['stall_seconds'],"energy = ", eco['ENERGY']['stall_seconds'])
 end
+
 function setEnergyStallMexesOnCount(args)
 	if not args then
 		preventE_Stall=0
@@ -65,101 +67,14 @@ function setEnergyStallMexesOnCount(args)
 	print("Number of mass production upgrades to keep on during energy stall set to:" , preventE_Stall, "Stalling eco: ", "mass = ", eco['MASS']['stall_seconds'],"energy = ", eco['ENERGY']['stall_seconds'])
 end
 
-function setBuildProjects()
-	ILOG("started")
-	
-	-- create table
-	local AllUnits={}
-	for _, u in getUnits() do 
-		table.insert(AllUnits,u) 
-	end
-
-	-- map mexes to positions
-	local mexes=EntityCategoryFilterDown(categories.MASSEXTRACTION,AllUnits)
-	local mexPositions = {}
-	for _, m in mexes do
-		local pos = m:GetPosition()
-		if(not mexPositions[pos[1]]) then
-			mexPositions[pos[1]] = {}
-		end
-
-		mexPositions[pos[1]][pos[3]] = m
-	end
-
-	-- find upgrading mexes, check if eco is capped
-	local AllMEXT3Capped=false
-	if table.getsize(mexes)>0 then 
-		AllMEXT3Capped=true
-	end
-
-	engineers = EntityCategoryFilterDown(categories.ENGINEER,AllUnits)
-	for _, m in mexes do
-		if not m:IsIdle() then --and not excluded[m:GetEntityId()] 
-			table.insert(engineers,m)
-		end
-
-		local data=m:GetEconData()
-		if data['massProduced']~=27 then
-			AllMEXT3Capped =false
-		end
-
-	end
-
-	if AllMEXT3Capped and not mexCappedMsgPrinted then
-		local minutes=math.floor(GetGameTimeSeconds()/60)
-		print("All Mexes upgraded to t3 and capped at", minutes .. ":" .. GetGameTimeSeconds()-minutes*60)
-		mexCappedMsgPrinted=true
-	end
-
-	-- find the mex assisting and grab id from there
-	assisting = {}
-	for _, e in engineers do
-		if not e:IsDead() then 
-			local m
-			local is_idle = e:IsIdle()
-			local focus = e:GetFocus()
-			local assist = true
-
-			if(focus) then
-				m = focus
-			else -- engineer isn't focusing, walking towards mex?
-				local queue = e:GetCommandQueue()
-				local p = queue[1].position
-
-
-				if(queue[1].type == 'Guard') then
-					if(mexPositions[p[1]] and mexPositions[p[1]][p[3]]) then
-						local mex = mexPositions[p[1]][p[3]]
-						m = mex:GetFocus()
-
-						if(m and VDist3(p, e:GetPosition()) > 20) then -- 10 -> buildrange of engineer maybe?
-							assist = false
-						end
-					end
-				end
-			end
-			
-			if m and (m:IsInCategory("MASSEXTRACTION") or m:IsInCategory("MASSSTORAGE")) and assist then --and not excluded[e:GetEntityId()]
-				if not m:IsInCategory("MASSSTORAGE") or  e:GetWorkProgress() > 0.05 then
-					if (not assisting[m]) then
-						assisting[m] = {}
-					end
-					table.insert(assisting[m], e)
-				end 
-			end	
-		end
-	end
-
-end
-
 local mexCappedMsgPrinted=false
 function manageAssistedUpgrade()
 	ILOG("started")
 	-- create table
 	local AllUnits={}
 	local mexPositions = {}
-	for _, u in getUnits() do 
-		table.insert(AllUnits,u) 
+	for _, u in Units.Get() do
+		table.insert(AllUnits,u)
 	end
 
 	local mexes=EntityCategoryFilterDown(categories.MASSEXTRACTION,AllUnits)
@@ -177,13 +92,13 @@ function manageAssistedUpgrade()
 
 	-- find upgrading mexes, check if eco is capped
 	local AllMEXT3Capped=false
-	if table.getsize(mexes)>0 then 
+	if table.getsize(mexes)>0 then
 		AllMEXT3Capped=true
 	end
 
 	engineers = EntityCategoryFilterDown(categories.ENGINEER,AllUnits)
 	for _, m in mexes do
-		if not m:IsIdle() then --and not excluded[m:GetEntityId()] 
+		if not m:IsIdle() then --and not excluded[m:GetEntityId()]
 			table.insert(engineers,m)
 		end
 
@@ -203,7 +118,7 @@ function manageAssistedUpgrade()
 	-- find the mex assisting and grab id from there
 	assisting = {}
 	for _, e in engineers do
-		if not e:IsDead() then 
+		if not e:IsDead() then
 			local m
 			local is_idle = e:IsIdle()
 			local focus = e:GetFocus()
@@ -227,15 +142,15 @@ function manageAssistedUpgrade()
 					end
 				end
 			end
-			
+
 			if m and (m:IsInCategory("MASSEXTRACTION") or m:IsInCategory("MASSSTORAGE")) and assist then --and not excluded[e:GetEntityId()]
 				if not m:IsInCategory("MASSSTORAGE") or  e:GetWorkProgress() > 0.05 then
 					if (not assisting[m]) then
 						assisting[m] = {}
 					end
 					table.insert(assisting[m], e)
-				end 
-			end	
+				end
+			end
 		end
 	end
 
@@ -275,7 +190,7 @@ function manageAssistedUpgrade()
 
 	    	for _, mex in mexes do
 	    		local pos2=mex:GetPosition()
-	    		if pos2 then 
+	    		if pos2 then
 		    		if VDist3(pos,pos2)<3 then
 	                	local mexBP=mex:GetBlueprint()
 	                	mexMassProduction=mexBP.Economy.ProductionPerSecondMass
@@ -293,7 +208,7 @@ function manageAssistedUpgrade()
 			mProduction=bp.Economy.ProductionPerSecondMass
 		end
 
-		if mProduction > 0 then 
+		if mProduction > 0 then
 			local buildTime=bp.Economy.BuildTime
 			local workProgress=lastE:GetWorkProgress()
 			local workRemaining=(1-workProgress)
@@ -324,9 +239,9 @@ function manageAssistedUpgrade()
 		local pausedByMe=getUnitsPauseList()
 		local pausedByMeForPower=getUnitsPauseList()
 		local pausedByClickOrAssist = {}
-		
+
 		table.sort(sortTable, function(a, b) return a['res']['MASS']['TimeEfficiency'] < b['res']['MASS']['TimeEfficiency'] end)
-		optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,combinedMassDrain,combinedEnergyDrain)	
+		optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,combinedMassDrain,combinedEnergyDrain)
 
 	end
 	ILOG("finished")
@@ -347,7 +262,7 @@ function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,mProd_mDrai
 	local lastUnitsPauseList=unitsPauseList
 	unitsPauseList={}
 
-	for i = PossibleProjects+1, table.getsize(sortTable) do 
+	for i = PossibleProjects+1, table.getsize(sortTable) do
 		local m = sortTable[i].unit
 		for _, e in assisting[m] do
 			table.insert(unitsPauseList, e)
@@ -366,9 +281,9 @@ function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,mProd_mDrai
 			end
 		end
 	end
-		
+
 	-- execute pausing and unpausing
-	SetPaused(unitsPauseList, true)	
+	SetPaused(unitsPauseList, true)
 	SetPaused(unitsUnPauseList, false)
 end
 
@@ -403,7 +318,7 @@ function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEnti
 		--update eco stats for following calculations
 		NetIncome=NetIncome-DrainPerSec
 		CalcStored=CalcStored-CostRemaining
-		
+
 		--calculate storedincome for current and next project
 		local CalcStoredIncome=NetIncome + Stored/BufferTime
 
@@ -433,6 +348,6 @@ function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEnti
 
 		PossibleProjects=j
 	end
-	
+
 	return PossibleProjects
 end
