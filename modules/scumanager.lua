@@ -24,7 +24,7 @@ local TooltipInfo = {
 		description = 'Upgrades all idle unupgraded SCUs along the engineer path. Right click to configure (select an SCU first!).',
 	},
 }
-	
+
 local upgradeDefaultTable = {
 	UEF = {
 		Engineer = {
@@ -149,7 +149,7 @@ function ConfigureUpgrades()
 	local combatButton = Checkbox(window, '/textures/ui/common/SCUManager/combat_up.dds', '/textures/ui/common/SCUManager/combat_sel.dds', '/textures/ui/common/SCUManager/combat_over.dds', '/textures/ui/common/SCUManager/combat_over.dds', '/textures/ui/common/SCUManager/combat_up.dds', '/textures/ui/common/SCUManager/combat_up.dds', "UI_Menu_MouseDown_Sml", "UI_Menu_MouseDown_Sml")
 	local EngineerButton = Checkbox(window, '/textures/ui/common/SCUManager/engineer_up.dds', '/textures/ui/common/SCUManager/engineer_sel.dds', '/textures/ui/common/SCUManager/engineer_over.dds', '/textures/ui/common/SCUManager/engineer_over.dds', '/textures/ui/common/SCUManager/engineer_up.dds', '/textures/ui/common/SCUManager/engineer_up.dds', "UI_Menu_MouseDown_Sml", "UI_Menu_MouseDown_Sml")
 	combatButton:SetCheck(true)
-	
+
 	LayoutHelpers.AtLeftTopIn(factionChooser, window, 6, 6)
 	factionChooser.Width:Set(100)
 	factionChooser:AddItems({'Aeon', 'Cybran', 'UEF', 'Seraphim'})
@@ -160,9 +160,9 @@ function ConfigureUpgrades()
 			LayoutGrid(buttonGrid, text, 'Engineer')
 		end
 	end
-	
-	
-	
+
+
+
 	LayoutHelpers.AtLeftTopIn(combatButton, window, 108, 6)
 	LayoutHelpers.RightOf(EngineerButton, combatButton)
 	combatButton.OnClick = function(self, modifiers)
@@ -561,10 +561,10 @@ function PlaceMarker(upgradeType, position)
 	end
 	--position each frame to keep same world position
 	markerTable[index].OnFrame = function(self)
-		if not worldview or worldview:BeenDestroyed() then
+		if not worldview then
 			worldview = import('/lua/ui/game/worldview.lua').viewLeft
 		end
-		
+
 		self.Left:Set(function() return worldview:Project(self.position)[1]  - (self.Width()/2) +worldview.Left() end)
 		self.Top:Set(function() return worldview:Project(self.position)[2] - (self.Height()/2) +worldview.Top() end)
 	end

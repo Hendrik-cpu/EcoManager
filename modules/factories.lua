@@ -1,21 +1,21 @@
 local modPath = '/mods/EM/'
 
 local Units = import('/mods/common/units.lua')
-local Select = import('/mods/common/units.lua').Select
+local Select = import('/mods/common/select.lua')
 
 local bp2factories = {}
 
 function resetOrderQueue(factory)
 	local queue = SetCurrentFactoryForQueueDisplay(factory)
 
-	if(not queue) then
+	if not queue then
 		return
 	end
 
 	for i = 1, table.getsize(queue) do
 		local count = queue[i].count
 
-		if(i == 1) then
+		if i == 1 then
 			count = count - 1
 		end
 		DecreaseBuildCountInQueue(i, count)
@@ -23,10 +23,9 @@ function resetOrderQueue(factory)
 end
 
 function resetOrderQueues()
-	local factories = GetSelectedUnits()
-	local old = GetSelectedUnits()
+	local factories = EntityCategoryFilterDown(categories.FACTORY, GetSelectedUnits() or {})
 
-	if(factories) then
+	if factories then
 		Select.Hidden(function()
 			for _, factory in factories do
 				resetOrderQueue(factory)
@@ -47,15 +46,15 @@ function loadFactories()
 			local bps = EntityCategoryGetUnitList(categories)
 
 			for _, bp in bps do
-				if(not bp2factories[bp]) then
+				if not bp2factories[bp] then
 					bp2factories[bp] = {}
 				end
 
 				for _, factory in factories do
 					id = factory:GetEntityId()
-					if(not bp2factories[bp][id]) then
+					if not bp2factories[bp][id] then
 						bp2factories[bp][id] = factory
-					elseif(bp2factories[bp][id]:IsDead()) then
+					elseif bp2factories[bp][id]:IsDead() then
 						bp2factories[bp][id] = nil
 					end
 				end
@@ -91,7 +90,7 @@ function orderFactories()
 	for _, o in orders do
 		factories = bp2factories[o]
 
-		if(factories) then
+		if factories then
 			tmp = {}
 			for _, f in factories do
 				local data = factoryData(f)

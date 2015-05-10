@@ -152,11 +152,12 @@ function CreateMexOverlay(unit)
 	local overlay = Bitmap(GetFrame(0))
 	local id = unit:GetEntityId()
 
+	overlay.id = unit:GetEntityId()
+	overlay.destroy = false
 	overlay:SetSolidColor('black')
 	overlay.Width:Set(10)
 	overlay.Height:Set(10)
-
-	overlay:SetNeedsFrameUpdate(true)
+	
 	overlay.OnFrame = function(self, delta)
 		if not unit:IsDead() then
 			local worldView = import('/lua/ui/game/worldview.lua').viewLeft
@@ -168,12 +169,11 @@ function CreateMexOverlay(unit)
 		end
 	end
 
-	overlay.id = unit:GetEntityId()
-	overlay.destroy = false
 	overlay.text = UIUtil.CreateText(overlay, '0', 10, UIUtil.bodyFont)
 	overlay.text:SetColor('green')
     overlay.text:SetDropShadow(true)
 	LayoutHelpers.AtCenterIn(overlay.text, overlay, 0, 0)
+	overlay:SetNeedsFrameUpdate(true)
 
 	return overlay
 end

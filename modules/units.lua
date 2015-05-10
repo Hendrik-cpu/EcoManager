@@ -6,9 +6,6 @@ local boolstr = import(modPath .. 'modules/utils.lua').boolstr
 local addListener = import(modPath .. 'modules/init.lua').addListener
 local GetScore = import(modPath .. 'modules/score.lua').GetScore
 
-local units = {}
-local assisting = {}
-
 local econ_cache = {}
 
 function econData(unit)

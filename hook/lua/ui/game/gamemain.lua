@@ -18,9 +18,9 @@ function OnSelectionChanged(oldSelection, newSelection, added, removed)
                 import(modPath ..'modules/mexes.lua').upgradeMexes(mexes, true)
 			end
 		end
+    end
 
-		originalOnSelectionChanged(oldSelection, newSelection, added, removed)
-	end
+    originalOnSelectionChanged(oldSelection, newSelection, added, removed)
 end
 
 function CreateUI(isReplay, parent)
