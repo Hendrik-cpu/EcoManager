@@ -1,15 +1,43 @@
+--*****************************************************************************
+--* File: lua/modules/ui/game/economy.lua
+--* Author: Chris Blackwell
+--* Summary: Economy bar UI
+--*
+--* Copyright © 2005 Gas Powered Games, Inc.  All rights reserved.
+--*****************************************************************************
+
 local modPath = '/mods/EM/'
 local getCurrentThrottle = import(modPath .. 'modules/throttle.lua').getCurrentThrottle
 
-local oldCreateUI = CreateUI
-function CreateUI()
-    oldCreateUI()
+local UIUtil = import('/lua/ui/uiutil.lua')
+local LayoutHelpers = import('/lua/maui/layouthelpers.lua')
+local Group = import('/lua/maui/group.lua').Group
+local Bitmap = import('/lua/maui/bitmap.lua').Bitmap
+local Button = import('/lua/maui/button.lua').Button
+local Checkbox = import('/lua/maui/checkbox.lua').Checkbox
+local StatusBar = import('/lua/maui/statusbar.lua').StatusBar
+local GameMain = import('/lua/ui/game/gamemain.lua')
+local Tooltip = import('/lua/ui/game/tooltip.lua')
+local Prefs = import('/lua/user/prefs.lua')
+local Tooltip = import('/lua/ui/game/tooltip.lua')
+local options = Prefs.GetFromCurrentProfile('options')
 
-    for _, t in {'mass', 'energy'} do
-        GUI[t].overflow = UIUtil.CreateText(GUI.energy, '', 18, UIUtil.bodyFont)
-        GUI[t].overflow:SetDropShadow(true)
-    end
-end
+local UIState = true
+
+local _BeatFunction = nil
+
+group = false
+savedParent = false
+
+GUI = {
+    bg = false,
+}
+
+States = {
+    energyViewState = Prefs.GetFromCurrentProfile("energyRateView") or 1,
+    massViewState = Prefs.GetFromCurrentProfile("massRateView") or 1,
+}
+
 
 function round(num, idp)
     if(idp > 0) then
@@ -38,12 +66,201 @@ function unum(n, decimals, unit)
     end
 
     local str = string.format("%s%g", n < 0 and '-' or '+', value)
-
     if pos > 1 then
-        return str .. units[pos]
+        return str..units[pos]
     else
         return str
     end
+end
+
+
+function Contract()
+    UIState = false
+end
+
+function Expand()
+    UIState = true
+end
+
+function SetLayout(layout)
+    import(UIUtil.GetLayoutFilename('economy')).SetLayout()
+    GameMain.RemoveBeatFunction(_BeatFunction)
+    ConfigureBeatFunction()
+    GameMain.AddBeatFunction(_BeatFunction)
+
+    return CommonLogic()
+end
+
+function CreateEconomyBar(parent)
+    savedParent = parent
+    CreateUI()
+    return SetLayout()
+end
+
+function CreateUI()
+    GUI.bg = Group(savedParent)
+    GUI.bg.panel = Bitmap(GUI.bg)
+    GUI.bg.leftBracket = Bitmap(GUI.bg)
+    GUI.bg.leftBracketGlow = Bitmap(GUI.bg)
+
+    GUI.bg.rightGlowTop = Bitmap(GUI.bg)
+    GUI.bg.rightGlowMiddle = Bitmap(GUI.bg)
+    GUI.bg.rightGlowBottom = Bitmap(GUI.bg)
+
+    GUI.collapseArrow = Checkbox(savedParent)
+    Tooltip.AddCheckboxTooltip(GUI.collapseArrow, 'econ_collapse')
+
+    local function CreateResourceGroup(warningBitmap)
+        local group = Group(GUI.bg)
+
+        group.warningBG = Bitmap(group)
+        group.warningBG.Depth:Set(group.Depth)
+        group.warningBG.State = ''
+        group.warningBG.ascending = 1
+        group.warningBG.cycles = 0
+        group.warningBG.flashMod = 1
+        group.warningBG.warningBitmap = warningBitmap
+        group.warningBG.SetToState = function(self, state)
+            if self.State ~= state then
+                if state == 'red' then
+                    self:SetTexture(UIUtil.UIFile('/game/resource-panel/alert-'..self.warningBitmap..'-panel_bmp.dds'))
+                    self.flashMod = 1.6
+                elseif state == 'yellow' then
+                    self:SetTexture(UIUtil.UIFile('/game/resource-panel/caution-'..self.warningBitmap..'-panel_bmp.dds'))
+                    self.flashMod = 1.25
+                end
+                self.cycles = 0
+                self.State = state
+                self:SetNeedsFrameUpdate(true)
+            end
+        end
+
+        group.warningBG.OnFrame = function(self, deltaTime)
+            if self.State == 'hide' then
+                local newAlpha = self:GetAlpha() - deltaTime
+                if newAlpha < 0 then
+                    self:SetAlpha(0)
+                    self:SetNeedsFrameUpdate(false)
+                else
+                    self:SetAlpha(newAlpha)
+                end
+            else
+                local newAlpha = self:GetAlpha() + ((deltaTime * self.flashMod) * self.ascending)
+                if newAlpha > .5 then
+                    newAlpha = .5
+                    self.cycles = self.cycles + 1
+                    self.ascending = -1
+                elseif newAlpha < 0 then
+                    newAlpha = 0
+                    self.ascending = 1
+                end
+                self:SetAlpha(newAlpha)
+                if self.cycles == 5 then
+                    self:SetNeedsFrameUpdate(false)
+                end
+            end
+        end
+
+        group.icon = Bitmap(group)
+        group.rate = UIUtil.CreateText(group, '', 18, UIUtil.bodyFont)
+        group.rate:SetDropShadow(true)
+        group.storageBar = StatusBar(group, 0, 100, false, false,
+            UIUtil.UIFile('/game/resource-mini-bars/mini-energy-bar-back_bmp.dds'),
+            UIUtil.UIFile('/game/resource-mini-bars/mini-energy-bar_bmp.dds'), false)
+
+        group.curStorage = UIUtil.CreateText(group, '', 10, UIUtil.bodyFont)
+        group.curStorage:SetDropShadow(true)
+        group.maxStorage = UIUtil.CreateText(group, '', 10, UIUtil.bodyFont)
+        group.maxStorage:SetDropShadow(true)
+
+        group.storageTooltipGroup = Group(group.storageBar)
+        group.storageTooltipGroup.Depth:Set(function() return group.storageBar.Depth() + 10 end)
+
+        group.income = UIUtil.CreateText(group.warningBG, '', 10, UIUtil.bodyFont)
+        group.income:SetDropShadow(true)
+        group.expense = UIUtil.CreateText(group.warningBG, '', 10, UIUtil.bodyFont)
+        group.expense:SetDropShadow(true)
+
+        group.reclaimDelta = UIUtil.CreateText(group.warningBG, '', 10, UIUtil.bodyFont)
+        group.reclaimDelta:SetDropShadow(true)
+
+        group.reclaimTotal = UIUtil.CreateText(group.warningBG, '', 10, UIUtil.bodyFont)
+        group.reclaimTotal:SetDropShadow(true)
+
+        group.warningBG:DisableHitTest()
+        group.curStorage:DisableHitTest()
+        group.maxStorage:DisableHitTest()
+        group.storageBar:DisableHitTest()
+
+        return group
+    end
+
+    GUI.mass = CreateResourceGroup('mass')
+    GUI.energy = CreateResourceGroup('energy')
+
+    for _, t in {'mass', 'energy'} do
+        GUI[t].overflow = UIUtil.CreateText(GUI.energy, '', 18, UIUtil.bodyFont)
+        GUI[t].overflow:SetDropShadow(true)
+    end
+end
+
+function CommonLogic()
+    local function AddGroupLogic(group, prefix)
+        group.warningBG.OnHide = function(self, hidden)
+            -- This prevents the text controls appearing at game-start before the scroll-in
+            -- animation has taken place.
+            group.income:SetHidden(hidden)
+            group.expense:SetHidden(hidden)
+            group.reclaimDelta:SetHidden(hidden)
+            group.reclaimTotal:SetHidden(hidden)
+
+            return true
+        end
+
+        Tooltip.AddControlTooltip(group.reclaimDelta, prefix..'_reclaim_display')
+        Tooltip.AddControlTooltip(group.reclaimTotal, prefix..'_reclaim_display')
+        Tooltip.AddControlTooltip(group.income, prefix..'_income_display')
+        Tooltip.AddControlTooltip(group.expense, prefix..'_income_display')
+
+        group.storageTooltipGroup.HandleEvent = function(self, event)
+            if event.Type == 'MouseEnter' then
+                Tooltip.CreateMouseoverDisplay(self, prefix .. "_storage", nil, true)
+            elseif event.Type == 'MouseExit' then
+                Tooltip.DestroyMouseoverDisplay()
+            end
+            return true
+        end
+
+        group.rate.HandleEvent = function(self, event)
+            if event.Type == 'MouseEnter' then
+                Tooltip.CreateMouseoverDisplay(self, prefix .. "_rate", nil, true)
+            elseif event.Type == 'MouseExit' then
+                Tooltip.DestroyMouseoverDisplay()
+            elseif event.Type == 'ButtonPress' then
+                States[prefix..'ViewState'] = States[prefix..'ViewState'] + 1
+                if States[prefix..'ViewState'] > 2 then
+                    States[prefix..'ViewState'] = 1
+                end
+                Prefs.SetToCurrentProfile(prefix..'RateView', States[prefix..'ViewState'])
+                local sound = Sound({Bank = 'Interface', Cue = 'UI_Economy_Click'})
+                PlaySound(sound)
+            end
+            return true
+        end
+    end
+
+    AddGroupLogic(GUI.mass, 'mass')
+    AddGroupLogic(GUI.energy, 'energy')
+
+    GUI.bg.OnDestroy = function(self)
+        GameMain.RemoveBeatFunction(_BeatFunction)
+    end
+
+    GUI.collapseArrow.OnCheck = function(self, checked)
+        ToggleEconPanel()
+    end
+
+    return GUI.mass, GUI.energy
 end
 
 --- Build a beat function for updating the UI suitable for the current options.
@@ -258,4 +475,15 @@ function ConfigureBeatFunction()
         massUpdateFunction()
         energyUpdateFunction()
     end
+end
+
+function ToggleEconPanel(state)
+    if import('/lua/ui/game/gamemain.lua').gameUIHidden and state ~= nil then
+        return
+    end
+    import(UIUtil.GetLayoutFilename('economy')).TogglePanelAnimation(state)
+end
+
+function InitialAnimation()
+    import(UIUtil.GetLayoutFilename('economy')).InitAnimation()
 end
