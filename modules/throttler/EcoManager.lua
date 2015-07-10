@@ -33,7 +33,7 @@ local Economy = import(modPath .. 'modules/throttler/Economy.lua').Economy
 local EnergyPlugin = import(modPath .. 'modules/throttler/EnergyPlugin.lua').EnergyPlugin
 local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').StoragePlugin
 
-local getUnits = import(modPath .. 'modules/units.lua').getUnits
+local Units = import('/mods/common/units.lua')
 local econData = import(modPath .. 'modules/units.lua').econData
 
 
@@ -50,13 +50,14 @@ EcoManager = Class({
 		local unpause = {}
 
 		self.projects = {}
-		local units = EntityCategoryFilterDown(categories.STRUCTURE + categories.ENGINEER, getUnits())
+		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER)
 
 		for _, u in units do
 			local project
 
 			if not u:IsDead() then
 				local focus = u:GetFocus()
+				local isConstruction = false
 
 				if not focus then
 					local is_paused = isPaused(u)
@@ -69,6 +70,8 @@ EcoManager = Class({
 					elseif is_paused and (u:IsIdle() or u:GetWorkProgress() == 0) then
 						table.insert(unpause, u)
 					end
+				else
+					isConstruction = true
 				end
 
 				if focus then
@@ -79,6 +82,7 @@ EcoManager = Class({
 						--LOG("Adding new project " .. id)
 
 						project = Project(focus)
+						project.isConstruction = isConstruction
 						self.projects[id] = project
 					end
 
@@ -144,12 +148,12 @@ EcoManager = Class({
 	 				if not pause then
 	 					local last_ratio = p.throttle
 	 					plugin:throttle(eco, p)
-	 					if p.throttle > 0 and p.throttle < 1 then 
+	 					if p.throttle > 0 and p.throttle < 1 then
 	 						LOG("ADJUST THIS SHIT")
 	 						p:adjust_throttle(eco) -- round throttle to nearest assister
 	 						LOG("ADJUSTED TO " .. p.throttle)
 	 					end
-	 					
+
 	 					if p.throttle == 1 then
 	 						pause = true
 	 					end
@@ -189,12 +193,12 @@ EcoManager = Class({
 		end
 
 		table.sort(all_projects, function(a, b) return a.index < b.index end)
-		LOG(repr(all_projects))
+		--LOG(repr(all_projects))
 
 		for _, p in all_projects do
 			p:pause(self.pause_list)
 		end
-		
+
 
 		for toggle_key, modes in self.pause_list do
 			local toggle = toggle_key

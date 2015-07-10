@@ -48,6 +48,7 @@ Project = Class({
     index = 0,
     unit = nil,
     assisters = {},
+    isConstruction = false,
 
     __init = function(self, unit)
         local bp = unit:GetBlueprint()
@@ -200,12 +201,14 @@ Project = Class({
 
             if not pause_list[key] then pause_list[key] = {pause={}, no_pause={}} end
 
-            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or firstAssister then
+            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or (self.isConstruction and firstAssister) then
                 if is_paused then
                     table.insert(pause_list[key]['no_pause'], u)
                 end
                 currEnergyRequested = currEnergyRequested + a.energyRequested
-                firstAssister = false
+                if self.isConstruction then
+                    firstAssister = false
+                end
             else
                 if not is_paused then
                     table.insert(pause_list[key]['pause'], u)

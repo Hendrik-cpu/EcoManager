@@ -1,7 +1,7 @@
 local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
-local MASSFAB_RATIO = 0.5
+local MASSFAB_RATIO = 0.4
 
 EnergyPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
@@ -57,11 +57,16 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 
 	throttle = function(self, eco, project)
 		local net = eco:energyNet()
-		if project.prio <= 1 then
-			net = net - (eco.energyMax/5) * MASSFAB_RATIO
+		local new_net
+
+		if project.prio == 100 then
+			project.energyRequested = project.energyRequested * 5
 		end
 
-		local new_net = net - project.energyRequested
+		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining)
+		if project.prio <= 1 then
+			new_net = new_net - (eco.energyMax/5) * MASSFAB_RATIO
+		end
 
 		LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net .. " MASS RATIO " .. project.massRatio)
 

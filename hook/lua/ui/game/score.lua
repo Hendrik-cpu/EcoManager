@@ -153,7 +153,7 @@ function SetupPlayerLines()
 	local index = 1
 	for armyIndex, armyData in GetArmiesTable().armiesTable do
 		if armyData.civilian or not armyData.showScore then continue end
-		if not controls.armyLines then 
+		if not controls.armyLines then
 			controls.armyLines = {}
 		end
         controls.armyLines[index] = CreateArmyLine(armyData, armyIndex)
@@ -167,10 +167,10 @@ function SetupPlayerLines()
     	observerLine.speedText = UIUtil.CreateText(controls.bgStretch, '', 14, UIUtil.bodyFont)
     	observerLine.speedText:SetColor('ff00dbff')
     	LayoutHelpers.AtRightIn(observerLine.speedText, observerLine)
-    	observerLine.speedSlider = IntegerSlider(controls.bgStretch, false, -10, 10, 1, 
-    		UIUtil.SkinnableFile('/slider02/slider_btn_up.dds'), 
-    		UIUtil.SkinnableFile('/slider02/slider_btn_over.dds'), 
-    		UIUtil.SkinnableFile('/slider02/slider_btn_down.dds'), 
+    	observerLine.speedSlider = IntegerSlider(controls.bgStretch, false, -10, 10, 1,
+    		UIUtil.SkinnableFile('/slider02/slider_btn_up.dds'),
+    		UIUtil.SkinnableFile('/slider02/slider_btn_over.dds'),
+    		UIUtil.SkinnableFile('/slider02/slider_btn_down.dds'),
     		UIUtil.SkinnableFile('/dialogs/options/slider-back_bmp.dds'))
 
     	observerLine.speedSlider.Left:Set(function() return observerLine.Left() + 5 end)
@@ -179,7 +179,7 @@ function SetupPlayerLines()
     	observerLine.speedSlider._background.Left:Set(observerLine.speedSlider.Left)
     	observerLine.speedSlider._background.Right:Set(observerLine.speedSlider.Right)
     	observerLine.speedSlider._background.Top:Set(observerLine.speedSlider.Top)
-    	observerLine.speedSlider._background.Bottom:Set(observerLine.speedSlider.Bottom) 
+    	observerLine.speedSlider._background.Bottom:Set(observerLine.speedSlider.Bottom)
     	observerLine.speedSlider._thumb.Depth:Set(function() return observerLine.Depth() + 5 end)
     	Tooltip.AddControlTooltip(observerLine.speedSlider._thumb, 'Lobby_Gen_GameSpeed')
     	observerLine.speedSlider._background.Depth:Set(function() return observerLine.speedSlider._thumb.Depth() - 1 end)
@@ -195,10 +195,10 @@ function SetupPlayerLines()
     	observerLine.speedSlider:SetValue(gameSpeed)
     	controls.armyLines[index] = observerLine
     	index = index + 1
-    end	
+    end
 
     local function CreateMapNameLine(data, armyIndex)
-    	local group = Group(controls.bgStretch)	
+    	local group = Group(controls.bgStretch)
 
     	local mapnamesize = string.len(data.mapname)
     	local mapoffset = 131 - (mapnamesize * 2.7)
@@ -213,7 +213,7 @@ function SetupPlayerLines()
 
     	if (sessionInfo.Options.Ranked) then
     		group.faction = Bitmap(group)
-    		group.faction:SetTexture("/textures/ui/powerlobby/rankedscore.dds")        
+    		group.faction:SetTexture("/textures/ui/powerlobby/rankedscore.dds")
     		group.faction.Height:Set(14)
     		group.faction.Width:Set(14)
     		group.faction:DisableHitTest()
@@ -230,7 +230,7 @@ function SetupPlayerLines()
     	group.name:SetClipToWidth(true)
 
     	group.Height:Set(18)
-    	group.Width:Set(262)        
+    	group.Width:Set(262)
 
     	group:DisableHitTest()
 
@@ -246,7 +246,7 @@ function SetupPlayerLines()
     	end
     end
 
-    mapData = {}	
+    mapData = {}
     mapData.mapname = LOCF("<LOC gamesel_0002>Map: %s", sessionInfo.name)
 	if replayID == -1 then -- only do this once
     	if HasCommandLineArg("/syncreplay") and HasCommandLineArg("/gpgnet") and
@@ -260,7 +260,7 @@ function SetupPlayerLines()
 	        replayID =  GetCommandLineArg("/replayid", 1)[1]
 	    end
 	end
-    
+
     if tonumber(replayID) > 0 then mapData.mapname = mapData.mapname .. ', ID: ' .. replayID end
 	controls.armyLines[index] = CreateMapNameLine(mapData, 0)
 end
@@ -358,7 +358,7 @@ function _OnBeat()
 						line.score:SetColor('ffa0a0a0')
 						if SessionIsReplay() then
 							line.mass_in:SetColor('ffa0a0a0')
-							line.energy_in:SetColor('ffa0a0a0')	
+							line.energy_in:SetColor('ffa0a0a0')
 						end
 					end
 					break
@@ -376,7 +376,7 @@ function _OnBeat()
 			observerLine.name:SetFont(UIUtil.bodyFont, 14)
 		end
 	end
-	
+
 	table.sort(controls.armyLines, function(a,b)
 		if a.armyID == 0 or b.armyID == 0 then
 			return a.armyID >= b.armyID
