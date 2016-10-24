@@ -143,7 +143,7 @@ function manageAssistedUpgrade()
 				end
 			end
 
-			if m and (m:IsInCategory("MASSEXTRACTION") or m:IsInCategory("MASSSTORAGE")) and assist then --and not excluded[e:GetEntityId()]
+			if m and ((m:IsInCategory("MASSEXTRACTION") and not m:IsInCategory('TECH1')) or m:IsInCategory("MASSSTORAGE")) and assist then --and not excluded[e:GetEntityId()]
 				if not m:IsInCategory("MASSSTORAGE") or  e:GetWorkProgress() > 0.05 then
 					if (not assisting[m]) then
 						assisting[m] = {}
