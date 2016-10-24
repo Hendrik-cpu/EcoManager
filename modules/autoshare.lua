@@ -55,8 +55,8 @@ local share_threshold = {MASS=1, ENERGY=1}
 local total_shared = {MASS=0, ENERGY=0}
 
 --auto values
-local MIN_MASS = 10000
-local MIN_ENERGY = 7000
+local MIN_MASS = 7000
+local MIN_ENERGY = 6000
 local MIN_ENERGY_RATIO = 0.7
 
 local notifyStored = false
@@ -315,7 +315,7 @@ function processCommand(sender, msg)
 
 	if commands[args[1]] then
 		local army = GetArmyData(sender)
-
+        if not army then return end
 		if not players_eco[army.ArmyID] then
             if army.ArmyID ~= GetFocusArmy() then
                 print (army.nickname .. " autosharing resources")
@@ -380,7 +380,7 @@ function storageStatus()
                 threshold = math.max(MIN_MASS / eco[t]['max'], threshold)
                 threshold = math.min(threshold, 0.95) -- share if mass >= 95%
 
-                if GetGameTimeSeconds() < 60*4 then -- no mass share first 4 min
+                if GetGameTimeSeconds() < 60*3 then -- no mass share first 3 min
                     threshold = 1
                 end
             end
@@ -457,7 +457,7 @@ function shareWithPlayer(nickname, op)
 
     nickname = army.nickname
 
-    if(op == '+') then
+    if op == '+' then
         prefs['as_players'][nickname] = true
     else
         prefs['as_players'][nickname] = nil
@@ -649,6 +649,7 @@ function giveAllUnits()
 end
 
 function autoshareThread()
+    if GetFocusArmy() == -1 then return end
     eco = getEconomy()
     sendStored()
     checkIfDead()
