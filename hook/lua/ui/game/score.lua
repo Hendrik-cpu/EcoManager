@@ -2,6 +2,10 @@ do
 local modPath = '/mods/EM/'
 local replayID = -1
 
+local cheating = sessionInfo.Options.CheatsEnabled == 'true'
+function CanChangeFocus()
+    return SessionIsReplay() or cheating
+end
 
 function unum(n, unit)
 	local units = {"", "k", "m", "g"}
@@ -30,7 +34,7 @@ function SetupPlayerLines()
 		local group = Group(controls.bgStretch)
 		local sw = 42
 
-		if (armyIndex ~= 0 and SessionIsReplay() or true) then
+		if (armyIndex ~= 0 and CanChangeFocus()) then
 			group.faction = Bitmap(group)
 			if armyIndex ~= 0 then
 				group.faction:SetTexture(UIUtil.UIFile(UIUtil.GetFactionIcon(data.faction)))
@@ -126,7 +130,7 @@ function SetupPlayerLines()
 		group.Width:Set(262)
 		group.armyID = armyIndex
 
-		if SessionIsReplay() then
+		if CanChangeFocus() then
 			group.bg = Bitmap(group)
 			group.bg:SetSolidColor('00000000')
 			group.bg.Height:Set(group.faction.Height)
@@ -160,7 +164,7 @@ function SetupPlayerLines()
         index = index + 1
     end
 
-    if SessionIsReplay() then
+    if CanChangeFocus() then
     	observerLine = CreateArmyLine({color = 'ffffffff', nickname = LOC("<LOC score_0003>Observer")}, 0)
     	observerLine.name.Top:Set(observerLine.Top)
     	observerLine.Height:Set(40)
