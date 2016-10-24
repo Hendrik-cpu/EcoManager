@@ -1,6 +1,4 @@
 local modPath = '/mods/EM/'
-
-local originalCreateUI = CreateUI
 local Units = import('/mods/common/units.lua')
 local KeyMapper = import('/lua/keymap/keymapper.lua')
 
@@ -23,13 +21,11 @@ function OnSelectionChanged(oldSelection, newSelection, added, removed)
     originalOnSelectionChanged(oldSelection, newSelection, added, removed)
 end
 
+local originalCreateUI = CreateUI
 function CreateUI(isReplay, parent)
 	options.gui_scu_manager=0
     originalCreateUI(isReplay)
 
     import(modPath .. "modules/init.lua").init(isReplay, import('/lua/ui/game/borders.lua').GetMapGroup())
-    import(modPath .. 'modules/scumanager.lua').Init()
-    KeyMapper.SetUserKeyAction('scu_upgrade_marker', {action =  'UI_Lua import("' .. modPath .. 'modules/scumanager.lua").CreateMarker()', category = 'user', order = 4})
-
     import('/lua/ui/game/multifunction.lua').Contract()
 end
