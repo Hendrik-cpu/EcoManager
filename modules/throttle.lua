@@ -244,7 +244,7 @@ function throttleEconomy()
 
 	--LOG(repr(res))
 
-	if (res['use'] + current_throttle) >= res['income'] and res['ratio'] >= 0.92 then -- seems like overflow, test with +20% income
+	if (res['use'] + current_throttle) >= res['income'] and res['ratio'] >= 0.95 then -- seems like overflow, test with +20% income
 		--LOG("OVERFLOW INC")
 		overflow_income = overflow_income + res['income']*0.2
 		res['income'] = res['income'] + overflow_income
@@ -267,7 +267,7 @@ function throttleEconomy()
 
 	for _, u in res_users do
 		local progress_left = 1-u['workProgress']
-		local lasts_for = math.min(2, (progress_left*u['buildTime'])/u['buildRate'])
+		local lasts_for = math.min(3, (progress_left*u['buildTime'])/u['buildRate'])
 		local min_storage = throttle_min_storage
 		local toggle_key = 'pause'
 
