@@ -1,4 +1,4 @@
-EcoManager
+EcoManager v8
 
 __MEX-overlay__
 Shows graphical overlay over mexes to easier spot the different mex levels.
@@ -41,12 +41,5 @@ Commands:
 Sets the threshold when to throttle energy, auto means throttle at <=15% (<=1% at beginning until energy income > 1000.
 If <amount> is set to 0 only massfabs are throttled (< 80%)
 
-
-__Desync window close__
-The desync window are closed after the first click on OK. The game is still desynced but you can play on without the irritating window popping up all the time.
-
 __Show Options__
 /options - Show some info about game options
-
-__Max Shield upgrade__
-Upgrade a cybran shield to maximum by selecting it and press Ctrl-Shift S
