@@ -56,7 +56,7 @@ function watchdogThread()
 end
 
 function setup(isReplay, parent)
-	local mods = {'economy', 'factories', 'pause', 'options', 'shields', 'mexes', 'buildoverlay'}
+	local mods = {'economy', 'pause', 'options', 'mexes', 'buildoverlay'}
 
 	if not isReplay then
 		table.insert(mods, 'autoshare');
