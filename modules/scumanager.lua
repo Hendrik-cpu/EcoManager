@@ -81,7 +81,7 @@ local markerTable = {}
 
 function Init()
 	--add beat function to display markers
-	import('/lua/ui/game/gamemain.lua').AddBeatFunction(ShowMarkers)
+	import('/lua/ui/game/gamemain.lua').AddBeatFunction(ShowMarkers, true)
 	--get the table of upgrades to use from prefs, or use default if prefs isn't available
 	upgradeTable = Prefs.GetFromCurrentProfile("SCU_Manager_settings") or upgradeDefaultTable
 	--create the button container
