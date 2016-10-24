@@ -58,10 +58,11 @@ function Pause(units, pause, module)
 end
 
 function CanUnpause(unit, module)
-	local id
+	local id = unit:GetEntityId()
+	id = nil -- XXX
 	local prio = pause_prios[module]['unpause'] or pause_prios[module]['pause']
 
-	return not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or u:IsIdle() or u:GetWorkProgress() == 0
+	return not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or unit:IsIdle() or unit:GetWorkProgress() == 0
 end
 
 function CanUnpauseUnits(units, module)
