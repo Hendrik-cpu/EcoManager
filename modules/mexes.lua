@@ -71,14 +71,12 @@ function upgradeMexes(mexes, unpause)
 		return false
 	end
 
-	--local old = GetSelectedUnits()
 	local upgrades = {}
 
 	for _, m in mexes do
 		if m:IsIdle() then
 			local bp = m:GetBlueprint()
 			local upgrades_to = bp.General.UpgradesTo
-
 			if not unpause then
 				table.insert(pause_queue, m)
 			end
@@ -157,7 +155,7 @@ function CreateMexOverlay(unit)
 	overlay:SetSolidColor('black')
 	overlay.Width:Set(10)
 	overlay.Height:Set(10)
-	
+
 	overlay.OnFrame = function(self, delta)
 		if not unit:IsDead() then
 			local worldView = import('/lua/ui/game/worldview.lua').viewLeft
