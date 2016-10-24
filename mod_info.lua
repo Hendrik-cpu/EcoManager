@@ -1,8 +1,8 @@
 name = "EcoManager"
-uid = "ecbf6277-24e3-437a-b968-EcoManager-v5"
-version = 5
+uid = "ecbf6277-24e3-437a-b968-EcoManager-v8"
+version = 7
 copyright = "Crotalus"
-description = "EcoManager, helps with micromanaging the economy (Autoshare, Mex upgrade/pause, energy throttle + UI)"
+description = "EcoManager, helps with micromanaging the economy, 3660+ compatible"
 author = "Crotalus"
 url = ""
 selectable = true
@@ -14,6 +14,9 @@ requires = {
 }
 requiresNames = {}
 conflicts = {
+"ecbf6277-24e3-437a-b968-EcoManager-v7",
+"ecbf6277-24e3-437a-b968-EcoManager-v6",
+"ecbf6277-24e3-437a-b968-EcoManager-v5",
 "ecbf6277-24e3-437a-b968-EcoManager-v4",
 "ecbf6277-24e3-437a-b968-75e7e7c67db9",
 "21188cdf-ec69-43bd-b756-6140a84c0197",
