@@ -1,5 +1,5 @@
 local WAIT_TIME  = 0.1
-local ECO_DATA_SIZE = 4 --save how many data points
+local ECO_DATA_SIZE = 5 --save how many data points
 local eco_tick = 0
 local eco_data = {}
 local eco_types = {'MASS', 'ENERGY'}

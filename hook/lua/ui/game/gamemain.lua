@@ -4,6 +4,10 @@ local KeyMapper = import('/lua/keymap/keymapper.lua')
 
 local originalOnSelectionChanged = OnSelectionChanged
 function OnSelectionChanged(oldSelection, newSelection, added, removed)
+    if import('/lua/ui/game/selection.lua').IsHidden() then
+        return
+    end
+    
     if table.getsize(added) > 0 and table.getsize(newSelection) == 1 then
         local mexes = EntityCategoryFilterDown(categories.MASSEXTRACTION * categories.STRUCTURE, newSelection)
 

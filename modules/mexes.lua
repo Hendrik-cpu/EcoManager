@@ -78,7 +78,7 @@ function upgradeMexes(mexes, unpause)
 			local bp = m:GetBlueprint()
 			local upgrades_to = bp.General.UpgradesTo
 			if not unpause then
-				table.insert(pause_queue, m)
+				queuePause(mex)
 			end
 
 			if not upgrades[upgrades_to] then
@@ -127,6 +127,10 @@ function upgradeMexById(id)
 			return
 		end
 	end
+end
+
+function queuePause(mex)
+	table.insert(pause_queue, mex)
 end
 
 function pauseMexes()
@@ -201,9 +205,9 @@ function UpdateMexOverlay(mex)
 	end
 
 	if data['is_idle'] or (mex:GetWorkProgress() < 0.02) then
-		if(tech >= 2 and data['bonus'] < 1.5) then
+		if tech >= 2 and data['bonus'] < 1.5 then
 			color = 'red'
-		elseif(tech == 3) then
+		elseif tech == 3 then
 			color = 'white'
 		else
 			color = 'green'

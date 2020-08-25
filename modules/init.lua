@@ -71,6 +71,7 @@ function setup(isReplay, parent)
 end
 
 function initThreads()
+	WaitSeconds(2)
 	ForkThread(mainThread)
 	ForkThread(watchdogThread)
 end

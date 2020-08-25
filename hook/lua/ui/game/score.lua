@@ -1,4 +1,3 @@
-do
 local modPath = '/mods/EM/'
 local replayID = -1
 
@@ -34,7 +33,7 @@ function SetupPlayerLines()
 		local group = Group(controls.bgStretch)
 		local sw = 42
 
-		if (armyIndex ~= 0 and CanChangeFocus()) then
+		if armyIndex ~= 0 and CanChangeFocus() and false then
 			group.faction = Bitmap(group)
 			if armyIndex ~= 0 then
 				group.faction:SetTexture(UIUtil.UIFile(UIUtil.GetFactionIcon(data.faction)))
@@ -124,6 +123,32 @@ function SetupPlayerLines()
 
 			group.name.Right:Set(group.score.Left)
 			group.name:SetClipToWidth(true)
+
+			group.mass = Bitmap(group)
+			group.mass:SetTexture(UIUtil.UIFile('/game/build-ui/icon-mass_bmp.dds'))
+			LayoutHelpers.AtRightIn(group.mass, group, sw * 1)
+			LayoutHelpers.AtVerticalCenterIn(group.mass, group)
+			group.mass.Height:Set(14)
+			group.mass.Width:Set(14)
+
+			group.energy = Bitmap(group)
+			group.energy:SetTexture(UIUtil.UIFile('/game/build-ui/icon-energy_bmp.dds'))
+			LayoutHelpers.AtRightIn(group.energy, group, sw * 0)
+			LayoutHelpers.AtVerticalCenterIn(group.energy, group)
+			group.energy.Height:Set(14)
+			group.energy.Width:Set(14)
+
+			group.mass_in = UIUtil.CreateText(group, '', 12, UIUtil.bodyFont)
+			group.mass_in:DisableHitTest()
+			LayoutHelpers.AtRightIn(group.mass_in, group, sw * 1+14)
+			LayoutHelpers.AtVerticalCenterIn(group.mass_in, group)
+			group.mass_in:SetColor('ffb7e75f')
+
+			group.energy_in = UIUtil.CreateText(group, '', 12, UIUtil.bodyFont)
+			group.energy_in:DisableHitTest()
+			LayoutHelpers.AtRightIn(group.energy_in, group, sw * 0+14)
+			LayoutHelpers.AtVerticalCenterIn(group.energy_in, group)
+			group.energy_in:SetColor('fff7c70f')
 		end
 
 		group.Height:Set(group.faction.Height)
@@ -258,8 +283,12 @@ function SetupPlayerLines()
 			replayID = GetFrontEndData('syncreplayid')
 	    elseif HasCommandLineArg("/savereplay") then
         	local url = GetCommandLineArg("/savereplay", 1)[1]
-        	local lastpos = string.find(url, "/", 20)
-        	replayID = string.sub(url, 20, lastpos-1)
+			local lastpos = string.find(url, "/", 20)
+			if lastpos then
+				replayID = string.sub(url, 20, lastpos-1)
+			else
+				replayID = 0
+			end
     	elseif HasCommandLineArg("/replayid") then
 	        replayID =  GetCommandLineArg("/replayid", 1)[1]
 	    end
@@ -305,7 +334,7 @@ function _OnBeat()
 					else
 						local array = {MASS='mass_in', ENERGY='energy_in'}
 
-						if(eco[line.armyID]) then
+						if eco[line.armyID] then
 							for t, k in array do
 								v = eco[line.armyID][t]['overflow'] or 0
 								line[k]:SetText(fmtnum(v))
@@ -395,4 +424,4 @@ function _OnBeat()
 
 	import(UIUtil.GetLayoutFilename('score')).LayoutArmyLines()
 	end
-end
+

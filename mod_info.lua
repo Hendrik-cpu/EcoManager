@@ -1,6 +1,6 @@
 name = "EcoManager"
 uid = "ecbf6277-24e3-437a-b968-EcoManager-v8"
-version = 7
+version = 8
 copyright = "Crotalus"
 description = "EcoManager, helps with micromanaging the economy, 3660+ compatible"
 author = "Crotalus"

@@ -16,7 +16,7 @@ local throttledEnergyText = import(modPath .. 'modules/autoshare.lua').throttled
 local overflow_income = 0
 
 local throttle_min_storage = 'auto'
-local FAB_RATIO = 0.5
+local FAB_RATIO = 0.3
 
 local current_throttle = 0
 
@@ -123,19 +123,28 @@ function sortUsers(a, b)
 	return av > bv
 end
 
+function getAcu()
+    local acus = Units.Get(categories.COMMAND)
+
+    if acus then
+        return acus[1]
+    end
+end
+
 function getResourceUsers(res)
 	local all_units = CanUnpauseUnits(Units.Get(), 'throttle')
 	local users = {}
 	local unpause = {}
+	local commander = getAcu()
 
 	for _, u in all_units do
 		if not u:IsDead() then
 			local focus
 			local cats = {}
 			local econ_data = econData(u)
-
-			if EntityCategoryContains(categories.ENGINEER, u) or EntityCategoryContains(categories.MASSEXTRACTION, u) or
-			  (EntityCategoryContains(categories.FACTORY, u) and not (EntityCategoryContains(categories.AIR * categories.TECH3, u))) then
+			local isBuilder  = EntityCategoryContains(categories.ENGINEER, u) or EntityCategoryContains(categories.MASSEXTRACTION, u) or (EntityCategoryContains(categories.FACTORY, u) and not (EntityCategoryContains(categories.AIR * categories.TECH3, u)))
+			
+			if isBuilder then
 				focus = u:GetFocus()
 				if focus then
 					cats = constructionCategories
@@ -264,6 +273,7 @@ function throttleEconomy()
 	local pause_list = {}
 
 	local gametime = GetGameTimeSeconds()
+	local acu = getAcu()
 
 	for _, u in res_users do
 		local progress_left = 1-u['workProgress']
@@ -310,8 +320,9 @@ function throttleEconomy()
 					new_stored = new_stored - math.abs(new_income*lasts_for)
 				end
 
+				local ignore = a['unit'] == acu
 				--if((new_income < 0 or u['prio'] == 1) and new_stored < min_storage*res['max'] and not first) then
-				if new_stored < min_storage*res['max'] and not first then
+				if new_stored < min_storage*res['max'] and not first and not ignore then
 					pausing = true
 					--LOG("PAUSING!")
 				else

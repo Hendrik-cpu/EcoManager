@@ -1,5 +1,5 @@
 local modPath = '/mods/EM/'
-local upgradeMexes = import(modPath .. 'modules/mexes.lua').upgradeMexes
+local queuePause = import(modPath .. 'modules/mexes.lua').queuePause
 local Select = import('/lua/ui/game/selection.lua')
 
 local oldOnCommandIssued = OnCommandIssued
@@ -22,6 +22,7 @@ function UpgradeMex(mex, bp)
 	Select.Hidden(function()
         SelectUnits({mex})
         IssueBlueprintCommand("UNITCOMMAND_Upgrade", bp, 1, false)
+        queuePause(mex)
     end)
 end
 
@@ -62,6 +63,7 @@ function AssistMex(command)
             local postfix = order == 't2' and '1202' or '1302'
             UpgradeMex(mex, prefix .. postfix)
         end
+
         lastAssist.order = order
         lastAssist.mex = mex
     end
