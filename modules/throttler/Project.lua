@@ -153,7 +153,7 @@ Project = Class({
 
         for _, a in self.assisters do
             local u = a.unit
-            local is_paused = isPaused(u)
+            --local is_paused = isPaused(u)
 
             if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested then
                 currEnergyRequested = currEnergyRequested + a.energyRequested

@@ -67,13 +67,13 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	throttle = function(self, eco, project)
 		local net = eco:energyNet()
 		local new_net
-		local StallingMass = eco.massStored <= 0 
+		local StallingMass = eco.massStored < 1
 		StallingMass = StallingMass and (eco.massIncome - eco.massRequested) < 0
 
 		if eco.energyMax > 0 then
 			if eco.energyStored / eco.energyMax >= 0.90 and StallingMass then
 				project:SetEnergyDrain(project.energyRequested)
-				do return end
+				return
 			end
 		end
 
@@ -84,8 +84,8 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining)
 		--print("Net: " .. net .. "|Energy Income: " .. eco.energyIncome .. "|Energy Actual: " .. eco.energyActual)
 		if project.prio <= 1 then
-			local MinStorage = (project.energyMinStorage * eco.energyMax)
-			new_net = new_net - (MinStorage / 5) --* MASSFAB_RATIO
+			local minStorage = (project.energyMinStorage * eco.energyMax)
+			new_net = new_net - (minStorage / 5) --* MASSFAB_RATIO
 			--print("unit ID: " .. project.id .. "|New Net: " .. new_net .. "|Net: " .. net .. "|min storage: " .. (project.energyMinStorage * eco.energyMax) .. "|stored: " .. eco.energyStored)
 			if new_net <0 then
 				net=0
