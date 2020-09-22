@@ -12,24 +12,24 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		{name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 70},
 		{name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 80},
 		{name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 10},
-		{name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 70},
-		{name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 80},
-		{name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 60},
-		{name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 70},
-		{name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 80},
-		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, off=3, priority = 81},
-		{name="ACU/SCU upgrades", category = categories.LAND * categories.MOBILE * (categories.COMMAND + categories.SUBCOMMANDER), off=2, priority = 90},
-		{name="Mass Extractors", category = categories.STRUCTURE * categories.MASSEXTRACTION, priority = 91},
-		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 99},
-		--{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
-		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 85},
+		{name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 10},
+		{name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 10},
+		{name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 30},
+		{name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 30},
+		{name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 97},
+		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, off=3, priority = 40},
+		{name="ACU/SCU upgrades", category = categories.LAND * categories.MOBILE * (categories.COMMAND + categories.SUBCOMMANDER), off=2, priority = 50},
+		{name="Mass Extractors", category = categories.STRUCTURE * categories.MASSEXTRACTION, priority = 20},
+		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 98},
+		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
+		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 25},
 	},
 
 	_sortProjects = function(a, b)
 		-- local av = a['prio'] * 100000 + a['massRatio']*100 - (a['timeLeft'])
 		-- local bv = b['prio'] * 100000 + b['massRatio']*100 - (b['timeLeft'])
-		local av = a['massProportion']
-		local bv = b['massProportion']
+		local av = (a['massProportion'] + a['prio'] / 100) / 2 + a['workProgress'] * 2
+		local bv = (b['massProportion'] + b['prio'] / 100) / 3 + b['workProgress'] * 2
 
 		if a['energyPayoffSeconds'] > 0 then
 			av = av + 10000 - a['energyPayoffSeconds'] 
