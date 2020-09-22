@@ -95,7 +95,7 @@ end
 
 function ILOG(str)
 	if logEnabled then
-		LOG(str)
+		--LOG(str)
 	end
 end
 
