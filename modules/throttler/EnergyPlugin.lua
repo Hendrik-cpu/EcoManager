@@ -5,9 +5,9 @@ local MASSFAB_RATIO = 0.4
 
 EnergyPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
-		{name="T3 Mass fabrication", category = categories.TECH3 * categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 0},
-		{name="T2 Mass fabrication", category = categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 1},
-		{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, lasts_for=3, priority = 5},
+		{name="T3 Mass fabrication", category = categories.TECH3 * categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 1},
+		{name="T2 Mass fabrication", category = categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 2},
+		{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, lasts_for=3, priority = 3},
 		{name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 30},
 		{name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 30},
 		{name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 30},
@@ -28,9 +28,11 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	_sortProjects = function(a, b)
 		-- local av = a['prio'] * 100000 + a['massRatio']*100 - (a['timeLeft'])
 		-- local bv = b['prio'] * 100000 + b['massRatio']*100 - (b['timeLeft'])
-		local av = (a['massProportion'] + a['prio'] / 100) / 2 + a['workProgress'] * 2
-		local bv = (b['massProportion'] + b['prio'] / 100) / 2 + b['workProgress'] * 2
-
+		local av = a['massProportion'] --+ a['prio'] / 100 + a['workProgress'] 
+		local bv = b['massProportion'] --+ b['prio'] / 100 + b['workProgress'] 
+		print(a['prio'] / 100 .. ";" .. a['massProportion'] .. ";" .. a['workProgress'])
+		print(b['prio'] / 100 .. ";" .. b['massProportion'] .. ";" .. b['workProgress'])
+		
 		if a['energyPayoffSeconds'] > 0 then
 			av = av + 10000 - a['energyPayoffSeconds'] 
 		end
