@@ -67,6 +67,7 @@ table.insert(options.gameplay.items,
             states = {
                 {text = "<LOC _Off>", key = 0 },
                 {text = "<LOC _On>", key = 1 },
+                {text = "Throttle only Mass Fabricators", key = 2 },
             },
         },
     })
@@ -80,11 +81,7 @@ table.insert(options.gameplay.items,
         custom = {
             states = {
                 {text = "<LOC _Off>", key = 0 },
-                {text = "Auto", key = 'auto' },
-                {text = "Simple", key = 'simple' },
-                {text = "Optimize Time", key = 'optimizeTime' },
-                {text = "Optimize Mass Efficiency", key = 'optimizeMass' },
-                {text = "Optimize Energy Efficiency", key = 'optimizeEnergy' },
+                {text = "Optimize Payoff", key = 'auto' },
             },
         },
     })

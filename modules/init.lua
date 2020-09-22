@@ -62,6 +62,7 @@ function setup(isReplay, parent)
 		table.insert(mods, 'autoshare');
 		table.insert(mods, 'throttlemass');
 		table.insert(mods, 'throttle');
+		table.insert(mods, 'ecocommands')
 		--table.insert(mods, 'throttler');
 	end
 

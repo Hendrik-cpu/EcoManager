@@ -50,7 +50,36 @@ local consumptionCategories = {
 	{name="Mass fabrication", category = categories.STRUCTURE * categories.MASSFABRICATION, toggle=4, priority = 1}
 }
 
+--SC-Account
+local throttleActivationSeconds = 0*60
+local Prefs = import('/lua/user/prefs.lua')
+local logEnabled=false
+function ILOG(str)
+	if logEnabled then
+		LOG(str)
+	end
+end
 
+local toggleMassFabsOnlyState=true
+function toggleMassFabsOnly()
+	if toggleMassFabsOnlyState then
+		throttleCommand({"t","auto"})
+	else
+		throttleCommand({"t","0"})
+	end
+toggleMassFabsOnlyState=not toggleMassFabsOnlyState
+end
+
+local togglePowerThrottleState=false
+function togglePowerThrottle()
+	if togglePowerThrottleState then
+		throttleCommand({"t","off"})
+	else
+		throttleCommand({"t","auto"})
+	end
+	togglePowerThrottleState=not togglePowerThrottleState
+end
+--SC-Account
 
 function init()
 	addListener(throttleEconomy, 0.6, 'em_throttle')
@@ -70,6 +99,7 @@ function throttleCommand(args)
 	local cmd
 	local Prefs = import('/lua/user/prefs.lua')
 	local options = Prefs.GetFromCurrentProfile('options')
+	local option = 1
 
 	if table.getsize(args) < 2 then
 		if throttle_min_storage == 'auto' then
@@ -79,41 +109,35 @@ function throttleCommand(args)
 		end
 	end
 	local str_cmd = string.lower(args[2])
-
+	if str_cmd == 'on' then str_cmd = 'auto' end
+		
 	str_cmds = {off=true, on=true, auto=true}
 
-	if str_cmd == 'off' or options['em_throttle'] == 0 then
-		local option
-
-		if str_cmd == 'off' then
-			option = 0
-		else
-			option = 1
-		end
-
-		options['em_throttle'] = option
-		Prefs.SetToCurrentProfile('options', options)
-    	Prefs.SavePreferences()
-    end
-
-	if str_cmd == 'auto' then
+	if str_cmds[str_cmd] or str_cmd == 0 then
 		throttle_min_storage = str_cmd
-	elseif not str_cmds[str_cmd] then
+	else
 		throttle_min_storage = math.min(math.max(0, tonumber(args[2])/100), 1)
 	end
 
-	if str_cmd == 'off' then
+	if throttle_min_storage == 'off' then
+		option = 0
 		print ("Throttling disabled")
+	elseif throttle_min_storage == 'on' then
+		print ("Throttling enabled")
 	elseif throttle_min_storage == 0 then
-		print ("Throttling disabled (except massfabs)")
+		option = 2
+		print ("Throttling only mass fabricators")
+	elseif throttle_min_storage == 'auto' then
+		print ("Throttling energy using auto mode")
 	else
-		if throttle_min_storage == 'auto' then
-			print ("Throttling energy using auto mode")
-		else
-			local thres = round(throttle_min_storage*100)
-			print ("Throttling energy when storage < " .. thres .. " percent")
-		end
+		local thres = round(throttle_min_storage*100)
+		print ("Throttling energy when storage < " .. thres .. " percent")
 	end
+
+	--save prefs
+	options['em_throttle'] = option
+	Prefs.SetToCurrentProfile('options', options)
+	Prefs.SavePreferences()
 end
 
 function sortUsers(a, b)
@@ -233,7 +257,24 @@ function getResourceUsers(res)
 end
 
 function throttleEconomy()
+
 	--LOG("THROTTLE")
+	--sc	
+	--Check if throttle behavior options have been changed
+	str_cmds = {off=true, auto=true}
+	if str_cmds[throttle_min_storage] or throttle_min_storage == 0 then
+		local options = Prefs.GetFromCurrentProfile('options')
+		local throttleMode=options['em_throttle']
+		if throttleMode == 2 then --mass fabs only, rest handled by addListener
+			throttle_min_storage=0
+		elseif throttleMode == 1 then
+			throttle_min_storage ='auto'
+		elseif throttleMode == 0 then
+			throttle_min_storage = 'off'
+		end
+	end
+	--sc\
+
 	local tps = GetSimTicksPerSecond()
 	local eco = getEconomy()
 	local res
@@ -263,6 +304,10 @@ function throttleEconomy()
 	end
 
 	res_users = getResourceUsers(res)
+	if throttle_min_storage == 'off' then
+		SetPaused(res_users,false)
+		return false
+	end
 
 	current_throttle = res['throttle_current']
 
@@ -290,7 +335,7 @@ function throttleEconomy()
 		end
 
 		if throttle_min_storage == 'auto' then
-			if gametime < 180 or u['prio'] == 100 then -- no throttling first 3 minutes of game / pgens
+			if gametime < throttleActivationSeconds or u['prio'] == 100 then -- no throttling first xx minutes of game / pgens
 				min_storage = 0
 			elseif u['prio'] == 1 then -- massfabs are on >60% storage in automode
 				if res['ratio'] >= 0.96 and false then -- overflow from allies

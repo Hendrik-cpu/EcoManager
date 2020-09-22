@@ -1,4 +1,3 @@
-
 local modPath = '/mods/EM/'
 local Units = import('/mods/common/units.lua')
 local addListener = import(modPath .. 'modules/init.lua').addListener
@@ -6,6 +5,9 @@ local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
 local addCommand = import(modPath .. 'modules/commands.lua').addCommand
 local Pause = import(modPath .. 'modules/pause.lua').Pause
 local CanUnpause = import(modPath .. 'modules/pause.lua').CanUnpause
+local FindClients = import('/lua/ui/game/chat.lua').FindClients
+local minMassStored=0
+local minEnergyStored=0
 
 --/settings
 local logEnabled=false
@@ -17,16 +19,87 @@ local unitsPauseList={}
 --local excluded = {}
 
 function init()
-	addCommand('mm', setMassStallMexesOnCount)
-	addCommand('me', setEnergyStallMexesOnCount)
 	addListener(manageAssistedUpgrade, 0.6, 'em_mexOpti')
 end
+
+local AllIsPause=false
+function PauseAll()
+	local units={}
+	local selected={}
+
+	for _, u in GetSelectedUnits() or {} do
+		selected[u:GetEntityId()]=true
+	end
+
+	for _, u in Units.Get() do
+		if not selected[u:GetEntityId()] then
+			table.insert(units, u)
+		end
+	end
+
+	AllIsPause=not AllIsPause
+	Pause(units, AllIsPause, 'user')
+end
+
+local EcoIsPaused=false
+function PauseECO()
+	if EcoIsPaused then
+		minMassStored=0
+		minEnergyStored=0
+		preventM_Stall=1
+		preventE_Stall=1
+		EcoIsPaused=false
+		print("Mex upgrades have been unpaused.")
+	else
+		minMassStored=0.01
+		minEnergyStored=0.01
+		preventM_Stall=0
+		preventE_Stall=0
+		EcoIsPaused=true
+		print("Mex upgrades have been paused and will resume when storages are filling up (1%m/1%e).")
+	end
+end
+function PauseECOHard()
+	if EcoIsPaused then
+		minMassStored=0
+		minEnergyStored=0
+		preventM_Stall=1
+		preventE_Stall=1
+		EcoIsPaused=false
+		print("Mex upgrades have been unpaused.")
+	else
+		minMassStored=0.8
+		minEnergyStored=0.9
+		preventM_Stall=0
+		preventE_Stall=0
+		EcoIsPaused=true
+		print("Mex upgrades have been paused and will resume when storages are filling up (80%m/90%e).")
+	end
+end
+
+local NonEcoIsPaused=false
+function PauseAllNonECO()
+	local unitPauseList={}
+	for _, u in Units.Get() do
+		if u:IsInCategory("MASSEXTRACTION") or u:IsInCategory("ENERGYPRODUCTION") or u:IsInCategory("MASSPRODUCTION") then
+			--don't add to pause list
+		else
+			--add to pause list
+			table.insert(unitPauseList, u)
+		end
+	end
+
+	NonEcoIsPaused=not NonEcoIsPaused
+	Pause(unitPauseList, NonEcoIsPaused, 'user')
+end
+
 function ILOG(str)
 	if logEnabled then
 		LOG(str)
 	end
 end
 
+--*MassThrottling*
 function SetPaused(units, state)
 	Pause(units, state, 'throttlemass')
 end
@@ -54,7 +127,6 @@ function setMassStallMexesOnCount(args)
 	local eco=getEconomy()
 	print("Number of mass production upgrades to keep on during mass stall set to:" , preventM_Stall, "Stalling eco: ", "mass = ", eco['MASS']['stall_seconds'],"energy = ", eco['ENERGY']['stall_seconds'])
 end
-
 function setEnergyStallMexesOnCount(args)
 	if not args then
 		preventE_Stall=0
@@ -98,12 +170,14 @@ function manageAssistedUpgrade()
 
 	engineers = EntityCategoryFilterDown(categories.ENGINEER,AllUnits)
 	for _, m in mexes do
+		local data=m:GetEconData()
+		local mexMassProduction=data['massProduced']
+
 		if not m:IsIdle() then --and not excluded[m:GetEntityId()]
 			table.insert(engineers,m)
 		end
 
-		local data=m:GetEconData()
-		if data['massProduced']~=27 then
+		if mexMassProduction~=27 then
 			AllMEXT3Capped =false
 		end
 
@@ -113,6 +187,15 @@ function manageAssistedUpgrade()
 		local minutes=math.floor(GetGameTimeSeconds()/60)
 		print("All Mexes upgraded to t3 and capped at", minutes .. ":" .. GetGameTimeSeconds()-minutes*60)
 		mexCappedMsgPrinted=true
+	end
+	if AllMEXT3Capped and not mexCappedMsgPrinted then
+		local minutes=math.floor(GetGameTimeSeconds()/60)
+		local message="All Mexes upgraded to t3 and capped at" .. minutes .. ":" .. GetGameTimeSeconds()-minutes*60
+		print(message)
+		mexCappedMsgPrinted=true
+		msg = { to = 'allies', Chat = true, text = message}
+		SessionSendChatMessage(FindClients(), msg)
+	
 	end
 
 	-- find the mex assisting and grab id from there
@@ -238,22 +321,21 @@ function manageAssistedUpgrade()
 
 		local pausedByMe=getUnitsPauseList()
 		local pausedByMeForPower=getUnitsPauseList()
-		local pausedByClickOrAssist = {}
 
 		table.sort(sortTable, function(a, b) return a['res']['MASS']['TimeEfficiency'] < b['res']['MASS']['TimeEfficiency'] end)
-		optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,combinedMassDrain,combinedEnergyDrain)
+		optimizeECO(eco, pausedByMe,sortTable,combinedMassDrain,combinedEnergyDrain)
 
 	end
 	ILOG("finished")
 end
 
-function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,mProd_mDrain,mProd_eDrain,mProd)
+function optimizeECO(eco, pausedByMe,sortTable,mProd_mDrain,mProd_eDrain,mProd)
 
 	--detect mass problem
-	local mPossibleProjects=detectProblem("MASS",sortTable,eco,mProd_mDrain,5,preventM_Stall)
+	local mPossibleProjects=detectProblem("MASS",sortTable,eco,mProd_mDrain,5,preventM_Stall,minMassStored)
 
 	--detect power problem
-	local ePossibleProjects=detectProblem("ENERGY",sortTable,eco,mProd_eDrain,5,preventE_Stall)
+	local ePossibleProjects=detectProblem("ENERGY",sortTable,eco,mProd_eDrain,5,preventE_Stall,minEnergyStored)
 
 	--decide how many projects to unpause
 	local PossibleProjects=math.min(mPossibleProjects,ePossibleProjects)
@@ -287,13 +369,15 @@ function optimizeECO(eco, pausedByMe,pausedByClickOrAssist,sortTable,mProd_mDrai
 	SetPaused(unitsUnPauseList, false)
 end
 
-function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEntities)
+function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEntities,minStored)
 
 	local res=eco[mode]
+	local totalIncome=res['income']*GetSimTicksPerSecond()
 	local DrainRequested=res['net_income']*GetSimTicksPerSecond()
 	local NetIncome=res['net_income']*GetSimTicksPerSecond()+mProd_Drain
-	local Stored=res['stored']
 	local Max=res['max']
+	local Stored=res['stored']-(Max*minStored)
+
 
 	local PossibleProjects=0
 	local OrdersCount=table.getsize(sortTable)
@@ -326,7 +410,8 @@ function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEnti
 		local StorageLimitReached=Stored >= (Max-DrainRequested)
 
 		--decide wether to pause or continue with upgrades
-		local Problem=(j > MaxStallingEntities and CalcStoredIncome<0 and CalcStored<=0 and Stalling>=0 and not StorageLimitReached)
+		--print((DrainRequested*-1)/totalIncome)
+		local Problem=(j > MaxStallingEntities and CalcStoredIncome<0 and CalcStored<=0 and Stalling>=0 and not StorageLimitReached ) and (DrainRequested*-1/totalIncome>0.20)
 
 		--if a project is 90% completed finish it even if exceeding maximum project count at stall set by user
 		if (MaxStallingEntities+1)==j then
@@ -349,5 +434,10 @@ function detectProblem(mode,sortTable,eco,mProd_Drain,BufferTime,MaxStallingEnti
 		PossibleProjects=j
 	end
 
-	return PossibleProjects
+	if Stored <0 then 
+		return 0
+	else
+		return PossibleProjects
+	end
+
 end
