@@ -56,7 +56,7 @@ local Prefs = import('/lua/user/prefs.lua')
 local logEnabled=false
 function ILOG(str)
 	if logEnabled then
-		LOG(str)
+		--LOG(str)
 	end
 end
 

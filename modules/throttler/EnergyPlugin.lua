@@ -92,11 +92,11 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 			end
 		end
 
-		LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net .. " MASS RATIO " .. project.massRatio)
+		--LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net .. " MASS RATIO " .. project.massRatio)
 
 		if new_net < 0 then
 			project:SetEnergyDrain(math.max(0, net))
-			LOG("Throttle set to " .. project.throttle)
+			--LOG("Throttle set to " .. project.throttle)
 		end
 	end,
 }

@@ -159,7 +159,7 @@ EcoManager = Class({
 
 		--print ("n_projects " .. table.getsize(all_projects))
 
-		LOG("NEW BALANCE ROUND")
+		--LOG("NEW BALANCE ROUND")
 
 		import(modPath .. 'modules/throttler/Project.lua').throttleIndex = 0
 		import(modPath .. 'modules/throttler/Project.lua').firstAssister = true
@@ -183,9 +183,9 @@ EcoManager = Class({
 					local last_ratio = p.throttle
 					plugin:throttle(eco, p)
 					if p.throttle > 0 and p.throttle < 1 then
-						LOG("ADJUST THIS SHIT")
+						--LOG("ADJUST THIS SHIT")
 						p:adjust_throttle(eco) -- round throttle to nearest assister
-						LOG("ADJUSTED TO " .. p.throttle)
+						--LOG("ADJUSTED TO " .. p.throttle)
 					end
 
 					if p.throttle == 1 then
