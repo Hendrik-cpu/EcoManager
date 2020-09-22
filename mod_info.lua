@@ -1,6 +1,6 @@
 name = "NewEcomanager"
 uid = "ecbf6277-24e3-597a-b968-EcoManager-Re0.01"
-version = 8.001
+version = 8.1
 copyright = "SC-Account"
 description = ""
 author = "SC-Account"

@@ -162,7 +162,7 @@ EcoManager = Class({
 
 	manageEconomy = function(self)
 		if throttlerDisabled then
-			return
+			return false
 		end
 
 		--print("throttler alive!")
