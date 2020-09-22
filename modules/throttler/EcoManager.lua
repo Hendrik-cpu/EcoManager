@@ -31,36 +31,9 @@ function setPause(units, toggle, pause)
 		end
 	end
 end 
--- local LastPausedList
--- function setPause(units, toggle, pause)
--- 	if pause == true then
--- 		for _, u in units or {} do
--- 			if LastPausedList[u:GetEntityId()]
--- 				if u:GetIsPaused() then
--- 					--keep in pause list
--- 				else
--- 					--remove from pause list cause unpaused by someone else
--- 				end
--- 			end
--- 		end
--- 		LastPausedList=units
--- 	end
 
--- 	if toggle == 'pause' then
--- 		SetPaused(units, pause)
--- 	else
--- 		local bit = GetScriptBit(units, toggle)
--- 		local is_paused = bit
+local LastUnitsPauseState
 
--- 		if toggle == 0  then
--- 			is_paused = not is_paused
--- 		end
-
--- 		if pause ~= is_paused then
--- 			ToggleScriptBit(units, toggle, bit)
--- 		end
--- 	end
--- end
 
 local throttlerDisabled=false
 function DisableNewEcoManager()
@@ -161,9 +134,6 @@ EcoManager = Class({
 	end,
 
 	manageEconomy = function(self)
-		if throttlerDisabled then
-			return false
-		end
 
 		--print("throttler alive!")
 		local eco
@@ -175,6 +145,11 @@ EcoManager = Class({
 		eco = self.eco
 		for _, p in self:LoadProjects(eco) do
 			table.insert(all_projects, p)
+		end
+
+		if throttlerDisabled then
+
+			return false
 		end
 
 		--print ("n_projects " .. table.getsize(all_projects))
