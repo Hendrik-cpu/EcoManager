@@ -21,7 +21,7 @@ function setPause(units, toggle, pause)
 	
 	for _, u in units do 
 		LastUnitsPauseState[u:GetEntityId()] = {toggle = toggle, pause = pause}
-		print("unit id: " .. u:GetEntityId() .. " | toggle: " .. LastUnitsPauseState[u:GetEntityId()].toggle .. " | pause: " .. tostring(LastUnitsPauseState[u:GetEntityId()].pause))
+		--print("unit id: " .. u:GetEntityId() .. " | toggle: " .. LastUnitsPauseState[u:GetEntityId()].toggle .. " | pause: " .. tostring(LastUnitsPauseState[u:GetEntityId()].pause))
 	end
 
 	if toggle == 'pause' then
