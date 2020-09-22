@@ -82,7 +82,7 @@ Project = Class({
                     self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production']
                 end
             else
-                selft[t .. 'PayoffSeconds'] = 0
+                self[t .. 'PayoffSeconds'] = 0
             end
         end
     end,
