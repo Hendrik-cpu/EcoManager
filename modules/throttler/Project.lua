@@ -82,7 +82,7 @@ Project = Class({
                     self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production']
                 end
             else
-                selft[t .. 'PayoffSeconds'] = 0
+                self[t .. 'PayoffSeconds'] = 0
             end
         end
     end,
@@ -153,7 +153,7 @@ Project = Class({
 
         for _, a in self.assisters do
             local u = a.unit
-            local is_paused = isPaused(u)
+            --local is_paused = isPaused(u)
 
             if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested then
                 currEnergyRequested = currEnergyRequested + a.energyRequested

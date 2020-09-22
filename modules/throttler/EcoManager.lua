@@ -89,7 +89,7 @@ EcoManager = Class({
 					if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
 						--mass fabricators i guess
 						isMassFabricator = true
-						data = econData(u)
+						--data = econData(u)
 						--if not (data.energyRequested == 0 and not isPaused(u)) then
 							focus = u
 						--end
@@ -139,7 +139,6 @@ EcoManager = Class({
 	end,
 
 	manageEconomy = function(self)
-
 		--print("throttler alive!")
 		local eco
 		local all_projects = {}
@@ -153,7 +152,6 @@ EcoManager = Class({
 		end
 
 		if throttlerDisabled then
-
 			return false
 		end
 
