@@ -56,14 +56,17 @@ function watchdogThread()
 end
 
 function setup(isReplay, parent)
-	local mods = {'economy', 'pause', 'options', 'mexes', 'buildoverlay'}
+	--local mods = {'economy', 'factories', 'pause', 'options', 'shields', 'mexes', 'buildoverlay'}
+	local mods = {'economy','pause','options','mexes','buildoverlay'}
+	--local mods = {}
 
 	if not isReplay then
-		table.insert(mods, 'autoshare');
+		--WARN("setup running")
+		--table.insert(mods, 'autoshare');
 		table.insert(mods, 'throttlemass');
-		table.insert(mods, 'throttle');
-		table.insert(mods, 'ecocommands')
-		--table.insert(mods, 'throttler');
+		--table.insert(mods, 'throttle');
+		table.insert(mods, 'ecocommands');
+		table.insert(mods, 'throttler');
 	end
 
 	for _, m in mods do
@@ -72,7 +75,6 @@ function setup(isReplay, parent)
 end
 
 function initThreads()
-	WaitSeconds(2)
 	ForkThread(mainThread)
 	ForkThread(watchdogThread)
 end

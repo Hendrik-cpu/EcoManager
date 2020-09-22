@@ -1,9 +1,9 @@
-name = "EcoManager"
-uid = "ecbf6277-24e3-437a-b968-EcoManager-v8"
-version = 8
-copyright = "Crotalus"
-description = "EcoManager, helps with micromanaging the economy, 3660+ compatible"
-author = "Crotalus"
+name = "NewEcomanager"
+uid = "ecbf6277-24e3-597a-b968-EcoManager-Re0.01"
+version = 8.001
+copyright = "SC-Account"
+description = ""
+author = "SC-Account"
 url = ""
 selectable = true
 enabled = true
@@ -14,6 +14,12 @@ requires = {
 }
 requiresNames = {}
 conflicts = {
+"ecbf6277-24e3-597a-b968-EcoManager-v13",
+"ecbf6277-24e3-437a-b968-EcoManager-v12",
+"ecbf6277-24e3-437a-b968-EcoManager-v11",
+"ecbf6277-24e3-437a-b968-EcoManager-v10",
+"ecbf6277-24e3-437a-b968-EcoManager-v9",
+"ecbf6277-24e3-437a-b968-EcoManager-v8",
 "ecbf6277-24e3-437a-b968-EcoManager-v7",
 "ecbf6277-24e3-437a-b968-EcoManager-v6",
 "ecbf6277-24e3-437a-b968-EcoManager-v5",

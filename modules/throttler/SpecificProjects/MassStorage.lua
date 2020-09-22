@@ -1,0 +1,3 @@
+MassStorage = Class(Project){
+
+}

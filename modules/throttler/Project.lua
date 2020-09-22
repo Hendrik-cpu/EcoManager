@@ -26,7 +26,6 @@ end
 
 Project = Class({
     id = -1,
-
     buildTime = 0,
     workProgress = 0,
     workLeft = 0,
@@ -41,8 +40,14 @@ Project = Class({
     energyCostRemaining = 0,
     massProduction = 0,
     energyProduction = 0,
-    massTimeEfficiency = 0,
-    energyTimeEfficency = 0,
+    massPayoffSeconds = 0,
+    energyPayoffSeconds = 0,
+    massProportion = 0,
+    energyProportion = 0,
+
+    massMinStorage = 0,
+    energyMinStorage = 0,
+    isMassFabricator = false,
 
     throttle = {},
     index = 0,
@@ -60,8 +65,9 @@ Project = Class({
         self.massBuildCost = bp.Economy.BuildCostMass
         self.energyBuildCost = bp.Economy.BuildCostEnergy
         self.massProduction = bp.Economy.ProductionPerSecondMass
-        self.energyProduction = bp.Economy.EnergyPerSecondMass
-
+        self.energyProduction = bp.Economy.ProductionPerSecondEnergy
+        self.massProportion = self.massBuildCost / (self.massBuildCost + self.energyBuildCost) * 100
+        self.energyProportion = self.energyBuildCost / (self.energyBuildCost + self.massBuildCost) * 100
     end,
 
     LoadFinished = function(self)
@@ -72,9 +78,11 @@ Project = Class({
             self[t .. 'Drain'] = self[t .. 'BuildCost'] / (self.buildTime / self.buildRate)
             self[t .. 'CostRemaining'] = self[t .. 'BuildCost'] * self.workLeft
             if self[t .. 'Production'] then
-                self[t .. 'TimeEfficiency'] = self[t .. 'CostRemaining'] / self[t .. 'Production']
+                if self[t .. 'Production'] > 0 then
+                    self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production']
+                end
             else
-                selft[t .. 'TimeEfficiency'] = 0
+                selft[t .. 'PayoffSeconds'] = 0
             end
         end
     end,
@@ -115,6 +123,14 @@ Project = Class({
 
         if ratio > self.throttle then
             self.throttle = ratio
+        end
+    end,
+
+    SetTypeDrain = function(self, type, value)
+        if type == "mass" then
+            self:SetMassDrain(value)
+        elseif type == "energy" then
+            self:SetEnergyDrain(value)
         end
     end,
 
@@ -188,7 +204,6 @@ Project = Class({
     pause = function(self, pause_list)
         local maxEnergyRequested = (1-self.throttle) * self.energyRequested
         local currEnergyRequested = 0
-
         for _, a in self.assisters do
             local u = a.unit
             local is_paused = isPaused(u)

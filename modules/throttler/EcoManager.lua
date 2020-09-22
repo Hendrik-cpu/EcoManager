@@ -1,4 +1,5 @@
 local modPath = '/mods/EM/'
+local Pause = import(modPath .. 'modules/pause.lua').Pause
 
 function isPaused(u)
 	local is_paused
@@ -11,20 +12,63 @@ function isPaused(u)
 	return is_paused
 end
 
+function SetPaused(units, state)
+	Pause(units, state, 'throttle')
+end
 function setPause(units, toggle, pause)
 	if toggle == 'pause' then
 		SetPaused(units, pause)
 	else
 		local bit = GetScriptBit(units, toggle)
-		local is_paused = bit
-
-		if toggle == 0  then
-			is_paused = not is_paused
+		local is_paused = bit 
+ 
+		if toggle == 0 then 
+			is_paused = not is_paused 
 		end
 
 		if pause ~= is_paused then
 			ToggleScriptBit(units, toggle, bit)
 		end
+	end
+end 
+-- local LastPausedList
+-- function setPause(units, toggle, pause)
+-- 	if pause == true then
+-- 		for _, u in units or {} do
+-- 			if LastPausedList[u:GetEntityId()]
+-- 				if u:GetIsPaused() then
+-- 					--keep in pause list
+-- 				else
+-- 					--remove from pause list cause unpaused by someone else
+-- 				end
+-- 			end
+-- 		end
+-- 		LastPausedList=units
+-- 	end
+
+-- 	if toggle == 'pause' then
+-- 		SetPaused(units, pause)
+-- 	else
+-- 		local bit = GetScriptBit(units, toggle)
+-- 		local is_paused = bit
+
+-- 		if toggle == 0  then
+-- 			is_paused = not is_paused
+-- 		end
+
+-- 		if pause ~= is_paused then
+-- 			ToggleScriptBit(units, toggle, bit)
+-- 		end
+-- 	end
+-- end
+
+local throttlerDisabled=false
+function DisableNewEcoManager()
+	throttlerDisabled = not throttlerDisabled
+	if throttlerDisabled then
+		print("Throttler disabled!")
+	else
+		print("Throttler enabled!")
 	end
 end
 
@@ -58,11 +102,15 @@ EcoManager = Class({
 			if not u:IsDead() then
 				local focus = u:GetFocus()
 				local isConstruction = false
+				local isMassFabricator = false
+				local isMassStorage = false
 
 				if not focus then
 					local is_paused = isPaused(u)
 
 					if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
+						--mass fabricators i guess
+						isMassFabricator = true
 						data = econData(u)
 						--if not (data.energyRequested == 0 and not isPaused(u)) then
 							focus = u
@@ -80,9 +128,10 @@ EcoManager = Class({
 					project = self.projects[id]
 					if not project then
 						--LOG("Adding new project " .. id)
-
 						project = Project(focus)
 						project.isConstruction = isConstruction
+						project.isMassFabricator = isMassFabricator
+						if isMassFabricator then project.energyMinStorage = 0.9 end
 						self.projects[id] = project
 					end
 
@@ -112,6 +161,11 @@ EcoManager = Class({
 	end,
 
 	manageEconomy = function(self)
+		if throttlerDisabled then
+			return
+		end
+
+		--print("throttler alive!")
 		local eco
 		local all_projects = {}
 
@@ -144,50 +198,29 @@ EcoManager = Class({
 	 		for _, p in plugin.projects do
 		 		local ratio_inc
 
-	 			if p.throttle < 1 then
-	 				if not pause then
-	 					local last_ratio = p.throttle
-	 					plugin:throttle(eco, p)
-	 					if p.throttle > 0 and p.throttle < 1 then
-	 						LOG("ADJUST THIS SHIT")
-	 						p:adjust_throttle(eco) -- round throttle to nearest assister
-	 						LOG("ADJUSTED TO " .. p.throttle)
-	 					end
+				if p.throttle < 1 then
+					
+					local last_ratio = p.throttle
+					plugin:throttle(eco, p)
+					if p.throttle > 0 and p.throttle < 1 then
+						LOG("ADJUST THIS SHIT")
+						p:adjust_throttle(eco) -- round throttle to nearest assister
+						LOG("ADJUSTED TO " .. p.throttle)
+					end
 
-	 					if p.throttle == 1 then
-	 						pause = true
-	 					end
+					if p.throttle == 1 then
+						pause = true
+					else
+						pause = false
+					end
 
-	 					ratio_inc = p.throttle - last_ratio
-	 					eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
-		 				eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
-	 				end
+					ratio_inc = p.throttle - last_ratio
+					eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
+					eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
 
 	 				if pause then
 	 					p:SetEnergyDrain(0)
 	 				end
-
-
-	 				--[[
-			 		if not pause then
-	 					local last_ratio = p.throttle
-		 				plugin:throttle(eco, p)
-	 					ratio_inc = p.throttle - last_ratio
-		 				if p.throttle < 1 then
-			 				--table.insert(projects, p)
-		 				else
-				 			pause = true -- plugin throttles all from here
-		 				end
-
-		 				eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
-		 				eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
-		 			end
-
-		 			if(pause) then
-				 		p:SetEnergyDrain(0)
-		 				--projects[p.id] = nil
-		 			end
-		 			]]
 		 		end
 	 		end
 		end

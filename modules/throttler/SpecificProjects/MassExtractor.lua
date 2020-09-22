@@ -1,0 +1,3 @@
+MassExtractor = Class(Project){
+
+}

@@ -3,7 +3,7 @@ local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua
 
 MassPlugin = Class(ThrottlerPlugin) {
 	_sortProjects = function(a, b)
-		return a.massTimeEfficiency < b.massTimeEfficiency
+		return a.massPayoffSeconds < b.massPayoffSeconds
 	end,
 
 	add = function(self, project)

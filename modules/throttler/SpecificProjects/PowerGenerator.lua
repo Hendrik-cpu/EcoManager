@@ -1,0 +1,3 @@
+PowerGenerator = Class(Project){
+
+}

@@ -1,0 +1,3 @@
+MassFabricator = Class(Project){
+
+}
