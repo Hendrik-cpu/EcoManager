@@ -5,7 +5,6 @@ Economy = Class({
 	massRequested = 0,
 	energyRequested = 0,
 	massActual = 0,
-	energyActual = 0,
 	massStored = 0,
 	energyStored = 0,
 	massMax = 0,
