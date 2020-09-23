@@ -1,19 +1,10 @@
 Economy = Class({
-	--[[
-	massIncome = 0,
-	energyIncome = 0,
-	massRequested = 0,
-	energyRequested = 0,
-	massActual = 0,
-	massStored = 0,
-	energyStored = 0,
-	massMax = 0,
-	energyMax = 0,
-	massRatio = 0,
-	energyRatio = 0,
-	]]
-
 	data = {},
+
+	--Stall detection
+	massStall = false,
+	energyStall = false,
+	ecoStall = false,
 
 	__init = function(self)
 		self:Init()
@@ -23,7 +14,7 @@ Economy = Class({
 
 	Init = function(self, data)
 		local types = {'MASS', 'ENERGY'}
-		local mapping = {maxStorage="Max", stored="Stored", income="Income", lastUseRequested="Requested", lastUseActual="Actual", ratio="ratio", net_income="net_income"}
+		local mapping = {maxStorage="Max", stored="Stored", income="Income", lastUseRequested="Requested", lastUseActual="Actual", ratio="ratio",  net_income="net_income", stalling="stalling"}
 		local per_tick = {income=true, lastUseRequested=true, lastUseActual=true}
 
 		tps = GetSimTicksPerSecond()
@@ -41,6 +32,9 @@ Economy = Class({
 			end
 
 			self[prefix .. "Ratio"] = data['stored'][t] / data['maxStorage'][t]
+			self[prefix .. "Ratio"] = data['stored'][t] / data['maxStorage'][t]
+			print(prefix .. " stalling = " .. data['stored'][t] < 1 and (data['income'][t] - data['lastUseRequested'][t]) < 0)
+
 
 			if self[prefix .. 'Stored'] < 1 then
 				self[prefix .. 'Actual'] = math.min(self[prefix .. 'Actual'], self[prefix .. 'Income']) -- mex bug
@@ -49,6 +43,11 @@ Economy = Class({
 			--self[prefix .. "Net"] = data['income'][t] - data['lastUseActual'][t] + data['stored'][t] / 5
 
 		end
+
+		energyStall = self.energyStored <= 1 and (self.energyIncome - self.energyRequested) < 0
+		massStall = self.massStored <= 1 and (self.massIncome - self.massRequested) < 0
+		ecoStall = energyStall or massStall
+		
 	end,
 
 	net = function(self, type)

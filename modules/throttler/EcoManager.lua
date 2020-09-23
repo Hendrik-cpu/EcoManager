@@ -141,13 +141,42 @@ EcoManager = Class({
 	manageEconomy = function(self)
 		--print("throttler alive!")
 		local eco
+
 		local all_projects = {}
+		local buildingsAndUnitProduction = {} --except power generators
+		local toggleables = {} 
+
+		--[[ 	
+		Logic for toggables:
+			85% storage:
+				0 mass fabs: turn off 85% storage, sort by energydrain/massproduction
+			20% storage:
+				regen field: turn off if units in range have full hp
+				5 stealth: turn off only for ASF when storage is <20%
+			When power stalls:
+				ACU cloak: turn off if not attacking or under attack and full hp, 
+				Shields: turn off all that arent under attack, never turn off ACU shield
+				2 scamming: turn off if
+				3 sonars: turn off all but one when
+				3 radars: turn off when building pgens, turn off all but highest tier 
+				4 mass extractors: turn off if mass storage is over 90%, sort by energydrain/massproduction
+		]]
+
+		local powerGenerators = {}
 
 		self.pause_list = {}
 
 		self.eco = Economy()
 		eco = self.eco
 		for _, p in self:LoadProjects(eco) do
+			-- if true then
+			-- 	table.insert(powerGenerators, p)
+			-- elseif true then
+			-- 	table.insert(toggleables, p)
+			-- else true then
+			-- 	table.insert(buildingsAndUnitProduction, p)
+			-- end
+
 			table.insert(all_projects, p)
 		end
 
