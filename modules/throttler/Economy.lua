@@ -33,7 +33,9 @@ Economy = Class({
 
 			self[prefix .. "Ratio"] = data['stored'][t] / data['maxStorage'][t]
 			self[prefix .. "Ratio"] = data['stored'][t] / data['maxStorage'][t]
-			print(prefix .. " stalling = " .. data['stored'][t] < 1 and (data['income'][t] - data['lastUseRequested'][t]) < 0)
+			ecoStall = ecoStall or (self[prefix .. 'Stored'] < 1 and (self[prefix .. 'Income'] - self[prefix .. 'Requested'] < 0)
+
+			if ecoStall then print(prefix .. " stalling") end
 
 
 			if self[prefix .. 'Stored'] < 1 then
