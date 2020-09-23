@@ -28,11 +28,9 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	_sortProjects = function(a, b)
 		-- local av = a['prio'] * 100000 + a['massRatio']*100 - (a['timeLeft'])
 		-- local bv = b['prio'] * 100000 + b['massRatio']*100 - (b['timeLeft'])
-		local av = a['massProportion'] --+ a['prio'] / 100 + a['workProgress'] 
-		local bv = b['massProportion'] --+ b['prio'] / 100 + b['workProgress'] 
-		print(a['prio'] / 100 .. ";" .. a['massProportion'] .. ";" .. a['workProgress'])
-		print(b['prio'] / 100 .. ";" .. b['massProportion'] .. ";" .. b['workProgress'])
-		
+		local av = a['prio'] + a['massProportion'] + a['workProgress'] 
+		local bv = b['prio'] + b['massProportion'] + b['workProgress'] 
+
 		if a['energyPayoffSeconds'] > 0 then
 			av = av + 10000 - a['energyPayoffSeconds'] 
 		end
