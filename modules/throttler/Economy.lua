@@ -33,9 +33,11 @@ Economy = Class({
 
 			self[prefix .. "Ratio"] = data['stored'][t] / data['maxStorage'][t]
 			self[prefix .. "Ratio"] = data['stored'][t] / data['maxStorage'][t]
-			ecoStall = ecoStall or (self[prefix .. 'Stored'] < 1 and (self[prefix .. 'Income'] - self[prefix .. 'Requested'] < 0)
-
-			if ecoStall then print(prefix .. " stalling") end
+			
+			if self[prefix .. 'Stored'] < 1 and (self[prefix .. 'Income'] - self[prefix .. 'Requested'] < 0) then
+				--print(prefix .. " stalling") 
+				self.ecoStall = true 
+			end
 
 
 			if self[prefix .. 'Stored'] < 1 then
@@ -46,9 +48,9 @@ Economy = Class({
 
 		end
 
-		energyStall = self.energyStored <= 1 and (self.energyIncome - self.energyRequested) < 0
-		massStall = self.massStored <= 1 and (self.massIncome - self.massRequested) < 0
-		ecoStall = energyStall or massStall
+		-- energyStall = self.energyStored <= 1 and (self.energyIncome - self.energyRequested) < 0
+		-- massStall = self.massStored <= 1 and (self.massIncome - self.massRequested) < 0
+		-- ecoStall = energyStall or massStall
 		
 	end,
 
