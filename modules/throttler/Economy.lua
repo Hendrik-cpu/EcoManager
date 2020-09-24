@@ -31,22 +31,13 @@ Economy = Class({
 			
 			if self[prefix .. 'Stored'] < 1 and (self[prefix .. 'Income'] - self[prefix .. 'Requested'] < 0) then
 				self[prefix .. 'Stall'] = true 
-				--print(prefix .. " stalling - " .. tostring(self[prefix .. 'Stall'])) 
 			end
-
 
 			if self[prefix .. 'Stored'] < 1 then
 				self[prefix .. 'Actual'] = math.min(self[prefix .. 'Actual'], self[prefix .. 'Income']) -- mex bug
 			end
 
-			--self[prefix .. "Net"] = data['income'][t] - data['lastUseActual'][t] + data['stored'][t] / 5
-
 		end
-
-		-- energyStall = self.energyStored <= 1 and (self.energyIncome - self.energyRequested) < 0
-		-- massStall = self.massStored <= 1 and (self.massIncome - self.massRequested) < 0
-		-- ecoStall = energyStall or massStall
-		
 	end,
 
 	net = function(self, type)
