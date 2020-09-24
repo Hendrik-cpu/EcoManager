@@ -68,7 +68,6 @@ Project = Class({
         self.massProducedActual = unit:GetEconData().massProduced * 10
         self.energyProduction = bp.Economy.ProductionPerSecondEnergy
         self.energyUpkeep = bp.Economy.energyUpkeep
-        self.massProportion = self.massBuildCost / (self.massBuildCost + self.energyBuildCost)
         self.energyProportion = self.energyBuildCost / (self.energyBuildCost + self.massBuildCost)
     end,
 
@@ -87,6 +86,8 @@ Project = Class({
                 self[t .. 'PayoffSeconds'] = 0
             end
         end
+        self.massProportion = self.massRequested / (self.massRequested + self.energyRequested)
+
     end,
 
     CalculatePriority = function(self)
