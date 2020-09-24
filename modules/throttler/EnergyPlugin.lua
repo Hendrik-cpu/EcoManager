@@ -19,7 +19,8 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		{name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 30},
 		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, off=3, priority = 40},
 		{name="ACU/SCU upgrades", category = categories.LAND * categories.MOBILE * (categories.COMMAND + categories.SUBCOMMANDER), off=2, priority = 50},
-		{name="Mass Extractors", category = categories.STRUCTURE * categories.MASSEXTRACTION, priority = 20},
+		{name="Mass Extractors", category = categories.STRUCTURE * categories.MASSEXTRACTION, priority = 45},
+		{name="Mass Extractors T2/T3", category = categories.STRUCTURE * categories.TECH2 * categories.TECH3 * categories.MASSEXTRACTION, priority = 20},
 		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 98},
 		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
 		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 30},
@@ -45,7 +46,8 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		--handles buildables
 		local av = a.CalculatePriority(a)
 		local bv = b.CalculatePriority(b)
-		--print("Iprio: " .. a.prio * 10 .. "ImassProp: " .. a.massProportion .. "Iworkprogress: " .. a.workProgress .. "|" .. "Uprio: " .. b.prio * 10 .. "UmassProp: " .. b.massProportion .. "Uworkprogress: " .. b.workProgress) 
+
+		--print("prio: " .. a.prio  .. "-" .. b.prio .. "|massProportion: " .. a.massProportion .. "-" .. b.massProportion .. "|workprogress: " .. a.workProgress .. "|" .. b.workProgress .. "|Calc: " .. av .. "|" .. bv) 
 
 		--handles power production
 		if a.energyPayoffSeconds > 0 then
@@ -55,7 +57,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 			bv = bv + 10000 - b.energyPayoffSeconds 
 		end
 
-		print(av .. " vs " .. bv)  
+		--print(av .. " vs " .. bv)  
 		return av > bv
 	end,
 	

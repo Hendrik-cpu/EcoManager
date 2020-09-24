@@ -90,7 +90,7 @@ Project = Class({
 
     CalculatePriority = function(self)
         --return self.prio * 10 + self.prio * 10 * self.workProgress + self.massProportion * self.workProgress + self.massProportion / 2
-        return (self.prio / 100) + (self.prio / 100) * self.workProgress + self.massProportion * self.workProgress + self.massProportion * 1,5
+        return self.prio / 100 * self.workProgress + self.massProportion * self.workProgress + self.prio / 100 + self.massProportion * 1.5
     end,
     
     GetConsumption = function()
