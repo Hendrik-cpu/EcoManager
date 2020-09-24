@@ -66,7 +66,6 @@ Project = Class({
         self.energyBuildCost = bp.Economy.BuildCostEnergy
         self.massProduction = bp.Economy.ProductionPerSecondMass
         self.energyProduction = bp.Economy.ProductionPerSecondEnergy
-        self.energyUpkeep = bp.Economy.energyUpkeep
         self.massProportion = self.massBuildCost / (self.massBuildCost + self.energyBuildCost)
         self.energyProportion = self.energyBuildCost / (self.energyBuildCost + self.massBuildCost)
     end,
@@ -88,12 +87,7 @@ Project = Class({
         end
     end,
 
-    CalculatePriority = function(self)
-        --return self.prio * 10 + self.prio * 10 * self.workProgress + self.massProportion * self.workProgress + self.massProportion / 2
-        return (self.prio / 100) + (self.prio / 100) * self.workProgress + self.massProportion * self.workProgress + self.massProportion * 1,5
-    end,
-    
-    GetConsumption = function()
+    GetConsumption = function(self)
         return {mass=self.massRequested, energy=energyRequested}
     end,
 

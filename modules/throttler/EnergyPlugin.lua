@@ -11,9 +11,9 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		{name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 30},
 		{name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 30},
 		{name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 30},
-		{name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 30},
-		{name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 30},
-		{name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 30},
+		{name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 10},
+		{name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 10},
+		{name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 10},
 		{name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 30},
 		{name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 30},
 		{name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 30},
@@ -22,43 +22,25 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		{name="Mass Extractors", category = categories.STRUCTURE * categories.MASSEXTRACTION, priority = 20},
 		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 98},
 		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
-		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 30},
+		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 25},
 	},
 
-	_sortProjects = function(a, b) --sort algorithm selector
-		
-		--handles mass fabricators vs. mass fabricators
-		if b.isMassFabricator and a.isMassFabricator then
-			print("massfabs detected!")
-			--print("u consume " .. b.energyRequested .. " energy and i consume " .. a.energyRequested .. "energy. We are both mass fabricators :)")
-			local diff = (b.energyRequested / b.massProduction) - (a.energyRequested / a.massProduction) 
-			
-			if diff > 0 then
-				return true
-			elseif diff == 0 then
-				return a.prio > b.prio
-			else
-				return false
-			end		
-		end
+	_sortProjects = function(a, b)
+		-- local av = a['prio'] * 100000 + a['massRatio']*100 - (a['timeLeft'])
+		-- local bv = b['prio'] * 100000 + b['massRatio']*100 - (b['timeLeft'])
+		local av = a['prio'] + a['massProportion'] + a['workProgress'] 
+		local bv = b['prio'] + b['massProportion'] + b['workProgress'] 
 
-		--handles buildables
-		local av = a.CalculatePriority(a) --a.prio * 10 * a.workProgress + a.massProportion * a.workProgress + a.massProportion / 2
-		local bv = b.CalculatePriority(b) --b.prio * 10 + b.massProportion * b.workProgress + b.massProportion / 2
-		--print("Iprio: " .. a.prio * 10 .. "ImassProp: " .. a.massProportion .. "Iworkprogress: " .. a.workProgress .. "|" .. "Uprio: " .. b.prio * 10 .. "UmassProp: " .. b.massProportion .. "Uworkprogress: " .. b.workProgress) 
-
-		--handles power production
-		if a.energyPayoffSeconds > 0 then
-			av = av + 10000 - a.energyPayoffSeconds 
+		if a['energyPayoffSeconds'] > 0 then
+			av = av + 10000 - a['energyPayoffSeconds'] 
 		end
-		if b.energyPayoffSeconds > 0 then
-			bv = bv + 10000 - b.energyPayoffSeconds 
+		if b['energyPayoffSeconds'] > 0 then
+			bv = bv + 10000 - b['energyPayoffSeconds'] 
 		end
-
-		print(av .. " vs " .. bv)  
-		return av < bv
+		--print(av .. "<>" .. bv)
+		return av > bv
 	end,
-	
+
 	add = function(self, project)
 		local category
 		local u = project.unit
@@ -101,7 +83,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 
 		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining)
 		--print("Net: " .. net .. "|Energy Income: " .. eco.energyIncome .. "|Energy Actual: " .. eco.energyActual)
-		if project.prio <= 2 then
+		if project.prio <= 1 then
 			local minStorage = (project.energyMinStorage * eco.energyMax)
 			new_net = new_net - (minStorage / 5) --* MASSFAB_RATIO
 			--print("unit ID: " .. project.id .. "|New Net: " .. new_net .. "|Net: " .. net .. "|min storage: " .. (project.energyMinStorage * eco.energyMax) .. "|stored: " .. eco.energyStored)

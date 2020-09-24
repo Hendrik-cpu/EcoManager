@@ -70,7 +70,6 @@ EcoManager = Class({
 
 	LoadProjects = function(self, eco)
 		local unpause = {}
-		local countmassfabs = 0
 
 		self.projects = {}
 		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER)
@@ -94,7 +93,6 @@ EcoManager = Class({
 						--if not (data.energyRequested == 0 and not isPaused(u)) then
 							focus = u
 						--end
-						countmassfabs = countmassfabs +1
 					elseif is_paused and (u:IsIdle() or u:GetWorkProgress() == 0) then
 						table.insert(unpause, u)
 					end
