@@ -29,11 +29,11 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	_sortProjects = function(a, b) --sort algorithm selector
 		
 		--handles mass fabricators vs. mass fabricators
-		if b.isMassFabricator and a.isMassFabricator then
+		if b.isMassFabricator and a.isMassFabricator then --could actually add mexes too since there is a working priority
 			--print("massfabs detected!")
 			--print("u consume " .. b.energyRequested .. " energy and i consume " .. a.energyRequested .. "energy. We are both mass fabricators :)")
-			local diff = (b.energyRequested / b.massProduction) - (a.energyRequested / a.massProduction) 
-			
+			local diff = (b.energyRequested / math.max(b.massProducedActual,b.massProduction)) - (a.energyRequested / math.max(a.massProducedActual,b.massProduction)) 
+			print(a.massProducedActual*10 .. " - " .. b.massProducedActual * 10)
 			if diff > 0 then
 				return true
 			elseif diff == 0 then

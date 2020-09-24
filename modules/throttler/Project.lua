@@ -65,6 +65,7 @@ Project = Class({
         self.massBuildCost = bp.Economy.BuildCostMass
         self.energyBuildCost = bp.Economy.BuildCostEnergy
         self.massProduction = bp.Economy.ProductionPerSecondMass
+        self.massProducedActual = unit:GetEconData().massProduced
         self.energyProduction = bp.Economy.ProductionPerSecondEnergy
         self.energyUpkeep = bp.Economy.energyUpkeep
         self.massProportion = self.massBuildCost / (self.massBuildCost + self.energyBuildCost)
