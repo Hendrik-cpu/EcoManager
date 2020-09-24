@@ -207,30 +207,29 @@ EcoManager = Class({
 	 		for _, p in plugin.projects do
 		 		local ratio_inc
 
-				if p.throttle < 1 then
-					
-					local last_ratio = p.throttle
-					plugin:throttle(eco, p)
-					if p.throttle > 0 and p.throttle < 1 then
-						--LOG("ADJUST THIS SHIT")
-						p:adjust_throttle(eco) -- round throttle to nearest assister
-						--LOG("ADJUSTED TO " .. p.throttle)
+	 			if p.throttle < 1 then
+					if not pause then
+						local last_ratio = p.throttle
+						plugin:throttle(eco, p)
+						if p.throttle > 0 and p.throttle < 1 then
+							LOG("ADJUST THIS SHIT")
+							p:adjust_throttle(eco) -- round throttle to nearest assister
+							LOG("ADJUSTED TO " .. p.throttle)
+						end
+
+						if p.throttle == 1 then
+							pause = true
+						end
+
+						ratio_inc = p.throttle - last_ratio
+						eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
+						eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
 					end
 
-					if p.throttle == 1 then
-						pause = true
-					else
-						pause = false
+					if pause then
+						p:SetEnergyDrain(0)
 					end
-
-					ratio_inc = p.throttle - last_ratio
-					eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
-					eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
-
-	 				if pause then
-	 					p:SetEnergyDrain(0)
-	 				end
-		 		end
+				end
 	 		end
 		end
 

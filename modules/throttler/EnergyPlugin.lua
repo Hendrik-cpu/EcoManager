@@ -43,8 +43,8 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		end
 
 		--handles buildables
-		local av = a.CalculatePriority(a) --a.prio * 10 * a.workProgress + a.massProportion * a.workProgress + a.massProportion / 2
-		local bv = b.CalculatePriority(b) --b.prio * 10 + b.massProportion * b.workProgress + b.massProportion / 2
+		local av = a.CalculatePriority(a)
+		local bv = b.CalculatePriority(b)
 		--print("Iprio: " .. a.prio * 10 .. "ImassProp: " .. a.massProportion .. "Iworkprogress: " .. a.workProgress .. "|" .. "Uprio: " .. b.prio * 10 .. "UmassProp: " .. b.massProportion .. "Uworkprogress: " .. b.workProgress) 
 
 		--handles power production
@@ -56,7 +56,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		end
 
 		print(av .. " vs " .. bv)  
-		return av < bv
+		return av > bv
 	end,
 	
 	add = function(self, project)
