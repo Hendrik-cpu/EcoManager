@@ -20,10 +20,10 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, off=3, priority = 40},
 		{name="ACU/SCU upgrades", category = categories.LAND * categories.MOBILE * (categories.COMMAND + categories.SUBCOMMANDER), off=2, priority = 50},
 		{name="Mass Extractors", category = categories.STRUCTURE * categories.MASSEXTRACTION, priority = 45},
-		{name="Mass Extractors T2/T3", category = categories.STRUCTURE * categories.TECH2 * categories.TECH3 * categories.MASSEXTRACTION, priority = 10},
+		{name="Mass Extractors T2/T3", category = categories.STRUCTURE * categories.TECH2 * categories.TECH3 * categories.MASSEXTRACTION, priority = 5},
 		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 98},
 		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
-		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 32},
+		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 40},
 	},
 
 	_sortProjects = function(a, b) --sort algorithm selector
@@ -40,7 +40,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 				return a.prio > b.prio
 			else
 				return false
-			end		
+			end
 		end
 
 		--handles buildables
