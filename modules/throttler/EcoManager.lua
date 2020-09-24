@@ -60,6 +60,7 @@ local econData = import(modPath .. 'modules/units.lua').econData
 
 
 EcoManager = Class({
+	throttleActivationTimer = (5 * 60),
 	eco = nil,
 	projects = {},
 	plugins = {},
@@ -141,12 +142,15 @@ EcoManager = Class({
 	end,
 
 	manageEconomy = function(self)
+		--should throttle be activated?
+		local gametime = GetGameTimeSeconds()
+		if gametime < throttleActivationTimer then 
+			return false
+		end
+
 		--print("throttler alive!")
 		local eco
-
 		local all_projects = {}
-		local buildingsAndUnitProduction = {} --except power generators
-		local toggleables = {} 
 
 		--[[ 	
 		Logic for toggables:
@@ -164,21 +168,11 @@ EcoManager = Class({
 				4 mass extractors: turn off if mass storage is over 90%, sort by energydrain/massproduction
 		]]
 
-		local powerGenerators = {}
-
 		self.pause_list = {}
 
 		self.eco = Economy()
 		eco = self.eco
 		for _, p in self:LoadProjects(eco) do
-			-- if true then
-			-- 	table.insert(powerGenerators, p)
-			-- elseif true then
-			-- 	table.insert(toggleables, p)
-			-- else true then
-			-- 	table.insert(buildingsAndUnitProduction, p)
-			-- end
-
 			table.insert(all_projects, p)
 		end
 
@@ -187,7 +181,6 @@ EcoManager = Class({
 		end
 
 		--print ("n_projects " .. table.getsize(all_projects))
-
 		--LOG("NEW BALANCE ROUND")
 
 		import(modPath .. 'modules/throttler/Project.lua').throttleIndex = 0
