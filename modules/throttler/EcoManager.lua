@@ -111,7 +111,7 @@ EcoManager = Class({
 						project = Project(focus)
 						project.isConstruction = isConstruction
 						project.isMassFabricator = isMassFabricator
-						if isMassFabricator then project.energyMinStorage = 0.9 end
+						if isMassFabricator then project.energyMinStorage = 0.7 end
 						self.projects[id] = project
 					end
 

@@ -33,7 +33,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 			--print("massfabs detected!")
 			--print("u consume " .. b.energyRequested .. " energy and i consume " .. a.energyRequested .. "energy. We are both mass fabricators :)")
 			local diff = (b.energyRequested / math.max(b.massProducedActual,b.massProduction)) - (a.energyRequested / math.max(a.massProducedActual,b.massProduction)) 
-			print(a.massProducedActual*10 .. " - " .. b.massProducedActual * 10)
+			--print(a.massProducedActual*10 .. " - " .. b.massProducedActual * 10)
 			if diff > 0 then
 				return true
 			elseif diff == 0 then
@@ -103,10 +103,10 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 
 		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining)
 		--print("Net: " .. net .. "|Energy Income: " .. eco.energyIncome .. "|Energy Actual: " .. eco.energyActual)
-		if project.prio <= 2 then
+		if project.isMassFabricator then
 			local minStorage = (project.energyMinStorage * eco.energyMax)
-			new_net = new_net - (minStorage / 5) --* MASSFAB_RATIO
-			--print("unit ID: " .. project.id .. "|New Net: " .. new_net .. "|Net: " .. net .. "|min storage: " .. (project.energyMinStorage * eco.energyMax) .. "|stored: " .. eco.energyStored)
+			new_net = new_net - ((eco.energyMax - minStorage) *2 / 5 * 1.15) --* MASSFAB_RATIO
+			print("unit ID: " .. project.id .. "|New Net: " .. new_net .. "|Net: " .. net .. "|min storage: " .. (project.energyMinStorage * eco.energyMax) .. "|stored: " .. eco.energyStored)
 			if new_net <0 then
 				net=0
 			end
