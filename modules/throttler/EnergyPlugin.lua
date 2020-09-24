@@ -30,7 +30,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		
 		--handles mass fabricators vs. mass fabricators
 		if b.isMassFabricator and a.isMassFabricator then
-			print("massfabs detected!")
+			--print("massfabs detected!")
 			--print("u consume " .. b.energyRequested .. " energy and i consume " .. a.energyRequested .. "energy. We are both mass fabricators :)")
 			local diff = (b.energyRequested / b.massProduction) - (a.energyRequested / a.massProduction) 
 			
