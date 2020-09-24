@@ -1,11 +1,6 @@
 Economy = Class({
 	data = {},
 
-	--Stall detection
-	massStall = false,
-	energyStall = false,
-	ecoStall = false,
-
 	__init = function(self)
 		self:Init()
 
@@ -14,7 +9,7 @@ Economy = Class({
 
 	Init = function(self, data)
 		local types = {'MASS', 'ENERGY'}
-		local mapping = {maxStorage="Max", stored="Stored", income="Income", lastUseRequested="Requested", lastUseActual="Actual", ratio="ratio",  net_income="net_income", stalling="stalling"}
+		local mapping = {maxStorage="Max", stored="Stored", income="Income", lastUseRequested="Requested", lastUseActual="Actual",  net_income="net_income"}
 		local per_tick = {income=true, lastUseRequested=true, lastUseActual=true}
 
 		tps = GetSimTicksPerSecond()
@@ -35,8 +30,8 @@ Economy = Class({
 			self[prefix .. "Ratio"] = data['stored'][t] / data['maxStorage'][t]
 			
 			if self[prefix .. 'Stored'] < 1 and (self[prefix .. 'Income'] - self[prefix .. 'Requested'] < 0) then
-				--print(prefix .. " stalling") 
-				self.ecoStall = true 
+				self[prefix .. 'Stall'] = true 
+				--print(prefix .. " stalling - " .. tostring(self[prefix .. 'Stall'])) 
 			end
 
 
