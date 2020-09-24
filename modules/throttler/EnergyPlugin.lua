@@ -46,7 +46,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		--handles buildables
 		local av = a.CalculatePriority(a)
 		local bv = b.CalculatePriority(b)
-
+		--print(a.massRequested.. " - " .. a.energyRequested .. " | " .. b.massRequested .. " - " .. b.energyRequested)
 		--print("prio: " .. a.prio  .. "-" .. b.prio .. "|massProportion: " .. a.massProportion .. "-" .. b.massProportion .. "|workprogress: " .. a.workProgress .. "|" .. b.workProgress .. "|Calc: " .. av .. "|" .. bv) 
 
 		--handles power production
@@ -105,8 +105,8 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		--print("Net: " .. net .. "|Energy Income: " .. eco.energyIncome .. "|Energy Actual: " .. eco.energyActual)
 		if project.isMassFabricator then
 			local minStorage = (project.energyMinStorage * eco.energyMax)
-			new_net = new_net - ((eco.energyMax - minStorage) *2 / 5 * 1.15) --* MASSFAB_RATIO
-			print("unit ID: " .. project.id .. "|New Net: " .. new_net .. "|Net: " .. net .. "|min storage: " .. (project.energyMinStorage * eco.energyMax) .. "|stored: " .. eco.energyStored)
+			new_net = new_net - ((eco.energyMax - minStorage) * 0.1) --* MASSFAB_RATIO
+			--print("unit ID: " .. project.id .. "|New Net: " .. new_net .. "|Net: " .. net .. "|min storage: " .. (project.energyMinStorage * eco.energyMax) .. "|stored: " .. eco.energyStored)
 			if new_net <0 then
 				net=0
 			end
