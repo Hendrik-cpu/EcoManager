@@ -57,10 +57,10 @@ local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').S
 
 local Units = import('/mods/common/units.lua')
 local econData = import(modPath .. 'modules/units.lua').econData
-
+local throttleActivationTimer = (5 * 5)
+local activationMSG_Not_Printed = true
 
 EcoManager = Class({
-	throttleActivationTimer = (5 * 60),
 	eco = nil,
 	projects = {},
 	plugins = {},
@@ -146,6 +146,11 @@ EcoManager = Class({
 		local gametime = GetGameTimeSeconds()
 		if gametime < throttleActivationTimer then 
 			return false
+		else
+			if activationMSG_Not_Printed then
+				print("Throttle activated!") 
+				activationMSG_Not_Printed = false
+			end
 		end
 
 		--print("throttler alive!")
