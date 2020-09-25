@@ -57,7 +57,7 @@ local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').S
 
 local Units = import('/mods/common/units.lua')
 local econData = import(modPath .. 'modules/units.lua').econData
-local throttleActivationTimer = (5 * 5)
+local throttleActivationTimer = (5 * 60)
 local activationMSG_Not_Printed = true
 
 EcoManager = Class({
