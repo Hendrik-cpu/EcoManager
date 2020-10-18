@@ -89,6 +89,7 @@ function PauseAllNonECO()
 		end
 	end
 
+	print("Non eco units paused = " .. tostring(NonEcoIsPaused))
 	NonEcoIsPaused=not NonEcoIsPaused
 	Pause(unitPauseList, NonEcoIsPaused, 'user')
 end

@@ -1,5 +1,7 @@
 local modPath = '/mods/EM/'
 local Pause = import(modPath .. 'modules/pause.lua').Pause
+local throttleActivationTimer = (5 * 60)
+local activationMSG_Not_Printed = true
 
 function isPaused(u)
 	local is_paused
@@ -47,6 +49,7 @@ function DisableNewEcoManager()
 		print("Throttler disabled!")
 	else
 		print("Throttler enabled!")
+		throttleActivationTimer = 0
 	end
 end
 
@@ -57,8 +60,6 @@ local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').S
 
 local Units = import('/mods/common/units.lua')
 local econData = import(modPath .. 'modules/units.lua').econData
-local throttleActivationTimer = (5 * 60)
-local activationMSG_Not_Printed = true
 
 EcoManager = Class({
 	eco = nil,
