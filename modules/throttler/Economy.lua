@@ -50,7 +50,6 @@ Economy = Class({
 				newMin = 0
 			end
 			self[prefix .. 'minStored'] = newMin
-			print(newMin)
 		end
 	end,
 
