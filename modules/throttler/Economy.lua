@@ -1,5 +1,7 @@
 Economy = Class({
 	data = {},
+	energyMin = 1000,
+	massMin = 0,
 
 	__init = function(self)
 		self:Init()
@@ -37,16 +39,39 @@ Economy = Class({
 				self[prefix .. 'Actual'] = math.min(self[prefix .. 'Actual'], self[prefix .. 'Income']) -- mex bug
 			end
 
+			--set min storage
+			self.energyMin = data['maxStorage'][t] * 0.01
+			if self.energyMin > 40 then 
+				self.energyMin = math.max(self.energyMin,5100)
+			end
+
+			local newMin = data['stored'][t] - self.energyMin
+			if newMin <= 0 then
+				newMin = 0
+			end
+			self[prefix .. 'minStored'] = newMin
+			print(newMin)
 		end
 	end,
 
 	net = function(self, type)
-		local stored = self[type .. 'Stored']
-		if stored > 0 then
-			stored = stored / 5
+		local stored = self[type .. 'minStored']
+		local maxStored = self[type .. 'Max']
+		local drain = self[type .. 'Income'] - self[type .. 'Actual']
+
+		local drainSecMinimum = 5
+		if maxStored / drain < drainSecMinimum then
+			drainSecMinimum = maxStored / drain
+			if drainSecMinimum < 0 then 
+				drainSecMinimum = 5
+			end
 		end
 
-		return self[type .. 'Income'] - self[type .. 'Actual'] + stored
+		if stored > 0 then
+			stored = stored / drainSecMinimum
+		end
+
+		return drain + stored
 	end,
 
 	massNet = function(self)
