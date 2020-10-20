@@ -53,18 +53,20 @@ Economy = Class({
 		end
 	end,
 
-	net = function(self, type)
-		local stored = self[type .. 'minStored']
+	net = function(self, type, Min)
+		Min = math.max(self[type .. 'minStored'],Min)
+		
+		local stored = self[type .. 'Stored'] - Min
 		local maxStored = self[type .. 'Max']
 		local drain = self[type .. 'Income'] - self[type .. 'Actual']
 
 		local drainSecMinimum = 5
-		if maxStored / drain < drainSecMinimum then
-			drainSecMinimum = maxStored / drain
-			if drainSecMinimum < 0 then 
-				drainSecMinimum = 5
-			end
-		end
+		-- if maxStored / drain < drainSecMinimum then
+		-- 	drainSecMinimum = maxStored / drain
+		-- 	if drainSecMinimum < 0 then 
+		-- 		drainSecMinimum = 5
+		-- 	end
+		-- end
 
 		if stored > 0 then
 			stored = stored / drainSecMinimum
@@ -73,11 +75,11 @@ Economy = Class({
 		return drain + stored
 	end,
 
-	massNet = function(self)
-		return self:net('mass')
+	massNet = function(self, massMin)
+		return self:net('mass', massMin)
 	end,
 
-	energyNet = function(self)
-		return self:net('energy')
+	energyNet = function(self, energyMin)
+		return self:net('energy', energyMin)
 	end,
 })
