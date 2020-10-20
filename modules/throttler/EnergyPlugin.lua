@@ -31,10 +31,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		
 		--handles mass fabricators vs. mass fabricators
 		if b.isMassFabricator and a.isMassFabricator then --could actually add mexes too since there is a working priority
-			--print("massfabs detected!")
-			--print("u consume " .. b.energyRequested .. " energy and i consume " .. a.energyRequested .. "energy. We are both mass fabricators :)")
 			local diff = (b.energyRequested / math.max(b.massProducedActual,b.massProduction)) - (a.energyRequested / math.max(a.massProducedActual,b.massProduction)) 
-			--print(a.massProducedActual*10 .. " - " .. b.massProducedActual * 10)
 			if diff > 0 then
 				return true
 			elseif diff == 0 then
@@ -47,8 +44,6 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		--handles buildables
 		local av = a.CalculatePriority(a)
 		local bv = b.CalculatePriority(b)
-		--print(a.massRequested.. " - " .. a.energyRequested .. " | " .. b.massRequested .. " - " .. b.energyRequested)
-		--print("prio: " .. a.prio  .. "-" .. b.prio .. "|massProportion: " .. a.massProportion .. "-" .. b.massProportion .. "|workprogress: " .. a.workProgress .. "|" .. b.workProgress .. "|Calc: " .. av .. "|" .. bv) 
 
 		--handles power production
 		if a.energyPayoffSeconds > 0 then
@@ -89,36 +84,14 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	throttle = function(self, eco, project)
 		local net = eco:energyNet(project.energyMinStorage * eco.energyMax)
 		local new_net
-		--local StallingMass = eco.massStored < 1
-		--StallingMass = StallingMass and (eco.massIncome - eco.massRequested) < 0
-
-		-- if eco.energyMax > 0 then
-		-- 	if (eco.energyStored / eco.energyMax) >= 0.90 then
-		-- 		project:SetEnergyDrain(project.energyRequested)
-		-- 		return false
-		-- 	end
-		-- end
 
 		-- if project.prio == 100 then
 		-- 	project.energyRequested = project.energyRequested * 5
 		-- end
 
 		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining)
-		--print("Net: " .. net .. "|Energy Income: " .. eco.energyIncome .. "|Energy Actual: " .. eco.energyActual)
-		--if project.isMassFabricator then
-			-- local minStorage = (project.energyMinStorage * eco.energyMax)
-			-- new_net = new_net - ((eco.energyMax - minStorage) * 0.1) --* MASSFAB_RATIO
-			-- --print("unit ID: " .. project.id .. "|New Net: " .. new_net .. "|Net: " .. net .. "|min storage: " .. (project.energyMinStorage * eco.energyMax) .. "|stored: " .. eco.energyStored)
-			-- if new_net <0 then
-			-- 	net=0
-			-- end
-		--end
-
-		--LOG("NET " .. net .. " ENERGY REQUESTED " .. project.energyRequested .. " DIFF " .. new_net .. " MASS RATIO " .. project.massRatio)
-
 		if new_net < 0 then
 			project:SetEnergyDrain(math.max(0, net))
-			--LOG("Throttle set to " .. project.throttle)
 		end
 	end,
 }
