@@ -22,7 +22,13 @@ local LastUnitsPauseState = {}
 function setPause(units, toggle, pause)
 	
 	for _, u in units do 
-		LastUnitsPauseState[u:GetEntityId()] = {toggle = toggle, pause = pause}
+		if LastUnitsPauseState[u:GetEntityId()] then
+			
+		else
+			LastUnitsPauseState[u:GetEntityId()] = {toggle = toggle, pause = pause}
+		end
+
+		
 		--print("unit id: " .. u:GetEntityId() .. " | toggle: " .. LastUnitsPauseState[u:GetEntityId()].toggle .. " | pause: " .. tostring(LastUnitsPauseState[u:GetEntityId()].pause))
 	end
 
@@ -41,6 +47,7 @@ function setPause(units, toggle, pause)
 		end
 	end
 end 
+
 
 local throttlerDisabled=false
 function DisableNewEcoManager()
@@ -72,7 +79,6 @@ EcoManager = Class({
 
 	LoadProjects = function(self, eco)
 		local unpause = {}
-		local countmassfabs = 0
 
 		self.projects = {}
 		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER)
@@ -95,7 +101,6 @@ EcoManager = Class({
 						--if not (data.energyRequested == 0 and not isPaused(u)) then
 							focus = u
 						--end
-						countmassfabs = countmassfabs +1
 					elseif is_paused and (u:IsIdle() or u:GetWorkProgress() == 0) then
 						table.insert(unpause, u)
 					end
@@ -112,10 +117,8 @@ EcoManager = Class({
 						project = Project(focus)
 						project.isConstruction = isConstruction
 						project.isMassFabricator = isMassFabricator
-						if isMassFabricator then project.energyMinStorage = 0.7 end
 						self.projects[id] = project
 					end
-
 					--LOG("Entity " .. u:GetEntityId() .. " is an assister")
 					project:AddAssister(eco, u)
 				end
