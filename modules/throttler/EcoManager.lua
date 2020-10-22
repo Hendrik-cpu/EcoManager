@@ -2,6 +2,7 @@ local modPath = '/mods/EM/'
 local Pause = import(modPath .. 'modules/pause.lua').Pause
 local throttleActivationTimer = (5 * 60)
 local activationMSG_Not_Printed = true
+local Units = import('/mods/common/units.lua')
 
 function isPaused(u)
 	local is_paused
@@ -21,15 +22,8 @@ end
 local LastUnitsPauseState = {}
 function setPause(units, toggle, pause)
 	
-	for _, u in units do 
-		if LastUnitsPauseState[u:GetEntityId()] then
-			
-		else
-			LastUnitsPauseState[u:GetEntityId()] = {toggle = toggle, pause = pause}
-		end
-
-		
-		--print("unit id: " .. u:GetEntityId() .. " | toggle: " .. LastUnitsPauseState[u:GetEntityId()].toggle .. " | pause: " .. tostring(LastUnitsPauseState[u:GetEntityId()].pause))
+	for _, u in units do
+		LastUnitsPauseState[u:GetEntityId()] = pause
 	end
 
 	if toggle == 'pause' then
@@ -48,14 +42,38 @@ function setPause(units, toggle, pause)
 	end
 end 
 
+local AllIsPause=false
+function PauseAll()
+	local units={}
+	local selected={}
+
+	for _, u in GetSelectedUnits() or {} do
+		selected[u:GetEntityId()]=true
+	end
+
+	for _, u in Units.Get() do
+		if not selected[u:GetEntityId()] then
+			table.insert(units, u)
+		end
+	end
+
+	AllIsPause=not AllIsPause
+	if not AllIsPause then
+		LastUnitsPauseState = {}
+	end
+
+	Pause(units, AllIsPause, 'user')
+end
 
 local throttlerDisabled=false
 function DisableNewEcoManager()
 	throttlerDisabled = not throttlerDisabled
 	if throttlerDisabled then
 		print("Throttler disabled!")
+		Pause(Units.Get(), false, 'throttle')
 	else
 		print("Throttler enabled!")
+		LastUnitsPauseState = {}
 		throttleActivationTimer = 0
 	end
 end
@@ -85,8 +103,13 @@ EcoManager = Class({
 
 		for _, u in units do
 			local project
+			local StateUntouched = true
 
-			if not u:IsDead() then
+			if LastUnitsPauseState[u:GetEntityId()] then
+				StateUntouched = isPaused(u) == LastUnitsPauseState[u:GetEntityId()]
+			end
+
+			if not u:IsDead() and StateUntouched then
 				local focus = u:GetFocus()
 				local isConstruction = false
 				local isMassFabricator = false

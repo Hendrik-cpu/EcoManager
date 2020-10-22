@@ -6,7 +6,7 @@ local setEnergyStallMexesOnCount = import(throttleMassPath).setEnergyStallMexesO
 local Pause = import(modPath .. 'modules/pause.lua').Pause
 
 function init()
-	IN_AddKeyMapTable({['Ctrl-V' ] = {action =  'ui_lua import("' .. throttleMassPath .. '").PauseAll()'},})
+	IN_AddKeyMapTable({['Ctrl-V' ] = {action =  'ui_lua import("' .. modPath .. 'modules/throttler/EcoManager.lua").PauseAll()'},})
 	IN_AddKeyMapTable({['Ctrl-B' ] = {action =  'ui_lua import("' .. throttleMassPath .. '").PauseECO()'},})
 	IN_AddKeyMapTable({['Ctrl-N' ] = {action =  'ui_lua import("' .. throttleMassPath .. '").PauseECOHard()'},})
 	IN_AddKeyMapTable({['Ctrl-M'] = {action =  'ui_lua import("' .. throttleMassPath .. '").PauseAllNonECO()'},})
