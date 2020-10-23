@@ -153,7 +153,7 @@ EcoManager = Class({
 		end
 
 		for _, p in self.projects do
-			p:LoadFinished()
+			p:LoadFinished(eco)
 		end
 
 		return self.projects

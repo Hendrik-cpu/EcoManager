@@ -65,22 +65,25 @@ Project = Class({
         self.massBuildCost = bp.Economy.BuildCostMass
         self.energyBuildCost = bp.Economy.BuildCostEnergy
         self.massProduction = bp.Economy.ProductionPerSecondMass
-        self.massProducedActual = unit:GetEconData().massProduced * 10
+        self.massProducedActual = unit:GetEconData().massProduced
         self.energyProduction = bp.Economy.ProductionPerSecondEnergy
         self.energyUpkeep = bp.Economy.energyUpkeep
         self.energyProportion = self.energyBuildCost / (self.energyBuildCost + self.massBuildCost)
     end,
 
-    LoadFinished = function(self)
+    LoadFinished = function(self, eco)
         self.workLeft = 1 - self.workProgress
         self.timeLeft = self.workLeft * self.buildTime
+        self.workTimeLeft = (self.timeLeft / self.buildRate) 
+        self.minTimeLeft = self.workTimeLeft * self:CalcMaxThrottle(eco)
 
         for _, t in {'mass', 'energy'} do
             self[t .. 'Drain'] = self[t .. 'BuildCost'] / (self.buildTime / self.buildRate)
             self[t .. 'CostRemaining'] = self[t .. 'BuildCost'] * self.workLeft
+            
             if self[t .. 'Production'] then
                 if self[t .. 'Production'] > 0 then
-                    self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production']
+                    self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production'] + self.minTimeLeft
                 end
             else
                 self[t .. 'PayoffSeconds'] = 0
@@ -89,9 +92,25 @@ Project = Class({
         self.massProportion = self.massRequested / (self.massRequested + self.energyRequested)
 
     end,
+    
+    CalcMaxThrottle = function(self, eco)
+        local maxThrottleE = 0
+        local maxThrottleM = 0
+        if eco.energyIncome > self.energyRequested then
+            maxThrottleE = 1
+        else
+            maxThrottleE = eco.energyIncome / self.energyRequested
+        end
+        if eco.massIncome > self.massRequested then 
+            maxThrottleM = 1
+        else
+            maxThrottleM = eco.massIncome / self.massRequested
+        end
+        return math.min(maxThrottleE,maxThrottleM)
+    end,
 
     CalculatePriority = function(self)
-        return self.prio / 100 * (self.workProgress + 1) + self.massProportion * (self.workProgress + 1.5) - self.energyMinStorage * 100000
+            return self.prio / 100 * (self.workProgress + 1) + self.massProportion * (self.workProgress + 1.5) - self.energyMinStorage * 100000
     end,
     
     GetConsumption = function()
