@@ -2,7 +2,14 @@ local modPath = '/mods/EM/'
 local Pause = import(modPath .. 'modules/pause.lua').Pause
 local throttleActivationTimer = (5 * 60)
 local activationMSG_Not_Printed = true
+local Economy = import(modPath .. 'modules/throttler/Economy.lua').Economy
+local EnergyPlugin = import(modPath .. 'modules/throttler/EnergyPlugin.lua').EnergyPlugin
+local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').StoragePlugin
+
 local Units = import('/mods/common/units.lua')
+local econData = import(modPath .. 'modules/units.lua').econData
+local LastUnitsPauseState = {}
+local throttlerDisabled = false
 
 function isPaused(u)
 	local is_paused
@@ -14,12 +21,12 @@ function isPaused(u)
 
 	return is_paused
 end
+local Project = import(modPath .. 'modules/throttler/Project.lua').Project
 
 function SetPaused(units, state)
 	Pause(units, state, 'throttle')
 end
 
-local LastUnitsPauseState = {}
 function setPause(units, toggle, pause)
 	
 	for _, u in units do
@@ -42,49 +49,21 @@ function setPause(units, toggle, pause)
 	end
 end 
 
-local AllIsPause=false
-function PauseAll()
-	local units={}
-	local selected={}
-
-	for _, u in GetSelectedUnits() or {} do
-		selected[u:GetEntityId()]=true
-	end
-
-	for _, u in Units.Get() do
-		if not selected[u:GetEntityId()] then
-			table.insert(units, u)
-		end
-	end
-
-	AllIsPause=not AllIsPause
-	if not AllIsPause then
-		LastUnitsPauseState = {}
-	end
-
-	Pause(units, AllIsPause, 'user')
+function ResetPauseStates()
+	LastUnitsPauseState = {}
 end
 
-local throttlerDisabled=false
 function DisableNewEcoManager()
 	throttlerDisabled = not throttlerDisabled
 	if throttlerDisabled then
-		print("Throttler disabled!")
 		Pause(Units.Get(), false, 'throttle')
+		print("Throttler disabled!")
 	else
-		print("Throttler enabled!")
-		LastUnitsPauseState = {}
 		throttleActivationTimer = 0
+		ResetPauseStates()
+		print("Throttler enabled!")
 	end
 end
-
-local Project = import(modPath .. 'modules/throttler/Project.lua').Project
-local Economy = import(modPath .. 'modules/throttler/Economy.lua').Economy
-local EnergyPlugin = import(modPath .. 'modules/throttler/EnergyPlugin.lua').EnergyPlugin
-local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').StoragePlugin
-
-local Units = import('/mods/common/units.lua')
-local econData = import(modPath .. 'modules/units.lua').econData
 
 EcoManager = Class({
 	eco = nil,
