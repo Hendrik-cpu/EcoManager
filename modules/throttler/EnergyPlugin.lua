@@ -6,8 +6,8 @@ local MASSFAB_RATIO = 0.4
 EnergyPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
 		{name="T3 Mass fabrication", category = categories.TECH3 * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1, storage = 0.8},
-		{name="T2 Mass fabrication", category = categories.STRUCTURE * categories.MASSFABRICATION, priority = 2, storage = 0.8},
-		{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, lasts_for=3, priority = 3},
+		{name="T2 Mass fabrication", category = categories.TECH2 * categories.STRUCTURE * categories.MASSFABRICATION, priority = 2, storage = 0.9},
+		{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, priority = 3},
 		{name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 30},
 		{name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 30},
 		{name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 35},
@@ -47,10 +47,10 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 
 		--handles power production
 		if a.energyPayoffSeconds > 0 then
-			av = av + 10000 - a.energyPayoffSeconds 
+			av = av + math.max(0, 140 - a.energyPayoffSeconds)
 		end
 		if b.energyPayoffSeconds > 0 then
-			bv = bv + 10000 - b.energyPayoffSeconds 
+			bv = bv + math.max(0, 140 - b.energyPayoffSeconds)
 		end
 
 		--print(av .. " vs " .. bv)  

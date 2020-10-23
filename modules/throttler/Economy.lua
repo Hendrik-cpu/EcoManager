@@ -1,7 +1,5 @@
 Economy = Class({
 	data = {},
-	energyMin = 1000,
-	massMin = 0,
 
 	__init = function(self)
 		self:Init()
@@ -39,28 +37,38 @@ Economy = Class({
 				self[prefix .. 'Actual'] = math.min(self[prefix .. 'Actual'], self[prefix .. 'Income']) -- mex bug
 			end
 
-			--set min storage
-			self.energyMin = data['maxStorage'][t] * 0.01
-			if self.energyMin > 40 then 
-				self.energyMin = math.max(self.energyMin,5100)
+			--set min storage´
+			local Max = self[prefix .. 'Max']
+
+			local energyMin = self[prefix .. 'Income'] --* (GetGameTimeSeconds() / 4000 + 1)
+			if Max > 5100 then 
+				energyMin = math.max(energyMin,5100)
 			end
 
-			local newMin = data['stored'][t] - self.energyMin
-			if newMin <= 0 then
-				newMin = 0
+			local minStorageLimit = Max * 0.6
+			if energyMin > minStorageLimit then
+				energyMin = minStorageLimit
 			end
-			self[prefix .. 'minStored'] = newMin
+			--print(energyMin)
+
+			self['energyMinStored'] = energyMin
 		end
 	end,
 
-	net = function(self, type, Min)
-		Min = math.max(self[type .. 'minStored'],Min)
-		
+	net = function(self, type, Min, prio)
+
+		if prio == 100 then 
+			Min = 0
+		else
+			Min = math.max(self[type .. 'MinStored'],Min)
+		end
+		--print(Min)
+
 		local stored = self[type .. 'Stored'] - Min
 		local maxStored = self[type .. 'Max']
 		local drain = self[type .. 'Income'] - self[type .. 'Actual']
 
-		local drainSecMinimum = 5
+		local drainSecMinimum = 2
 		-- if maxStored / drain < drainSecMinimum then
 		-- 	drainSecMinimum = maxStored / drain
 		-- 	if drainSecMinimum < 0 then 
