@@ -42,8 +42,8 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		end
 
 		--handles buildables
-		local av = a.CalculatePriority(a)
-		local bv = b.CalculatePriority(b)
+		local av = a.eCalculatePriority(a)
+		local bv = b.eCalculatePriority(b)
 
 		--handles power production
 		if a.energyPayoffSeconds > 0 then
@@ -82,7 +82,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	end,
 
 	throttle = function(self, eco, project)
-		local net = eco:energyNet(project.energyMinStorage * eco.energyMax)
+		local net = eco:energyNet(project.energyMinStorage * eco.energyMax, project.prio)
 		local new_net
 
 		-- if project.prio == 100 then
