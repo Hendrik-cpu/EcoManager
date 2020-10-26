@@ -94,4 +94,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 			project:SetEnergyDrain(math.max(0, net))
 		end
 	end,
+	resetCycle = function(self)
+		self.projects = {}
+	end,
 }

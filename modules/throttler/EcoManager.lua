@@ -185,7 +185,7 @@ EcoManager = Class({
 		for _, plugin in self.plugins do
 			local pause = false
 
-			plugin.projects = {}
+			plugin:resetCycle()
 			for _, p in all_projects do
 				plugin:add(p)
 	 		end
