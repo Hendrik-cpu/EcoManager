@@ -89,12 +89,15 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		-- 	project.energyRequested = project.energyRequested * 5
 		-- end
 
-		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining)
-		if new_net < 0 then
+		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining) 
+		if new_net < 0 and UnpausedCount > 0 then
 			project:SetEnergyDrain(math.max(0, net))
+		else
+			UnpausedCount = UnpausedCount + 1
 		end
 	end,
 	resetCycle = function(self)
 		self.projects = {}
+		UnpausedCount = 0
 	end,
 }

@@ -59,13 +59,16 @@ MassPlugin = Class(ThrottlerPlugin) {
 			self.MassProductionRequestedMass = self.MassProductionRequestedMass + math.min(project.massRequested, project.massCostRemaining)
 		end
 
-		local new_net = net - math.min(project.massRequested, project.massCostRemaining) + (eco.massRequested * 0.5 - self.MassProductionRequestedMass) -- allow stall untill stalling 50% of eco except that used by mass prod
-		if new_net < 0 then -- this project will stall eco
+		local new_net = net - math.min(project.massRequested, project.massCostRemaining) + 0.2 * eco.massIncome -- allow stall untill stalling 50% of eco except that used by mass prod
+		if new_net < 0 and UnpausedCount > 0 then -- this project will stall eco
 			project:SetMassDrain(math.max(0, net))
+		else
+			UnpausedCount = UnpausedCount + 1
 		end
 	end,
 	resetCycle = function(self)
 		self.projects = {}
 		self.MassProductionRequestedMass = 0
+		UnpausedCount = 0
 	end,
 }
