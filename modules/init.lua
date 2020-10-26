@@ -63,7 +63,7 @@ function setup(isReplay, parent)
 	if not isReplay then
 		--WARN("setup running")
 		--table.insert(mods, 'autoshare');
-		table.insert(mods, 'throttlemass');
+		--table.insert(mods, 'throttlemass');
 		--table.insert(mods, 'throttle');
 		table.insert(mods, 'ecocommands');
 		table.insert(mods, 'throttler/throttler');
