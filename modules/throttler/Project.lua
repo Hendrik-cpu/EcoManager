@@ -86,7 +86,6 @@ Project = Class({
 	    		if pos2 then
 		    		if VDist3(self.Position,pos2)<3 then
                         mexMassProduction=mp.massProduction
-                        print(mexMassProduction)
 	                	break
 	    			end
 				end
