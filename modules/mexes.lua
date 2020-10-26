@@ -261,7 +261,7 @@ function checkMexes()
 	end
 
 	if table.getsize(mexes['assisted']) > 0 then
-		Pause(mexes['assisted'], false, 'user') -- unpause assisted mexes
+		Pause(mexes['assisted'], false, 'mexes') -- unpause assisted mexes
 	end
 end
 
