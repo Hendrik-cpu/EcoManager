@@ -54,21 +54,23 @@ Project = Class({
     unit = nil,
     assisters = {},
     isConstruction = false,
+    Position = nil,
 
     __init = function(self, unit)
-        local bp = unit:GetBlueprint()
+        local Eco = unit:GetBlueprint().Economy
         self.id = unit:GetEntityId()
         self.unit = unit
         self.assisters = {}
         self.throttle = 0
-        self.buildTime = bp.Economy.BuildTime
-        self.massBuildCost = bp.Economy.BuildCostMass
-        self.energyBuildCost = bp.Economy.BuildCostEnergy
-        self.massProduction = bp.Economy.ProductionPerSecondMass
-        self.massProducedActual = unit:GetEconData().massProduced
-        self.energyProduction = bp.Economy.ProductionPerSecondEnergy
-        self.energyUpkeep = bp.Economy.energyUpkeep
-        self.energyProportion = self.energyBuildCost / (self.energyBuildCost + self.massBuildCost)
+        self.buildTime = Eco.BuildTime
+        self.massBuildCost = Eco.BuildCostMass
+        self.energyBuildCost = Eco.BuildCostEnergy
+        self.massProduction = Eco.ProductionPerSecondMass
+        self.massProductionActual = unit:GetEconData().massProduced
+        self.energyProduction = Eco.ProductionPerSecondEnergy
+        self.energyProductionActual = unit:GetEconData().energyProduced
+        self.energyUpkeep = Eco.energyUpkeep
+
     end,
 
     LoadFinished = function(self, eco)
@@ -77,19 +79,42 @@ Project = Class({
         self.workTimeLeft = (self.timeLeft / self.buildRate) 
         self.minTimeLeft = self.workTimeLeft * self:CalcMaxThrottle(eco)
 
+        if EntityCategoryContains(categories.MASSSTORAGE*categories.STRUCTURE, self.unit) then
+			local mexMassProduction=0
+            for _, mp in import(modPath .. 'modules/throttler/ecomanager.lua').mexPositions do
+                local pos2 = mp.position
+	    		if pos2 then
+		    		if VDist3(self.Position,pos2)<3 then
+                        mexMassProduction=mp.massProduction
+                        print(mexMassProduction)
+	                	break
+	    			end
+				end
+	    	end
+
+	        if mexMassProduction==18 then
+	        	self.massProductionActual=2.25
+        	elseif mexMassProduction==6 then
+	        	self.massProductionActual=0.75
+	        end
+        end
+
         for _, t in {'mass', 'energy'} do
             self[t .. 'Drain'] = self[t .. 'BuildCost'] / (self.buildTime / self.buildRate)
             self[t .. 'CostRemaining'] = self[t .. 'BuildCost'] * self.workLeft
             
-            if self[t .. 'Production'] then
-                if self[t .. 'Production'] > 0 then
-                    self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production'] + self.minTimeLeft
+            if self[t .. 'ProductionActual'] then
+                if self[t .. 'ProductionActual'] > 0 then
+                    self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'ProductionActual'] + self.minTimeLeft
                 end
             else
                 self[t .. 'PayoffSeconds'] = 0
             end
         end
+
+        --must be calculated after all assisters have been added
         self.massProportion = self.massRequested / (self.massRequested + self.energyRequested)
+        self.energyProportion = self.energyRequested / (self.massRequested + self.energyRequested)
 
     end,
     
@@ -109,10 +134,14 @@ Project = Class({
         return math.min(maxThrottleE,maxThrottleM)
     end,
 
-    CalculatePriority = function(self)
-            return self.prio / 100 * (self.workProgress + 1) + self.massProportion * (self.workProgress + 1.5) - self.energyMinStorage * 100000
+    eCalculatePriority = function(self)
+        return self.prio / 100 * (self.workProgress + 1) + self.massProportion * (self.workProgress + 1.5) - self.energyMinStorage * 100000
     end,
-    
+
+    mCalculatePriority = function(self)
+        return self.prio / 100 * (self.workProgress + 1) + self.energyProportion * (self.workProgress + 1.5)
+    end,
+
     GetConsumption = function()
         return {mass=self.massRequested, energy=energyRequested}
     end,
@@ -187,44 +216,6 @@ Project = Class({
         end
 
         self:SetEnergyDrain(currEnergyRequested)
-    --[[
-        --print ("n_assisters " .. table.getsize(self.assisters))
-        local maxEnergyRequested = (1-self.throttle) * self.energyRequested
-        local currEnergyRequested = 0
-        local key = nil
-
-        --LOG("Checking pause for project " .. self.id .. " Max use is " .. maxEnergyRequested)
-
-        for _, a in self.assisters do
-            local u = a.unit
-            local is_paused = isPaused(u)
-
-            if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
-                key = 'toggle_4'
-            else
-                key = 'pause'
-            end
-
-            if not pause_list[key] then pause_list[key] = {pause={}, no_pause={}} end
-
-            --LOG("Assister " .. u:GetEntityId() .. " requesting " .. a.energyRequested .. " maxEnergyRequested " .. maxEnergyRequested .. " is_paused " .. tostring(is_paused))
-            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or firstAssister then
-                if is_paused then
-                    table.insert(pause_list[key]['no_pause'], u)
-                end
-
-                currEnergyRequested = currEnergyRequested + a.energyRequested
-                firstAssister = false
-            else
-                if not is_paused then
-                    --LOG("Pausing assister by using key " .. key)
-                    table.insert(pause_list[key]['pause'], u)
-                end
-            end
-        end
-
-        --LOG(repr(pause_list))
-        ]]
     end,
 
     pause = function(self, pause_list)

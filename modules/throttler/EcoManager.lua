@@ -10,6 +10,7 @@ local Units = import('/mods/common/units.lua')
 local econData = import(modPath .. 'modules/units.lua').econData
 local LastUnitsPauseState = {}
 local throttlerDisabled = false
+mexPositions = {}
 
 function isPaused(u)
 	local is_paused
@@ -76,7 +77,7 @@ EcoManager = Class({
 
 	LoadProjects = function(self, eco)
 		local unpause = {}
-
+		mexPositions = {}
 		self.projects = {}
 		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER)
 
@@ -88,41 +89,46 @@ EcoManager = Class({
 				StateUntouched = isPaused(u) == LastUnitsPauseState[u:GetEntityId()]
 			end
 
-			if not u:IsDead() and StateUntouched then
-				local focus = u:GetFocus()
-				local isConstruction = false
-				local isMassFabricator = false
-				local isMassStorage = false
-
-				if not focus then
-					local is_paused = isPaused(u)
-
-					if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
-						isMassFabricator = true
-						--data = econData(u)
-						--if not (data.energyRequested == 0 and not isPaused(u)) then
-							focus = u
-						--end
-					elseif is_paused and (u:IsIdle() or u:GetWorkProgress() == 0) then
-						table.insert(unpause, u)
-					end
-				else
-					isConstruction = true
+			if not u:IsDead() then
+				if EntityCategoryContains(categories.STRUCTURE * categories.MASSEXTRACTION, u) then
+					table.insert(mexPositions, { position = u:GetPosition(), massProduction = u:GetBlueprint().Economy.ProductionPerSecondMass })
 				end
 
-				if focus then
-					local id = focus:GetEntityId()
+				if StateUntouched then
 
-					project = self.projects[id]
-					if not project then
-						--LOG("Adding new project " .. id)
-						project = Project(focus)
-						project.isConstruction = isConstruction
-						project.isMassFabricator = isMassFabricator
-						self.projects[id] = project
+					local focus = u:GetFocus()
+					local isConstruction = false
+					local isMassFabricator = false
+					local isMassStorage = false
+
+					if not focus then
+						local is_paused = isPaused(u)
+
+						if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
+							isMassFabricator = true
+							focus = u					
+						elseif is_paused and (u:IsIdle() or u:GetWorkProgress() == 0) then
+							table.insert(unpause, u)
+						end
+					else
+						isConstruction = true
 					end
-					--LOG("Entity " .. u:GetEntityId() .. " is an assister")
-					project:AddAssister(eco, u)
+
+					if focus then
+						local id = focus:GetEntityId()
+
+						project = self.projects[id]
+						if not project then
+							--LOG("Adding new project " .. id)
+							project = Project(focus)
+							project.isConstruction = isConstruction
+							project.isMassFabricator = isMassFabricator
+							project.Position = focus:GetPosition()
+							self.projects[id] = project
+						end
+						--LOG("Entity " .. u:GetEntityId() .. " is an assister")
+						project:AddAssister(eco, u)
+					end
 				end
 			end
 		end
