@@ -55,14 +55,7 @@ Economy = Class({
 		end
 	end,
 
-	net = function(self, type, Min, prio)
-
-		if prio == 100 then 
-			Min = 0
-		else
-			Min = math.max(self[type .. 'MinStored'],Min)
-		end
-		--print(Min)
+	net = function(self, type, Min)
 
 		local stored = self[type .. 'Stored'] - Min
 		local maxStored = self[type .. 'Max']
@@ -87,7 +80,12 @@ Economy = Class({
 		return self:net('mass', massMin)
 	end,
 
-	energyNet = function(self, energyMin)
+	energyNet = function(self, energyMin, prio)
+		if prio == 100 then 
+			energyMin = 0
+		else
+			energyMin = math.max(self['energyMinStored'],energyMin)
+		end
 		return self:net('energy', energyMin)
 	end,
 })
