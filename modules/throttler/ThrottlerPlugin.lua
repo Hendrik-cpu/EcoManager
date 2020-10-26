@@ -5,4 +5,5 @@ ThrottlerPlugin = Class({
 	sort = function(self)
 		table.sort(self.projects, self._sortProjects)
 	end,
+	UnpausedCount = 0,
 })
