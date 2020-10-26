@@ -42,7 +42,7 @@ function PauseAll()
 	if AllIsPause then
 		print("Paused all units except selection!")
 	else
-		ResetPauseStates()
+		import(modPath .. 'modules/throttler/ecomanager.lua').ResetPauseStates()
 		print("Unpaused all units!")
 	end
 end
