@@ -233,9 +233,9 @@ EcoManager = Class({
 		end
 
 		table.sort(all_projects, function(a, b) return a.index < b.index end)
-		--LOG(repr(all_projects))
+		--LOG(repr(all_projects)) --printing of a table?
 
-		--preemptive pausing of future assisters
+		--preemptive pausing of future assisters, add preemtive projects too? not possible because blueprint cant be retrieved from command queue?
 		local engineers = Units.Get(categories.ENGINEER)
 		for _, e in engineers do
 			if not e:IsDead() then
@@ -259,6 +259,8 @@ EcoManager = Class({
 								--print("close range assister that needs to be paused found")
 							end
 						end
+					--elseif queue[1].type == "BuildMobile" then
+						--LOG(repr(queue))
 					end
 				end
 
