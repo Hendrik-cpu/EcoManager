@@ -70,6 +70,7 @@ EcoManager = Class({
 	eco = nil,
 	projects = {},
 	plugins = {},
+	ProjectPositions = {},
 
 	__init = function(self)
 		self.eco = Economy()
@@ -108,7 +109,7 @@ EcoManager = Class({
 							isMassFabricator = true
 							focus = u					
 						elseif is_paused and (u:IsIdle() or u:GetWorkProgress() == 0) then
-							table.insert(unpause, u)
+						 	table.insert(unpause, u)
 						end
 					else
 						isConstruction = true
@@ -123,7 +124,16 @@ EcoManager = Class({
 							project = Project(focus)
 							project.isConstruction = isConstruction
 							project.isMassFabricator = isMassFabricator
-							project.Position = focus:GetPosition()
+							
+							-- map positions
+							local pos = focus:GetPosition()
+							if(not self.ProjectPositions[pos[1]]) then
+								self.ProjectPositions[pos[1]] = {}
+							end
+					
+							self.ProjectPositions[pos[1]][pos[3]] = focus
+							project.Position = pos
+
 							self.projects[id] = project
 						end
 						--LOG("Entity " .. u:GetEntityId() .. " is an assister")
@@ -224,6 +234,40 @@ EcoManager = Class({
 
 		table.sort(all_projects, function(a, b) return a.index < b.index end)
 		--LOG(repr(all_projects))
+
+		--preemptive pausing of future assisters
+		local engineers = Units.Get(categories.ENGINEER)
+		for _, e in engineers do
+			if not e:IsDead() then
+				local is_idle = e:IsIdle()
+				local focus = e:GetFocus()
+				local pause = false
+	
+				if not (focus) then
+				-- engineer isn't focusing, walking towards mex?
+					local queue = e:GetCommandQueue()
+					local p = queue[1].position
+	
+					if(queue[1].type == 'Guard' or queue[1].type == 'Repair') then
+						--print("guarding engineer found")
+						if(self.ProjectPositions[p[1]] and self.ProjectPositions[p[1]][p[3]]) then
+							local unitID = self.ProjectPositions[p[1]][p[3]]:GetEntityId()
+							local project = self.projects[unitID]
+
+							if (VDist3(p, e:GetPosition()) < 15) and (project.throttle > 0) then -- 10 -> buildrange of engineer maybe?
+								pause = true
+								--print("close range assister that needs to be paused found")
+							end
+						end
+					end
+				end
+
+				if pause then
+					if not self.pause_list['pause'] then self.pause_list['pause'] = {pause={}, no_pause={}} end
+					table.insert(self.pause_list['pause']['pause'], e)
+				end
+			end
+		end
 
 		for _, p in all_projects do
 			p:pause(self.pause_list)

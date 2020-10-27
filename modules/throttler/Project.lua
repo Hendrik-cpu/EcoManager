@@ -220,6 +220,7 @@ Project = Class({
     pause = function(self, pause_list)
         local maxEnergyRequested = (1-self.throttle) * self.energyRequested
         local currEnergyRequested = 0
+        local countAssisters = 0
         for _, a in self.assisters do
             local u = a.unit
             local is_paused = isPaused(u)
@@ -245,6 +246,7 @@ Project = Class({
                     table.insert(pause_list[key]['pause'], u)
                 end
             end
+            countAssisters = countAssisters +1
         end
     end,
 })
