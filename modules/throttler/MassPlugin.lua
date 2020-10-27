@@ -2,9 +2,7 @@ local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
 --todo:
---add pause before engies reach mex
---run primary project with maximum buildpower (or 20% of total requested eco)
-
+--min storage = 
 MassPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
 		--{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 90},
@@ -59,7 +57,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 			self.MassProductionRequestedMass = self.MassProductionRequestedMass + math.min(project.massRequested, project.massCostRemaining)
 		end
 
-		local new_net = net - math.min(project.massRequested, project.massCostRemaining) + 0.2 * eco.massIncome -- allow stall untill stalling 50% of eco except that used by mass prod
+		local new_net = net - math.min(project.massRequested, project.massCostRemaining) --+ 0.2 * eco.massIncome -- allow stall untill stalling 50% of eco except that used by mass prod
 		if new_net < 0 and UnpausedCount > 0 then -- this project will stall eco
 			project:SetMassDrain(math.max(0, net))
 		else

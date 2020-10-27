@@ -175,7 +175,7 @@ EcoManager = Class({
 		local eco
 		local all_projects = {}
 		self.pause_list = {}
-		self.eco = Economy()
+		
 		eco = self.eco
 
 		for _, p in self:LoadProjects(eco) do
@@ -191,10 +191,11 @@ EcoManager = Class({
 
 		import(modPath .. 'modules/throttler/Project.lua').throttleIndex = 0
 		import(modPath .. 'modules/throttler/Project.lua').firstAssister = true
-
+		LOG("start: " .. eco.energyActual .. " mass:".. eco.massActual)
 		for _, plugin in self.plugins do
 			local pause = false
-
+			self.eco = Economy()
+			
 			plugin:resetCycle()
 			for _, p in all_projects do
 				plugin:add(p)
@@ -231,6 +232,7 @@ EcoManager = Class({
 				end
 	 		end
 		end
+		LOG("end: " .. eco.energyActual .. " mass:".. eco.massActual)
 
 		table.sort(all_projects, function(a, b) return a.index < b.index end)
 		--LOG(repr(all_projects)) --printing of a table?
