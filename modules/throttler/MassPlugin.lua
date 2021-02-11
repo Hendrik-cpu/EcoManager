@@ -6,27 +6,15 @@ local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua
 MassPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
 		--{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 90},
-		{name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 90, storage = 0.01, massProduction = true},
-		{name="Mass Storage", category = categories.STRUCTURE * categories.MASSSTORAGE, priority = 90, storage = 0.01, massProduction = true},
-		{name="Mass Extractors T3", category = categories.STRUCTURE * categories.TECH3 * categories.MASSEXTRACTION, priority = 90, storage = 0.01, massProduction = true},
+		{name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 2, storage = 0.01, massProduction = true},
+		{name="Mass Storage", category = categories.STRUCTURE * categories.MASSSTORAGE, priority = 2, storage = 0.01, massProduction = true},
+		{name="Mass Extractors T3", category = categories.STRUCTURE * categories.TECH3 * categories.MASSEXTRACTION, priority = 2, storage = 0.01, massProduction = true},
+		{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1, storage = 0.8, massProduction = true},
 	},
 	MassProductionRequestedMass = 0,
 
 	_sortProjects = function(a, b)
-
-		--handles buildables
-		local av = a.mCalculatePriority(a)
-		local bv = b.mCalculatePriority(b)
-
-		--handles mass production
-		if a.massPayoffSeconds > 0 then
-			av = av + math.max(0, 140 - a.massPayoffSeconds)
-		end
-		if b.massPayoffSeconds > 0 then
-			bv = bv + math.max(0, 140 - b.massPayoffSeconds)
-		end
-
-		return av > bv
+		return a.massPayoffSeconds / a.prio < b.massPayoffSeconds / b.prio
 	end,
 
 	add = function(self, project)
@@ -50,7 +38,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 	end,
 
 	throttle = function(self, eco, project)
-		local net = eco:massNet(0)
+		local net = eco:massNet(0, project.prio)
 		local new_net
 
 		if project.isMassProduction then 

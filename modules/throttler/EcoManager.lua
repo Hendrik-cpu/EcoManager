@@ -175,6 +175,7 @@ EcoManager = Class({
 		local eco
 		local all_projects = {}
 		self.pause_list = {}
+		self.eco = Economy()
 		
 		eco = self.eco
 
@@ -194,7 +195,6 @@ EcoManager = Class({
 		LOG("start: " .. eco.energyActual .. " mass:".. eco.massActual)
 		for _, plugin in self.plugins do
 			local pause = false
-			self.eco = Economy()
 			
 			plugin:resetCycle()
 			for _, p in all_projects do
@@ -232,7 +232,7 @@ EcoManager = Class({
 				end
 	 		end
 		end
-		LOG("end: " .. eco.energyActual .. " mass:".. eco.massActual)
+		--LOG("end: " .. eco.energyActual .. " mass:".. eco.massActual)
 
 		table.sort(all_projects, function(a, b) return a.index < b.index end)
 		--LOG(repr(all_projects)) --printing of a table?

@@ -61,7 +61,7 @@ Economy = Class({
 		local maxStored = self[type .. 'Max']
 		local drain = self[type .. 'Income'] - self[type .. 'Actual']
 
-		local drainSecMinimum = 2
+		local drainSecMinimum = 0
 		-- if maxStored / drain < drainSecMinimum then
 		-- 	drainSecMinimum = maxStored / drain
 		-- 	if drainSecMinimum < 0 then 
