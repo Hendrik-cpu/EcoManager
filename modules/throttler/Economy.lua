@@ -1,3 +1,38 @@
+
+local EcoIsPaused=false
+local massMinStorage=0
+local energyMinStorage=0
+function PauseEcoM10_E90()
+	if EcoIsPaused then
+		massMinStorage=0
+		energyMinStorage=0
+		EcoIsPaused=false
+		print("Mass upgrades have been unpaused.")
+	else
+		massMinStorage=0.10
+		energyMinStorage=0.90
+		preventM_Stall=0
+		preventE_Stall=0
+		EcoIsPaused=true
+		print("Mass upgrades have been paused and will resume when storages are filling up (1%m/1%e).")
+	end
+end
+function PauseEcoM80_E90()
+	if EcoIsPaused then
+		massMinStorage=0
+		energyMinStorage=0
+		EcoIsPaused=false
+		print("Mass upgrades have been unpaused.")
+	else
+		massMinStorage=0.8
+		energyMinStorage=0.9
+		preventM_Stall=0
+		preventE_Stall=0
+		EcoIsPaused=true
+		print("Mass upgrades have been paused and will resume when storages are filling up (80%m/90%e).")
+	end
+end
+
 Economy = Class({
 	data = {},
 
@@ -37,31 +72,39 @@ Economy = Class({
 				self[prefix .. 'Actual'] = math.min(self[prefix .. 'Actual'], self[prefix .. 'Income']) -- mex bug
 			end
 
-			--set min storage´
-			local Max = self[prefix .. 'Max']
+		end
 
-			local energyMin = self[prefix .. 'Income'] --* (GetGameTimeSeconds() / 4000 + 1)
-			if Max > 5100 then 
+		--set energy min storage
+		if energyMinStorage == 0 then
+			local energyMin = self.energyIncome --* (GetGameTimeSeconds() / 4000 + 1)
+			if self.energyMax > 5100 then 
 				energyMin = math.max(energyMin,5100)
 			end
 
-			local minStorageLimit = Max * 0.6
-			if energyMin > minStorageLimit then
-				energyMin = minStorageLimit
+			local minEnergyStorageLimit = self.energyMax * 0.6
+			if energyMin > minEnergyStorageLimit then
+				energyMin = minEnergyStorageLimit
 			end
-			--print(energyMin)
+			self.energyMinStored = energyMin
+		else
+			self.energyMinStored = energyMinStorage * self.energyMax
+		end
 
-			self['energyMinStored'] = energyMin
+		--set mass min storage
+		--local massMin = self.massIncome --* (GetGameTimeSeconds() / 4000 + 1)
+		if massMinStorage == 0 then
+			self.massMinStored = self.massActual
+		else
+			self.massMinStored = massMinStorage * self.massMax
 		end
 	end,
 
-	net = function(self, type, Min)
+	net = function(self, type, Min, drainSec)
 
 		local stored = self[type .. 'Stored'] - Min
 		local maxStored = self[type .. 'Max']
 		local drain = self[type .. 'Income'] - self[type .. 'Actual']
 
-		local drainSecMinimum = 0
 		-- if maxStored / drain < drainSecMinimum then
 		-- 	drainSecMinimum = maxStored / drain
 		-- 	if drainSecMinimum < 0 then 
@@ -70,14 +113,19 @@ Economy = Class({
 		-- end
 
 		if stored > 0 then
-			stored = stored / drainSecMinimum
+			stored = stored / drainSec
 		end
 
 		return drain + stored
 	end,
 
-	massNet = function(self, massMin)
-		return self:net('mass', massMin)
+	massNet = function(self, massMin, prio)
+		if prio == 100 then 
+			massMin = 0
+		else
+			massMin = math.max(self['massMinStored'],massMin)
+		end
+		return self:net('mass', massMin, 5)
 	end,
 
 	energyNet = function(self, energyMin, prio)
@@ -86,6 +134,6 @@ Economy = Class({
 		else
 			energyMin = math.max(self['energyMinStored'],energyMin)
 		end
-		return self:net('energy', energyMin)
+		return self:net('energy', energyMin, 0.5)
 	end,
 })

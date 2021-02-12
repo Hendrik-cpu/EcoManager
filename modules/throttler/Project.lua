@@ -55,8 +55,8 @@ Project = Class({
     assisters = {},
     isConstruction = false,
     Position = nil,
-    MinSecondsToCompletion = 0,
     prio = 0,
+    --CountAssisers = 0,
 
     __init = function(self, unit)
         local Eco = unit:GetBlueprint().Economy
@@ -99,7 +99,7 @@ Project = Class({
         self.minTimeLeft = self.workTimeLeft * self:CalcMaxThrottle(eco)
         self.massCostRemaining = self.workLeft * self.massBuildCost
         self.energyCostRemaining = self.workLeft * self.energyBuildCost
-        self.MinSecondsToCompletion = math.max(self.massCostRemaining / eco:massNet(0), self.timeLeft, self.energyCostRemaining / eco:energyNet(0,100))  
+        --self.MinSecondsToCompletion = math.max(self.massCostRemaining / eco.massIncome, self.timeLeft, self.energyCostRemaining / eco.energyIncome)  
 
         if EntityCategoryContains(categories.MASSSTORAGE*categories.STRUCTURE, self.unit) then
 			local mexMassProduction=0
@@ -114,9 +114,9 @@ Project = Class({
 	    	end
 
 	        if mexMassProduction==18 then
-	        	self.massProductionActual=2.25
+	        	self.massProduction=2.25
         	elseif mexMassProduction==6 then
-	        	self.massProductionActual=0.75
+	        	self.massProduction=0.75
 	        end
         end
 
@@ -126,7 +126,7 @@ Project = Class({
             
             if self[t .. 'Production'] then
                 if self[t .. 'Production'] > 0 then
-                    self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production'] + self.minTimeLeft
+                    self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production'] + self.workTimeLeft
                 end
             else
                 self[t .. 'PayoffSeconds'] = 0
@@ -166,7 +166,7 @@ Project = Class({
 
         --local sortPrio = self:MassPerEnergy() - self.energyMinStorage * 100000
         if self.energyPayoffSeconds > 0 then
-            print("pgen")
+            --print("pgen")
             sortPrio = sortPrio + math.max(0, 140 - self.energyPayoffSeconds)
         end
 
@@ -174,7 +174,10 @@ Project = Class({
     end,
 
     mCalculatePriority = function(self)
-        return self.massPayoffSeconds
+        --print(self.MinSecondsToCompletion)
+        --print("Assisers: " .. self.CountAssisers .. " | BuildPower: " .. self.buildRate .. " | PayOffSeconds: " .. self.massPayoffSeconds .. " | MassProduction: " .. self.massProduction)
+        return (self.massPayoffSeconds) / self.prio
+        --return (self.buildRate*-1)
     end,
 
     GetConsumption = function()
@@ -201,8 +204,9 @@ Project = Class({
             eco.massActual = eco.massActual - data.massConsumed
             eco.energyActual = eco.energyActual - data.energyConsumed
         end
-
+        
         table.bininsert(self.assisters, {energyRequested=data.energyRequested, unit=u}, self._sortAssister)
+        --self.CountAssisers = self.CountAssisers +1 
     end,
 
     SetThrottleRatio = function(self, ratio)

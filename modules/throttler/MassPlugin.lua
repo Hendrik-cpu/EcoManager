@@ -3,18 +3,20 @@ local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua
 
 --todo:
 --min storage = 
+
+
 MassPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
-		--{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 90},
-		{name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 2, storage = 0.01, massProduction = true},
-		{name="Mass Storage", category = categories.STRUCTURE * categories.MASSSTORAGE, priority = 2, storage = 0.01, massProduction = true},
-		{name="Mass Extractors T3", category = categories.STRUCTURE * categories.TECH3 * categories.MASSEXTRACTION, priority = 2, storage = 0.01, massProduction = true},
-		{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1, storage = 0.8, massProduction = true},
+		{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 1000, massProduction = true},
+		{name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 1, massProduction = true},
+		{name="Mass Storage", category = categories.STRUCTURE * categories.MASSSTORAGE, priority = 1, storage = 0.01, massProduction = true},
+		{name="Mass Extractors T3", category = categories.STRUCTURE * categories.TECH3 * categories.MASSEXTRACTION, priority = 1, massProduction = true},
+		{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 0.5, massProduction = true},
 	},
 	MassProductionRequestedMass = 0,
 
 	_sortProjects = function(a, b)
-		return a.massPayoffSeconds / a.prio < b.massPayoffSeconds / b.prio
+		return a:mCalculatePriority() < b:mCalculatePriority()
 	end,
 
 	add = function(self, project)
@@ -38,6 +40,11 @@ MassPlugin = Class(ThrottlerPlugin) {
 	end,
 
 	throttle = function(self, eco, project)
+		local prio = project.priority
+		if UnpausedCount == 0 then 
+			prio = 100 
+		end
+
 		local net = eco:massNet(0, project.prio)
 		local new_net
 
