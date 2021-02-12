@@ -16,7 +16,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 	MassProductionRequestedMass = 0,
 
 	_sortProjects = function(a, b)
-		return a:mCalculatePriority() < b:mCalculatePriority()
+		return a:mProdPriority() < b:mProdPriority()
 	end,
 
 	add = function(self, project)
@@ -45,7 +45,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 			prio = 100 
 		end
 
-		local net = eco:massNet(0, project.prio)
+		local net = eco:massNet(0, prio)
 		local new_net
 
 		if project.isMassProduction then 

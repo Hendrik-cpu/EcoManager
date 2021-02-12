@@ -10,6 +10,7 @@ end
 function init()
 	manager = EcoManager()
 	manager:addPlugin('Mass')
+	manager:addPlugin('MassBalance')
 	manager:addPlugin('Energy')
 	--manager:addPlugin('Storage')
 	addListener(manageEconomy, 0.3)

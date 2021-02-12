@@ -92,6 +92,24 @@ Project = Class({
         end
     end,
 
+    ResourceProportion = function(self, a, b)
+        local prod = self[a .. 'Production']
+        if prod then
+            local prodActual = self[a .. 'ProductionActual']
+            if prodActual > prod then
+                prod = prodActual
+            end
+        else
+            prod = 0
+        end
+        local drain = self[b .. 'Requested']
+        if drain then
+            return prod / drain
+        else
+            return 0
+        end
+    end,
+
     LoadFinished = function(self, eco)
         self.workLeft = 1 - self.workProgress
         self.timeLeft = self.workLeft * self.buildTime
@@ -173,11 +191,29 @@ Project = Class({
         return sortPrio
     end,
 
-    mCalculatePriority = function(self)
+    mProdPriority = function(self)
+
         --print(self.MinSecondsToCompletion)
         --print("Assisers: " .. self.CountAssisers .. " | BuildPower: " .. self.buildRate .. " | PayOffSeconds: " .. self.massPayoffSeconds .. " | MassProduction: " .. self.massProduction)
         return (self.massPayoffSeconds) / self.prio
         --return (self.buildRate*-1)
+    end,
+    mCalculatePriority = function(self)
+        local sortPrio = self.prio / 100 
+
+        if self.workProgress < 1 then
+            sortPrio = sortPrio * (self.workProgress + 1) + self.massProportion * (self.workProgress + 1.5) 
+        end
+
+        sortPrio = sortPrio + self:ResourceProportion("energy","mass") - self.massMinStorage * 100000
+
+        --local sortPrio = self:MassPerEnergy() - self.energyMinStorage * 100000
+        if self.massPayoffSeconds > 0 then
+            print("Error, should not exist")
+            sortPrio = sortPrio + math.max(0, 140 - self.massPayoffSeconds)
+        end
+
+        return sortPrio
     end,
 
     GetConsumption = function()
