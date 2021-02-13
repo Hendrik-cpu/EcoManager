@@ -1,0 +1,3 @@
+EnergyStorage = Class(Project){
+
+}
