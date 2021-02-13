@@ -194,43 +194,46 @@ EcoManager = Class({
 		import(modPath .. 'modules/throttler/Project.lua').firstAssister = true
 		LOG("start: " .. eco.energyActual .. " mass:".. eco.massActual)
 		for name, plugin in pairs(self.plugins) do
-			local pause = false
-			
-			plugin:resetCycle()
-			for _, p in all_projects do
-				plugin:add(p)
-	 		end
+			if plugin.Active then
 
-	 		plugin:sort()
+				local pause = false
+				plugin:resetCycle()
+				for _, p in all_projects do
+					plugin:add(p)
+				end
 
-			--print ("n_plugin_projects " .. table.getsize(plugin.projects))
-	 		for _, p in plugin.projects do
-		 		local ratio_inc
+				plugin:sort()
 
-	 			if p.throttle < 1 then
-					if not pause then
-						local last_ratio = p.throttle
-						plugin:throttle(eco, p)
-						if p.throttle > 0 and p.throttle < 1 then
-							--LOG("ADJUST THIS SHIT")
-							p:adjust_throttle(eco) -- round throttle to nearest assister
-							--LOG("ADJUSTED TO " .. p.throttle)
+				--print ("n_plugin_projects " .. table.getsize(plugin.projects))
+				for _, p in plugin.projects do
+					local ratio_inc
+
+					if p.throttle < 1 then
+						if not pause then
+							local last_ratio = p.throttle
+							plugin:throttle(eco, p)
+							if p.throttle > 0 and p.throttle < 1 then
+								--LOG("ADJUST THIS SHIT")
+								p:adjust_throttle(eco) -- round throttle to nearest assister
+								--LOG("ADJUSTED TO " .. p.throttle)
+							end
+
+							if p.throttle == 1 then
+								pause = true
+							end
+
+							ratio_inc = p.throttle - last_ratio
+							eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
+							eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
 						end
 
-						if p.throttle == 1 then
-							pause = true
+						if pause then
+							p:SetEnergyDrain(0)
 						end
-
-						ratio_inc = p.throttle - last_ratio
-						eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
-						eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
-					end
-
-					if pause then
-						p:SetEnergyDrain(0)
 					end
 				end
-	 		end
+				
+			end
 		end
 		--LOG("end: " .. eco.energyActual .. " mass:".. eco.massActual)
 
