@@ -84,7 +84,7 @@ Project = Class({
         else
             massProd = 0
         end
-        local energyDrain = self.energyRequested
+        local energyDrain = self.energyCostRemaining
         if energyDrain then
             return massProd / energyDrain
         else
@@ -92,23 +92,23 @@ Project = Class({
         end
     end,
 
-    -- ResourceProportion = function(self, a, b)
-    --     local prod = self[a .. 'Production']
-    --     if prod then
-    --         local prodActual = self[a .. 'ProductionActual']
-    --         if prodActual > prod then
-    --             prod = prodActual
-    --         end
-    --     else
-    --         prod = 0
-    --     end
-    --     local drain = self[b .. 'Requested']
-    --     if drain then
-    --         return prod / drain
-    --     else
-    --         return 0
-    --     end
-    -- end,
+    ResourceProportion = function(self, a, b)
+        local prod = self[a .. 'Production']
+        if prod then
+            local prodActual = self[a .. 'ProductionActual']
+            if prodActual > prod then
+                prod = prodActual
+            end
+        else
+            prod = 0
+        end
+        local cost = self[b .. 'CostRemaining']
+        if cost then
+            return prod / cost
+        else
+            return 0
+        end
+    end,
 
     LoadFinished = function(self, eco)
         self.workLeft = 1 - self.workProgress
@@ -212,10 +212,11 @@ Project = Class({
         local sortPrio = self.prio / 100 
 
         if self.workProgress < 1 then
-            sortPrio = sortPrio * (self.workProgress + 1) + self.massProportion * (self.workProgress + 1.5) 
+            sortPrio = sortPrio * (self.workProgress + 1) + self.energyProportion * (self.workProgress + 1.5) 
         end
 
         sortPrio = sortPrio + self:ResourceProportion("energy","mass") - self.massMinStorage * 100000
+
         return sortPrio
     end,
 
