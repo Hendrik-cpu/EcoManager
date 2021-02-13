@@ -14,7 +14,7 @@ function init()
 
 	IN_AddKeyMapTable({['Ctrl-B' ] = {action =  'ui_lua import("' .. EconomyPath .. '").PauseEcoM80_E90()'},})
 	IN_AddKeyMapTable({['Ctrl-N' ] = {action =  'ui_lua import("' .. EconomyPath .. '").PauseEcoM10_E190()'},})
-	IN_AddKeyMapTable({['Ctrl-K' ] = {action =  'ui_lua import("' .. modPath .. 'modules/throttler/MassBalancePlugin.lua' .. '").TestMassBalancer()'},})
+	IN_AddKeyMapTable({['Ctrl-K' ] = {action =  'ui_lua import("' .. modPath .. 'modules/throttler/throttler.lua' .. '").ToggleMassBalance()'},})
 
 	--IN_AddKeyMapTable({['Ctrl-M'] = {action =  'ui_lua import("' .. throttleMassPath .. '").PauseAllNonECO()'},})
 	--IN_AddKeyMapTable({['Ctrl-Shift-T' ] = {action =  'ui_lua import("/mods/EM/modules/throttle.lua").togglePowerThrottle()'},})
