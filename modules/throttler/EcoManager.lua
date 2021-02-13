@@ -154,9 +154,10 @@ EcoManager = Class({
 		return self.projects
 	end,
 
-	addPlugin = function(self, name)
+	addPlugin = function(self, name, active)
 		FullName = name .. 'Plugin'
 		local plugin = import(modPath .. 'modules/throttler/' .. FullName .. '.lua')[FullName](self.eco)
+		plugin.Active = active
 		self.plugins[name] = plugin
 	end,
 
