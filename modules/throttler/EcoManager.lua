@@ -155,9 +155,9 @@ EcoManager = Class({
 	end,
 
 	addPlugin = function(self, name)
-		name = name .. 'Plugin'
-		local plugin = import(modPath .. 'modules/throttler/' .. name .. '.lua')[name](self.eco)
-		table.insert(self.plugins, plugin)
+		FullName = name .. 'Plugin'
+		local plugin = import(modPath .. 'modules/throttler/' .. FullName .. '.lua')[FullName](self.eco)
+		self.plugins[name] = plugin
 	end,
 
 	manageEconomy = function(self)
@@ -193,7 +193,7 @@ EcoManager = Class({
 		import(modPath .. 'modules/throttler/Project.lua').throttleIndex = 0
 		import(modPath .. 'modules/throttler/Project.lua').firstAssister = true
 		LOG("start: " .. eco.energyActual .. " mass:".. eco.massActual)
-		for _, plugin in self.plugins do
+		for name, plugin in pairs(self.plugins) do
 			local pause = false
 			
 			plugin:resetCycle()
