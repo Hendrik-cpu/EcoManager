@@ -1,10 +1,6 @@
 local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
---todo:
---min storage = 
-
-
 MassPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
 		{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 1000, massProduction = true},
