@@ -92,23 +92,23 @@ Project = Class({
         end
     end,
 
-    ResourceProportion = function(self, a, b)
-        local prod = self[a .. 'Production']
-        if prod then
-            local prodActual = self[a .. 'ProductionActual']
-            if prodActual > prod then
-                prod = prodActual
-            end
-        else
-            prod = 0
-        end
-        local drain = self[b .. 'Requested']
-        if drain then
-            return prod / drain
-        else
-            return 0
-        end
-    end,
+    -- ResourceProportion = function(self, a, b)
+    --     local prod = self[a .. 'Production']
+    --     if prod then
+    --         local prodActual = self[a .. 'ProductionActual']
+    --         if prodActual > prod then
+    --             prod = prodActual
+    --         end
+    --     else
+    --         prod = 0
+    --     end
+    --     local drain = self[b .. 'Requested']
+    --     if drain then
+    --         return prod / drain
+    --     else
+    --         return 0
+    --     end
+    -- end,
 
     LoadFinished = function(self, eco)
         self.workLeft = 1 - self.workProgress
@@ -119,6 +119,7 @@ Project = Class({
         self.energyCostRemaining = self.workLeft * self.energyBuildCost
         --self.MinSecondsToCompletion = math.max(self.massCostRemaining / eco.massIncome, self.timeLeft, self.energyCostRemaining / eco.energyIncome)  
 
+        --mass storages
         if EntityCategoryContains(categories.MASSSTORAGE*categories.STRUCTURE, self.unit) then
 			local mexMassProduction=0
             for _, mp in import(modPath .. 'modules/throttler/ecomanager.lua').mexPositions do
@@ -137,11 +138,13 @@ Project = Class({
 	        	self.massProduction=0.75
 	        end
         end
+        --
 
         for _, t in {'mass', 'energy'} do
             self[t .. 'Drain'] = self[t .. 'BuildCost'] / (self.buildTime / self.buildRate)
             self[t .. 'CostRemaining'] = self[t .. 'BuildCost'] * self.workLeft
             
+            --power and mass production
             if self[t .. 'Production'] then
                 if self[t .. 'Production'] > 0 then
                     self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production'] + self.workTimeLeft
@@ -149,6 +152,8 @@ Project = Class({
             else
                 self[t .. 'PayoffSeconds'] = 0
             end
+            --
+
         end
 
         --must be calculated after all assisters have been added
@@ -182,15 +187,18 @@ Project = Class({
 
         sortPrio = sortPrio + self:MassPerEnergy() - self.energyMinStorage * 100000
 
+        --power production
         --local sortPrio = self:MassPerEnergy() - self.energyMinStorage * 100000
         if self.energyPayoffSeconds > 0 then
             --print("pgen")
             sortPrio = sortPrio + math.max(0, 140 - self.energyPayoffSeconds)
         end
+        --
 
         return sortPrio
     end,
 
+    --mass production
     mProdPriority = function(self)
 
         --print(self.MinSecondsToCompletion)
@@ -198,6 +206,8 @@ Project = Class({
         return (self.massPayoffSeconds) / self.prio
         --return (self.buildRate*-1)
     end,
+    --
+
     mCalculatePriority = function(self)
         local sortPrio = self.prio / 100 
 
@@ -206,13 +216,6 @@ Project = Class({
         end
 
         sortPrio = sortPrio + self:ResourceProportion("energy","mass") - self.massMinStorage * 100000
-
-        --local sortPrio = self:MassPerEnergy() - self.energyMinStorage * 100000
-        if self.massPayoffSeconds > 0 then
-            print("Error, should not exist")
-            sortPrio = sortPrio + math.max(0, 140 - self.massPayoffSeconds)
-        end
-
         return sortPrio
     end,
 
