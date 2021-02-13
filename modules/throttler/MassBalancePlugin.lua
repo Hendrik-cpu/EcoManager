@@ -1,7 +1,15 @@
 local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
-MassPlugin = Class(ThrottlerPlugin) {
+--test stuff
+local MassBalancerEnabled = false
+function TestMassBalancer()
+	MassBalancerEnabled = not MassBalancerEnabled
+	print("Set Mass Balancer to " .. tostring(MassBalancerEnabled))
+end
+--end test
+
+MassBalancePlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
 		--{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1, storage = 0.8},
 		--{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, priority = 3},
@@ -20,7 +28,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 		--{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 99},
 		--{name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 40},
 		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 1},
-		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 1,
+		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 1},
 		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 40},
 	},
 
@@ -48,13 +56,14 @@ MassPlugin = Class(ThrottlerPlugin) {
 	end,
 
 	throttle = function(self, eco, project)
+		if MassBalancerEnabled then
+			local net = eco:massNet(0, project.prio)
+			local new_net
 
-		local net = eco:massNet(0, project.prio)
-		local new_net
-
-		local new_net = net - math.min(project.massRequested, project.massCostRemaining)
-		if new_net < 0 then -- this project will stall eco
-			project:SetMassDrain(math.max(0, net))
+			local new_net = net - math.min(project.massRequested, project.massCostRemaining)
+			if new_net < 0 then -- this project will stall eco
+				project:SetMassDrain(math.max(0, net))
+			end
 		end
 	end,
 	
