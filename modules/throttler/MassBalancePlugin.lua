@@ -1,14 +1,6 @@
 local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
---test stuff
-local MassBalancerEnabled = false
-function TestMassBalancer()
-	MassBalancerEnabled = not MassBalancerEnabled
-	print("Set Mass Balancer to " .. tostring(MassBalancerEnabled))
-end
---end test
-
 MassBalancePlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
 		--{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1, storage = 0.8},
@@ -56,14 +48,12 @@ MassBalancePlugin = Class(ThrottlerPlugin) {
 	end,
 
 	throttle = function(self, eco, project)
-		if MassBalancerEnabled then
-			local net = eco:massNet(0, project.prio)
-			local new_net
+		local net = eco:massNet(0, project.prio)
+		local new_net
 
-			local new_net = net - math.min(project.massRequested, project.massCostRemaining)
-			if new_net < 0 then -- this project will stall eco
-				project:SetMassDrain(math.max(0, net))
-			end
+		local new_net = net - math.min(project.massRequested, project.massCostRemaining)
+		if new_net < 0 then -- this project will stall eco
+			project:SetMassDrain(math.max(0, net))
 		end
 	end,
 	
