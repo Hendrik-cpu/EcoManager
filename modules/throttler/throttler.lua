@@ -7,6 +7,12 @@ function manageEconomy()
 	manager:manageEconomy()
 end
 
+function ToggleMassBalance()
+	local NewStatus = not manager.plugins["MassBalance"].Active 
+	manager.plugins["MassBalance"].Active = NewStatus
+	print("MassBalance = " .. tostring(NewStatus))
+end
+
 function init()
 	manager = EcoManager()
 	manager:addPlugin('Mass')
