@@ -3,8 +3,8 @@ local Pause = import(modPath .. 'modules/pause.lua').Pause
 local throttleActivationTimer = (5 * 60)
 local activationMSG_Not_Printed = true
 local Economy = import(modPath .. 'modules/throttler/Economy.lua').Economy
-local EnergyPlugin = import(modPath .. 'modules/throttler/EnergyPlugin.lua').EnergyPlugin
-local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').StoragePlugin
+--local EnergyPlugin = import(modPath .. 'modules/throttler/EnergyPlugin.lua').EnergyPlugin
+--local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').StoragePlugin
 
 local Units = import('/mods/common/units.lua')
 local econData = import(modPath .. 'modules/units.lua').econData
