@@ -134,6 +134,6 @@ Economy = Class({
 		else
 			energyMin = math.max(self['energyMinStored'],energyMin)
 		end
-		return self:net('energy', energyMin, 0.1)
+		return self:net('energy', energyMin, 1)
 	end,
 })
