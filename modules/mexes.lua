@@ -150,7 +150,7 @@ function pauseMexes()
 end
 
 function CreateMexOverlay(unit)
-	--local worldView = import('/lua/ui/game/worldview.lua').viewLeft
+	local worldView = import('/lua/ui/game/worldview.lua').viewLeft
 	local overlay = Bitmap(GetFrame(0))
 	local id = unit:GetEntityId()
 
@@ -159,6 +159,9 @@ function CreateMexOverlay(unit)
 	overlay:SetSolidColor('black')
 	overlay.Width:Set(10)
 	overlay.Height:Set(10)
+
+	local pos = worldView:Project(unit:GetPosition())
+	LayoutHelpers.AtLeftTopIn(overlay, worldView, pos.x - overlay.Width() / 2, pos.y - overlay.Height() / 2 + 1)
 
 	overlay.OnFrame = function(self, delta)
 		if not unit:IsDead() then
