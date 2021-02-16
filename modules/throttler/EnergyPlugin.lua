@@ -13,9 +13,9 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		{name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 30},
 		{name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 30},
 		{name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 30},
-		{name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 30},
-		{name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 35},
-		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, priority = 40},
+		{name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 50},
+		{name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 80},
+		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, priority = 90},
 		{name="ACU upgrades", category = categories.LAND * categories.MOBILE * categories.COMMAND, priority = 98},
 		{name="SCU upgrades", category = categories.LAND * categories.MOBILE * categories.SUBCOMMANDER, priority = 50},
 		--{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 99},
@@ -63,11 +63,14 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 
 		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining) 
 		if new_net < 0 and (UnpausedCount > 0 or project.workLeft == 1) then
-			project:SetEnergyDrain(math.max(0, net))
+			if eco.energyStored < eco.energyMax * 0.9 then
+				project:SetEnergyDrain(math.max(0, net))
+			end 
 		else
 			UnpausedCount = UnpausedCount + 1
 		end
 	end,
+
 	resetCycle = function(self)
 		self.projects = {}
 		UnpausedCount = 0
