@@ -193,7 +193,7 @@ EcoManager = Class({
 
 		import(modPath .. 'modules/throttler/Project.lua').throttleIndex = 0
 		import(modPath .. 'modules/throttler/Project.lua').firstAssister = true
-		LOG("start: " .. eco.energyActual .. " mass:".. eco.massActual)
+		--LOG("start: " .. eco.energyActual .. " mass:".. eco.massActual)
 		for name, plugin in pairs(self.plugins) do
 			if plugin.Active then
 
@@ -224,8 +224,9 @@ EcoManager = Class({
 							end
 
 							ratio_inc = p.throttle - last_ratio
-							eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc)
-							eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc)
+							eco:setStallFactor()
+							eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc) * eco.massStallFactor
+							eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc) * eco.energyStallFactor
 						end
 
 						if pause then

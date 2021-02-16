@@ -35,7 +35,7 @@ end
 
 Economy = Class({
 	data = {},
-
+	
 	__init = function(self)
 		self:Init()
 
@@ -43,9 +43,9 @@ Economy = Class({
 	end,
 
 	Init = function(self, data)
-		local types = {'MASS', 'ENERGY'}
 		local mapping = {maxStorage="Max", stored="Stored", income="Income", lastUseRequested="Requested", lastUseActual="Actual",  net_income="net_income"}
 		local per_tick = {income=true, lastUseRequested=true, lastUseActual=true}
+		local types = {'MASS', 'ENERGY'}
 
 		tps = GetSimTicksPerSecond()
 		data = GetEconomyTotals()
@@ -64,15 +64,12 @@ Economy = Class({
 			self[prefix .. "Ratio"] = data['stored'][t] / data['maxStorage'][t]
 			self[prefix .. "Ratio"] = data['stored'][t] / data['maxStorage'][t]
 			
-			if self[prefix .. 'Stored'] < 1 and (self[prefix .. 'Income'] - self[prefix .. 'Requested'] < 0) then
-				self[prefix .. 'Stall'] = true 
-			end
-
 			if self[prefix .. 'Stored'] < 1 then
 				self[prefix .. 'Actual'] = math.min(self[prefix .. 'Actual'], self[prefix .. 'Income']) -- mex bug
 			end
 
 		end
+		self:setStallFactor()
 
 		--set energy min storage
 		if energyMinStorage == 0 then
@@ -99,11 +96,26 @@ Economy = Class({
 		end
 	end,
 
+	setStallFactor = function(self)
+		local stallFactor = 1
+		for _, t in {'mass', 'energy'} do
+			local requested = self[t .. 'Actual']
+			local income = self[t .. 'Income']
+			if requested > 0 and requested > income and self[t .. 'Stored'] < 1 then
+				stallFactor = income / requested
+				self[t .. 'Stall'] = true
+			end
+			self[t .. 'StallFactor'] = stallFactor
+		end
+		self['StallFactor'] = math.min(self.massStallFactor, self.energyStallFactor)
+		--print('Stall Factor mass: ' .. self.massStallFactor .. ' | Stall Factor energy: ' .. self.energyStallFactor)
+	end,
+
 	net = function(self, type, Min, drainSec)
 
 		local stored = self[type .. 'Stored'] - Min
 		local maxStored = self[type .. 'Max']
-		local drain = self[type .. 'Income'] - self[type .. 'Actual']
+		local drain = self[type .. 'Income'] - self[type .. 'Actual'] 
 
 		-- if maxStored / drain < drainSecMinimum then
 		-- 	drainSecMinimum = maxStored / drain
