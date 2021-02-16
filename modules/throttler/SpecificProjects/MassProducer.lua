@@ -1,0 +1,3 @@
+MassProducer = Class(Project){
+
+}
