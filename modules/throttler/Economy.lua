@@ -96,21 +96,6 @@ Economy = Class({
 		end
 	end,
 
-	setStallFactor = function(self)
-		local stallFactor = 1
-		for _, t in {'mass', 'energy'} do
-			local requested = self[t .. 'Actual']
-			local income = self[t .. 'Income']
-			if requested > 0 and requested > income and self[t .. 'Stored'] < 1 then
-				stallFactor = income / requested
-				self[t .. 'Stall'] = true
-			end
-			self[t .. 'StallFactor'] = stallFactor
-		end
-		self['StallFactor'] = math.min(self.massStallFactor, self.energyStallFactor)
-		--print('Stall Factor mass: ' .. self.massStallFactor .. ' | Stall Factor energy: ' .. self.energyStallFactor)
-	end,
-
 	net = function(self, type, Min, drainSec)
 
 		local stored = self[type .. 'Stored'] - Min
@@ -147,5 +132,20 @@ Economy = Class({
 			energyMin = math.max(self['energyMinStored'],energyMin)
 		end
 		return self:net('energy', energyMin, 1)
+	end,
+
+	setStallFactor = function(self)
+		for _, t in {'mass', 'energy'} do
+			local stallFactor = 1
+			local requested = self[t .. 'Actual']
+			local income = self[t .. 'Income']
+			if requested > 0 and requested > income and self[t .. 'Stored'] < 1 then
+				stallFactor = income / requested
+				self[t .. 'Stall'] = true
+			end
+			self[t .. 'StallFactor'] = stallFactor
+		end
+		self['StallFactor'] = math.min(self.massStallFactor, self.energyStallFactor)
+		--print('Stall Factor mass: ' .. self.massStallFactor .. ' | Stall Factor energy: ' .. self.energyStallFactor)
 	end,
 })
