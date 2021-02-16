@@ -16,7 +16,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		{name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 50},
 		{name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 80},
 		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, priority = 90},
-		{name="ACU upgrades", category = categories.LAND * categories.MOBILE * categories.COMMAND, priority = 98},
+		{name="ACU upgrades", category = categories.LAND * categories.MOBILE * categories.COMMAND, priority = 100},
 		{name="SCU upgrades", category = categories.LAND * categories.MOBILE * categories.SUBCOMMANDER, priority = 50},
 		--{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 99},
 		{name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 5, storage = 0.02},
