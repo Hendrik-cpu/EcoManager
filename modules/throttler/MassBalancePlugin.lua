@@ -48,7 +48,7 @@ MassBalancePlugin = Class(ThrottlerPlugin) {
 	end,
 
 	throttle = function(self, eco, project)
-		local net = eco:massNet(0, project.prio)
+		local net = eco:massNet(project.massMinStorage * eco.energyMax, project.prio)
 		local new_net
 
 		local new_net = net - math.min(project.massRequested, project.massCostRemaining)
@@ -59,5 +59,6 @@ MassBalancePlugin = Class(ThrottlerPlugin) {
 	
 	resetCycle = function(self)
 		self.projects = {}
+		UnpausedCount = 0
 	end,
 }
