@@ -122,7 +122,7 @@ Project = Class({
         --mass storages
         if EntityCategoryContains(categories.MASSSTORAGE*categories.STRUCTURE, self.unit) then
 			local mexMassProduction=0
-            for _, mp in import(modPath .. 'modules/throttler/ecomanager.lua').mexPositions do
+            for _, mp in import(modPath .. 'modules/throttler/throttler.lua').manager.mexPositions do
                 local pos2 = mp.position
 	    		if pos2 then
 		    		if VDist3(self.Position,pos2)<3 then

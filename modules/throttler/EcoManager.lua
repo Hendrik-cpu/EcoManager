@@ -10,7 +10,6 @@ local Units = import('/mods/common/units.lua')
 local econData = import(modPath .. 'modules/units.lua').econData
 local LastUnitsPauseState = {}
 local throttlerDisabled = false
-mexPositions = {}
 
 function isPaused(u)
 	local is_paused
@@ -71,6 +70,8 @@ EcoManager = Class({
 	projects = {},
 	plugins = {},
 	ProjectPositions = {},
+	mexPositions = {},
+
 
 	__init = function(self)
 		--self.eco = Economy()
@@ -78,7 +79,7 @@ EcoManager = Class({
 
 	LoadProjects = function(self, eco)
 		local unpause = {}
-		mexPositions = {}
+		self.mexPositions = {}
 		self.projects = {}
 		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER)
 
@@ -92,7 +93,7 @@ EcoManager = Class({
 
 			if not u:IsDead() then
 				if EntityCategoryContains(categories.STRUCTURE * categories.MASSEXTRACTION, u) then
-					table.insert(mexPositions, { position = u:GetPosition(), massProduction = u:GetBlueprint().Economy.ProductionPerSecondMass })
+					table.insert(self.mexPositions, { position = u:GetPosition(), massProduction = u:GetBlueprint().Economy.ProductionPerSecondMass })
 				end
 
 				if StateUntouched then
