@@ -212,7 +212,7 @@ Project = Class({
         local sortPrio = self.prio / 100 
 
         if self.workProgress < 1 then
-            sortPrio = sortPrio * (self.workProgress + 1) + self.energyProportion * (self.workProgress + 1.5) 
+            sortPrio = sortPrio * (self.workProgress + 1) + (self.energyProportion * 100) * (self.workProgress + 1.5) 
         end
 
         sortPrio = sortPrio + self:ResourceProportion("energy","mass") - self.massMinStorage * 100000
