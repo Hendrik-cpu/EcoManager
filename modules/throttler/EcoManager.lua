@@ -67,13 +67,13 @@ function DisableNewEcoManager()
 end
 
 EcoManager = Class({
-	eco = nil,
+	--eco = nil,
 	projects = {},
 	plugins = {},
 	ProjectPositions = {},
 
 	__init = function(self)
-		self.eco = Economy()
+		--self.eco = Economy()
 	end,
 
 	LoadProjects = function(self, eco)
@@ -173,12 +173,11 @@ EcoManager = Class({
 			end
 		end
 
-		local eco
+		
 		local all_projects = {}
 		self.pause_list = {}
-		self.eco = Economy()
-		
-		eco = self.eco
+		local eco = Economy()
+		self.eco = eco 
 
 		for _, p in self:LoadProjects(eco) do
 			table.insert(all_projects, p)
@@ -194,9 +193,13 @@ EcoManager = Class({
 		import(modPath .. 'modules/throttler/Project.lua').throttleIndex = 0
 		import(modPath .. 'modules/throttler/Project.lua').firstAssister = true
 		--LOG("start: " .. eco.energyActual .. " mass:".. eco.massActual)
+		local energyActual = eco.energyActual
+		local massActual = eco.massActual
 		for name, plugin in pairs(self.plugins) do
 			if plugin.Active then
 
+				eco.energyActual = energyActual
+				eco.massActual = massActual
 				local pause = false
 				plugin:resetCycle()
 				for _, p in all_projects do
