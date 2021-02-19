@@ -8,9 +8,9 @@ MassBalancePlugin = Class(ThrottlerPlugin) {
 		{name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 40},
 		{name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 40},
 		{name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 40},
-		{name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 40},
-		{name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 40},
-		{name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 40},
+		{name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 90},
+		{name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 80},
+		{name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 70},
 		{name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 40},
 		{name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 40},
 		{name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 40},
@@ -21,7 +21,7 @@ MassBalancePlugin = Class(ThrottlerPlugin) {
 		--{name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 40},
 		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 2},
 		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 1},
-		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 40},
+		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 30},
 	},
 
 	_sortProjects = function(a, b)
@@ -48,7 +48,7 @@ MassBalancePlugin = Class(ThrottlerPlugin) {
 	end,
 
 	throttle = function(self, eco, project)
-		local net = eco:massNet(project.massMinStorage * eco.energyMax, project.prio)
+		local net = eco:massNet(project.massMinStorage * eco.energyMax, project.prio, 3)
 		local new_net
 
 		local new_net = net - math.min(project.massRequested, project.massCostRemaining)

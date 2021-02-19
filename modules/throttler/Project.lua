@@ -1,5 +1,5 @@
 local modPath = '/mods/EM/'
-local isPaused = import(modPath .. 'modules/units.lua').isPaused
+local isPaused = import(modPath .. 'modules/pause.lua').isPaused
 local econData = import(modPath .. 'modules/units.lua').econData
 
 throttleIndex = 0
@@ -205,13 +205,13 @@ Project = Class({
     --
 
     mCalculatePriority = function(self)
-        local sortPrio = self.prio / 100 
+        local sortPrio = self.prio / 100 + 1
 
         if self.workProgress < 1 then
-            sortPrio = sortPrio * (self.workProgress + 1) + (self.energyProportion * 100) * (self.workProgress + 1.5) 
+            sortPrio = sortPrio * ((self.workProgress + 1) + (self.energyProportion + 1) * (self.workProgress + 1.5)) 
         end
 
-        sortPrio = sortPrio + self:ResourceProportion("energy","mass") - self.massMinStorage * 100000
+        sortPrio = sortPrio * (self:ResourceProportion("energy","mass") + 1) * 100 - self.massMinStorage * 1000
 
         return sortPrio
     end,
