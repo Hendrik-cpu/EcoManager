@@ -1,3 +1,0 @@
-MassProducer = Class(Project){
-
-}

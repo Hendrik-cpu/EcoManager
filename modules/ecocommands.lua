@@ -10,7 +10,7 @@ local Units = import('/mods/common/units.lua')
 
 function init()
 	IN_AddKeyMapTable({['Ctrl-V' ] = {action =  MyPath .. '.PauseAll()'},})
-	IN_AddKeyMapTable({['Ctrl-T' ] = {action =  'ui_lua import("' .. modPath .. 'modules/throttler/EcoManager.lua").DisableNewEcoManager()'},})
+	IN_AddKeyMapTable({['Ctrl-T' ] = {action =  'ui_lua import("' .. modPath .. 'modules/throttler/throttler.lua").toggleEcomanager()'},})
 
 	IN_AddKeyMapTable({['Ctrl-B' ] = {action =  'ui_lua import("' .. EconomyPath .. '").PauseEcoM80_E90()'},})
 	IN_AddKeyMapTable({['Ctrl-N' ] = {action =  'ui_lua import("' .. EconomyPath .. '").PauseEcoM10_E190()'},})

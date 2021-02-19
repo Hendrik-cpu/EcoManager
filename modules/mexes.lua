@@ -4,7 +4,7 @@ local Units = import('/mods/common/units.lua')
 
 local triggerEvent = import(modPath .. 'modules/events.lua').triggerEvent
 local addListener = import(modPath .. 'modules/init.lua').addListener
-local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
+--local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
 
 local LayoutHelpers = import('/lua/maui/layouthelpers.lua')
 local Bitmap = import('/lua/maui/bitmap.lua').Bitmap
@@ -254,7 +254,7 @@ function checkMexes()
 		local auto_upgrade = options['em_mexes'] == 'auto';
 
 		if not auto_upgrade then
-			local eco = getEconomy()
+			--local eco = getEconomy()
 			local tps = GetSimTicksPerSecond()
 		end
 

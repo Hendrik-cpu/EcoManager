@@ -1,78 +1,27 @@
 local modPath = '/mods/EM/'
 local Pause = import(modPath .. 'modules/pause.lua').Pause
-local throttleActivationTimer = (5 * 60)
-local activationMSG_Not_Printed = true
 local Economy = import(modPath .. 'modules/throttler/Economy.lua').Economy
---local EnergyPlugin = import(modPath .. 'modules/throttler/EnergyPlugin.lua').EnergyPlugin
---local StoragePlugin = import(modPath .. 'modules/throttler/StoragePlugin.lua').StoragePlugin
-
 local Units = import('/mods/common/units.lua')
 local econData = import(modPath .. 'modules/units.lua').econData
-local LastUnitsPauseState = {}
-local throttlerDisabled = false
+local isPaused = import(modPath .. 'modules/units.lua').isPaused
 
-function isPaused(u)
-	local is_paused
-	if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
-		is_paused = GetScriptBit({u}, 4)
-	else
-		is_paused = GetIsPaused({u})
-	end
-
-	return is_paused
-end
 local Project = import(modPath .. 'modules/throttler/Project.lua').Project
 
 function SetPaused(units, state)
 	Pause(units, state, 'throttle')
 end
 
-function setPause(units, toggle, pause)
-	
-	for _, u in units do
-		LastUnitsPauseState[u:GetEntityId()] = pause
-	end
-
-	if toggle == 'pause' then
-		SetPaused(units, pause)
-	else
-		local bit = GetScriptBit(units, toggle)
-		local is_paused = bit 
- 
-		if toggle == 0 then 
-			is_paused = not is_paused 
-		end
-
-		if pause ~= is_paused then
-			ToggleScriptBit(units, toggle, bit)
-		end
-	end
-end 
-
-function ResetPauseStates()
-	LastUnitsPauseState = {}
-end
-
-function DisableNewEcoManager()
-	throttlerDisabled = not throttlerDisabled
-	if throttlerDisabled then
-		Pause(Units.Get(), false, 'throttle')
-		print("Throttler disabled!")
-	else
-		throttleActivationTimer = 0
-		ResetPauseStates()
-		print("Throttler enabled!")
-	end
-end
-
 EcoManager = Class({
-	--eco = nil,
+
+	Active = true,
+	ActivationTimer = 5  * 60,
+	ActivationMessagePrinted = false,
 	projects = {},
 	plugins = {},
 	ProjectPositions = {},
 	mexPositions = {},
-
-
+	LastUnitsPauseState = {},
+	
 	__init = function(self)
 		--self.eco = Economy()
 	end,
@@ -87,8 +36,8 @@ EcoManager = Class({
 			local project
 			local StateUntouched = true
 
-			if LastUnitsPauseState[u:GetEntityId()] then
-				StateUntouched = isPaused(u) == LastUnitsPauseState[u:GetEntityId()]
+			if self.LastUnitsPauseState[u:GetEntityId()] then
+				StateUntouched = isPaused(u) == self.LastUnitsPauseState[u:GetEntityId()]
 			end
 
 			if not u:IsDead() then
@@ -145,7 +94,7 @@ EcoManager = Class({
 		end
 
 		if unpause then
-			setPause(unpause, 'pause', false)
+			self:setPause(unpause, 'pause', false)
 		end
 
 		for _, p in self.projects do
@@ -163,18 +112,7 @@ EcoManager = Class({
 	end,
 
 	manageEconomy = function(self)
-		--should throttle be activated?
-		local gametime = GetGameTimeSeconds()
-		if gametime < throttleActivationTimer then 
-			return false
-		else
-			if activationMSG_Not_Printed then
-				print("Throttle activated!") 
-				activationMSG_Not_Printed = false
-			end
-		end
 
-		
 		local all_projects = {}
 		self.pause_list = {}
 		local eco = Economy()
@@ -182,10 +120,6 @@ EcoManager = Class({
 
 		for _, p in self:LoadProjects(eco) do
 			table.insert(all_projects, p)
-		end
-
-		if throttlerDisabled then
-			return false
 		end
 
 		--print ("n_projects " .. table.getsize(all_projects))
@@ -295,7 +229,37 @@ EcoManager = Class({
 			end
 
 			for mode, units in modes do
-				setPause(units, toggle, mode == 'pause')
+				self:setPause(units, toggle, mode == 'pause')
+			end
+		end
+	end,
+
+	erasePauseMemory = function(self)
+		self.LastUnitsPauseState = {}
+	end,
+
+	releaseUnits = function(self)
+		Pause(Units.Get(), false, 'throttle')
+	end,
+
+	setPause = function(self, units, toggle, pause)
+	
+		for _, u in units do
+			self.LastUnitsPauseState[u:GetEntityId()] = pause
+		end
+	
+		if toggle == 'pause' then
+			SetPaused(units, pause)
+		else
+			local bit = GetScriptBit(units, toggle)
+			local is_paused = bit 
+	 
+			if toggle == 0 then 
+				is_paused = not is_paused 
+			end
+	
+			if pause ~= is_paused then
+				ToggleScriptBit(units, toggle, bit)
 			end
 		end
 	end

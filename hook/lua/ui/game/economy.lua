@@ -1,5 +1,5 @@
 local modPath = '/mods/EM/'
-local getCurrentThrottle = import(modPath .. 'modules/throttle.lua').getCurrentThrottle
+--local getCurrentThrottle = import(modPath .. 'modules/throttle.lua').getCurrentThrottle
 
 local oldCreateUI = CreateUI
 function CreateUI()
@@ -231,17 +231,17 @@ function ConfigureBeatFunction()
 
             rateTxt:SetColor(getRateColour(rateVal, storedVal, maxStorageVal))
 
-            if resourceType == 'ENERGY' then
-                local overflow = -getCurrentThrottle()
-                if overflow ~= 0 then
-                    local color = overflow < 0 and 'red' or 'ffb7e75f'
-                    overflowTxt:Show()
-                    overflowTxt:SetText(unum(overflow, 1))
-                    overflowTxt:SetColor(color)
-                else
-                    overflowTxt:Hide()
-                end
-            end
+            -- if resourceType == 'ENERGY' then
+            --     local overflow = -getCurrentThrottle()
+            --     if overflow ~= 0 then
+            --         local color = overflow < 0 and 'red' or 'ffb7e75f'
+            --         overflowTxt:Show()
+            --         overflowTxt:SetText(unum(overflow, 1))
+            --         overflowTxt:SetColor(color)
+            --     else
+            --         overflowTxt:Hide()
+            --     end
+            -- end
 
             if not UIState then
                 return

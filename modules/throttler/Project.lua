@@ -1,5 +1,5 @@
 local modPath = '/mods/EM/'
-local isPaused = import(modPath .. 'modules/throttler/ecomanager.lua').isPaused
+local isPaused = import(modPath .. 'modules/units.lua').isPaused
 local econData = import(modPath .. 'modules/units.lua').econData
 
 throttleIndex = 0

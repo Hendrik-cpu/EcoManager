@@ -1,3 +1,0 @@
-PowerGenerator = Class(Project){
-
-}

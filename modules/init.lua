@@ -11,24 +11,43 @@ function currentTick()
 	return current_tick
 end
 
-function addListener(callback, wait, option)
-	table.insert(listeners, {callback=callback, wait=wait, option=option})
+local listenersCount = 0
+function addListener(callback, wait, option, key, timer)
+	if not key then
+		key = "k" .. listenersCount
+		listenersCount = listenersCount + 1 
+	end
+	listeners[key] = {callback=callback, wait=wait, option=option, timer=timer, activated = false}
+
+end
+function removeListener(key)
+	listeners[key] = nil
 end
 
 function mainThread()
 	local options
 
 	while true do
-		for _, l in listeners do
-			local current_second = current_tick * WAIT_SECONDS
+		for key, l in pairs(listeners) do
 
-			if not options or math.mod(current_tick, 10) == 0 then
-				options = import(modPath .. 'modules/utils.lua').getOptions(true)
-				--options = import(modPath .. 'modules/prefs.lua').getPrefs()
-			end
+			if not l.timer or l.activated then
 
-			if math.mod(current_second*10, l['wait']*10) == 0 and (not l.option or options[l.option] ~= 0) then
-				l['callback']()
+				local current_second = current_tick * WAIT_SECONDS
+
+				if not options or math.mod(current_tick, 10) == 0 then
+					options = import(modPath .. 'modules/utils.lua').getOptions(true)
+					--options = import(modPath .. 'modules/prefs.lua').getPrefs()
+				end
+
+				if math.mod(current_second*10, l['wait']*10) == 0 and (not l.option or options[l.option] ~= 0) then
+					l['callback']()
+				end
+
+			else
+				if GetGameTimeSeconds() > l.timer then
+					l.activated = true
+					print(key .. ' thread has automatically been activated by its activation timer!')
+				end
 			end
 		end
 
@@ -57,7 +76,7 @@ end
 
 function setup(isReplay, parent)
 	--local mods = {'economy', 'factories', 'pause', 'options', 'shields', 'mexes', 'buildoverlay'}
-	local mods = {'economy','pause','options','mexes','buildoverlay'}
+	local mods = {'pause','options','mexes','buildoverlay'}
 	--local mods = {}
 
 	if not isReplay then
