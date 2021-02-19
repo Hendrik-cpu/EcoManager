@@ -34,6 +34,8 @@ Project = Class({
     energyBuildCost = 0,
     massRequested = 0,
     energyRequested = 0,
+    massConsumed = 0,
+    energyConsumed =0,
     massDrain = 0,
     energyDrain = 0,
     massCostRemaining = 0,
@@ -68,10 +70,10 @@ Project = Class({
         self.massBuildCost = Eco.BuildCostMass
         self.energyBuildCost = Eco.BuildCostEnergy
         self.massProduction = Eco.ProductionPerSecondMass
-        self.massProductionActual = unit:GetEconData().massProduced
+        self.massProductionActual = econData(unit).massProduced
         if not self.massProductionActual then self.massProductionActual = 0 end
         self.energyProduction = Eco.ProductionPerSecondEnergy
-        self.energyProductionActual = unit:GetEconData().energyProduced
+        self.energyProductionActual = econData(unit).energyProduced
         self.energyUpkeep = Eco.energyUpkeep
     end,
 
@@ -84,7 +86,8 @@ Project = Class({
         else
             massProd = 0
         end
-        local energyDrain = self.energyCostRemaining
+        local energyDrain = self.energyRequested 
+        
         if energyDrain then
             return massProd / energyDrain
         else
@@ -179,13 +182,13 @@ Project = Class({
     end,
 
     eCalculatePriority = function(self)
-        local sortPrio = self.prio / 100 
+        local sortPrio = self.prio / 100 + 1
 
         if self.workProgress < 1 then
-            sortPrio = sortPrio * ((self.workProgress + 1) + (self.massProportion * 100) * (self.workProgress + 1.5)) 
+            sortPrio = sortPrio * ((self.workProgress + 1) + (self.massProportion + 1) * (self.workProgress + 1.5)) 
         end
 
-        sortPrio = sortPrio + self:MassPerEnergy() - self.energyMinStorage * 100000
+        sortPrio = sortPrio * (self:MassPerEnergy() + 1) * 100 - self.energyMinStorage * 1000
 
         --power production
         --local sortPrio = self:MassPerEnergy() - self.energyMinStorage * 100000
@@ -195,6 +198,8 @@ Project = Class({
         end
         --
 
+        print(self.energyRequested .. " | " ..  sortPrio)
+        --print(self.energyConsumed .. "/" .. self.energyRequested)
         return sortPrio
     end,
 
@@ -241,8 +246,10 @@ Project = Class({
         self.massRequested = self.massRequested + data.massRequested
 
         if not isPaused(u) then
-            eco.massActual = eco.massActual - data.massConsumed
-            eco.energyActual = eco.energyActual - data.energyConsumed
+            eco.massActual = eco.massActual - data.massConsumed 
+            eco.energyActual = eco.energyActual - data.energyConsumed 
+            self.massConsumed = self.massConsumed + data.massConsumed
+            self.energyConsumed = self.energyConsumed + data.energyConsumed
         end
         
         table.bininsert(self.assisters, {energyRequested=data.energyRequested, unit=u}, self._sortAssister)
