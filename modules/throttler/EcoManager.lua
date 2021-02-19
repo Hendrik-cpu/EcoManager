@@ -229,7 +229,7 @@ EcoManager = Class({
 
 							ratio_inc = p.throttle - last_ratio
 							eco:setStallFactor()
-							eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc) * eco.massStallFactor
+							eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc) * eco.massStallFactor --use consumption instead of requested? (but there is a rounding bug when stalling hard with many engineers)
 							eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc) * eco.energyStallFactor
 						end
 

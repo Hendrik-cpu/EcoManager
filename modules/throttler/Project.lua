@@ -191,25 +191,16 @@ Project = Class({
         sortPrio = sortPrio * (self:MassPerEnergy() + 1) * 100 - self.energyMinStorage * 1000
 
         --power production
-        --local sortPrio = self:MassPerEnergy() - self.energyMinStorage * 100000
         if self.energyPayoffSeconds > 0 then
-            --print("pgen")
             sortPrio = sortPrio + math.max(0, 140 - self.energyPayoffSeconds)
         end
         --
-
-        print(self.energyRequested .. " | " ..  sortPrio)
-        --print(self.energyConsumed .. "/" .. self.energyRequested)
         return sortPrio
     end,
 
     --mass production
     mProdPriority = function(self)
-
-        --print(self.MinSecondsToCompletion)
-        --print("Assisers: " .. self.CountAssisers .. " | BuildPower: " .. self.buildRate .. " | PayOffSeconds: " .. self.massPayoffSeconds .. " | MassProduction: " .. self.massProduction)
         return (self.massPayoffSeconds) / self.prio
-        --return (self.buildRate*-1)
     end,
     --
 
