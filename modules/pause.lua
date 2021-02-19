@@ -16,6 +16,17 @@ function init()
 	--addListener(DoPause, 0.1)
 end
 
+function isPaused(unit)
+	local is_paused
+	if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, unit) then
+		is_paused = GetScriptBit({unit}, 4)
+	else
+		is_paused = GetIsPaused({unit})
+	end
+
+	return is_paused
+end
+
 function Pause(units, pause, module)
 	local prio
 	local paused = {}
