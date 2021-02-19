@@ -116,22 +116,22 @@ Economy = Class({
 		return drain + stored
 	end,
 
-	massNet = function(self, massMin, prio)
+	massNet = function(self, massMin, prio, buffer)
 		if prio == 100 then 
 			massMin = 0
 		else
 			massMin = math.max(self['massMinStored'],massMin)
 		end
-		return self:net('mass', massMin, 5)
+		return self:net('mass', massMin, buffer)
 	end,
 
-	energyNet = function(self, energyMin, prio)
+	energyNet = function(self, energyMin, prio, buffer)
 		if prio == 100 then 
 			energyMin = 0
 		else
 			energyMin = math.max(self['energyMinStored'],energyMin)
 		end
-		return self:net('energy', energyMin, 1)
+		return self:net('energy', energyMin, buffer)
 	end,
 
 	setStallFactor = function(self)

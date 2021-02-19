@@ -1,9 +1,9 @@
 local modPath = '/mods/EM/'
 local Pause = import(modPath .. 'modules/pause.lua').Pause
+local isPaused = import(modPath .. 'modules/pause.lua').isPaused
 local Economy = import(modPath .. 'modules/throttler/Economy.lua').Economy
 local Units = import('/mods/common/units.lua')
 local econData = import(modPath .. 'modules/units.lua').econData
-local isPaused = import(modPath .. 'modules/units.lua').isPaused
 
 local Project = import(modPath .. 'modules/throttler/Project.lua').Project
 
@@ -108,7 +108,7 @@ EcoManager = Class({
 		FullName = name .. 'Plugin'
 		local plugin = import(modPath .. 'modules/throttler/' .. FullName .. '.lua')[FullName](self.eco)
 		plugin.Active = active
-		self.plugins[name] = plugin
+		self.plugins[string.lower(name)] = plugin
 	end,
 
 	manageEconomy = function(self)

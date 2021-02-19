@@ -41,7 +41,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 			prio = 100 
 		end
 
-		local net = eco:massNet(0, prio)
+		local net = eco:massNet(0, prio, 5)
 		local new_net
 
 		if project.isMassProduction then 

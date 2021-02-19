@@ -54,7 +54,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	end,
 
 	throttle = function(self, eco, project)
-		local net = eco:energyNet(project.energyMinStorage * eco.energyMax, project.prio)
+		local net = eco:energyNet(project.energyMinStorage * eco.energyMax, project.prio, 1)
 		local new_net
 
 		-- if project.prio == 100 then

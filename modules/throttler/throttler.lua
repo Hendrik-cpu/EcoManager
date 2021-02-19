@@ -22,8 +22,8 @@ function manageEconomy()
 end
 
 function ToggleMassBalance()
-	local NewStatus = not manager.plugins["MassBalance"].Active 
-	manager.plugins["MassBalance"].Active = NewStatus
+	local NewStatus = not manager.plugins["massbalance"].Active 
+	manager.plugins["massbalance"].Active = NewStatus
 	print("MassBalance = " .. tostring(NewStatus))
 end
 
@@ -49,13 +49,13 @@ function togglePlugin(args)
 	if argsCount < 2 then
 		toggleEcomanager()
 	else
+		local pluginName = args[2]
 		if  manager.plugins[pluginName] then 
 
-			local pluginName = args[1]
 			local pluginState = manager.plugins[pluginName].Active 
 			local state
 			if argsCount > 2 then
-				state = args[2]
+				state = args[3]
 			end
 
 			if not state then
@@ -66,7 +66,7 @@ function togglePlugin(args)
 				elseif state == "off" then
 					pluginState = false 
 				else
-					InvalidInput = true
+					print("Invalid parameter!")
 				end
 			end
 
@@ -74,12 +74,8 @@ function togglePlugin(args)
 			print(pluginName .. "Plugin set to " .. tostring(pluginState))
 
 		else
-			InvalidInput = true
+			print("Plugin name doesn't exist!")
 		end
-	end
-
-	if InvalidInput then
-		print("Invalid input!")
 	end
 end
 
