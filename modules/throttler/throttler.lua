@@ -32,11 +32,11 @@ function toggleEcomanager()
 	if manager.Active then
 		manager:erasePauseMemory()
 		addListener(manageEconomy, 0.3,'em_throttler',managerThreadKey)
-		print('EconomyManager thread started!')
+		print('Throttler started!')
 	else
 		manager:releaseUnits()
 		removeListener(managerThreadKey)
-		print('EconomyManager thread terminated!')
+		print('Throttler terminated!')
 	end
 end
 
