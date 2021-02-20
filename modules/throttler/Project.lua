@@ -311,7 +311,7 @@ Project = Class({
 
             if not pause_list[key] then pause_list[key] = {pause={}, no_pause={}} end
 
-            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or (self.isConstruction and firstAssister) then
+            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or (self.isConstruction and firstAssister) or (self.isConstruction and (self.timeLeft < 0.5 or self.workProgress == 1 or self.workProgress < 0.01)) then
                 if is_paused then
                     table.insert(pause_list[key]['no_pause'], u)
                 end
