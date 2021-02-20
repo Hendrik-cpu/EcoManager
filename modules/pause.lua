@@ -2,7 +2,7 @@ local modPath = '/mods/EM/'
 local addListener = import(modPath .. 'modules/init.lua').addListener
 
 local pause_prios = {
-	mexes={pause=80, unpause=100},
+	mexes={pause=80, unpause=50},
 	ecomanager={pause=90, unpause=60},
 	--throttlemass={pause=70},
 	user={pause=100},

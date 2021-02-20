@@ -19,7 +19,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		{name="ACU upgrades", category = categories.LAND * categories.MOBILE * categories.COMMAND, priority = 100},
 		{name="SCU upgrades", category = categories.LAND * categories.MOBILE * categories.SUBCOMMANDER, priority = 50},
 		--{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 99},
-		{name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 5, storage = 0.02},
+		{name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 5, storage = 0.1},
 		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 97},
 		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
 		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 40},

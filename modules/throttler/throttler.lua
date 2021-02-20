@@ -14,7 +14,7 @@ function init()
 	manager:addPlugin('Energy')
 	--manager:addPlugin('Storage')
 	addCommand('t', togglePlugin)
-	addListener(manageEconomy, 0.3,'em_throttler', managerThreadKey, 5 * 60) --activates after 5 minutes
+	addListener(manageEconomy, 0.3,'em_throttler', managerThreadKey) --activates after 5 minutes
 end
 
 function manageEconomy()

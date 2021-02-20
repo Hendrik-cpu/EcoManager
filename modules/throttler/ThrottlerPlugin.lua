@@ -1,5 +1,6 @@
 ThrottlerPlugin = Class({
 	Active = true,
+	Timer = 300,
 	__init = function(self)
 		self.projects = {}
 	end,
