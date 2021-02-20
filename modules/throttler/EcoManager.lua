@@ -8,7 +8,7 @@ local econData = import(modPath .. 'modules/units.lua').econData
 local Project = import(modPath .. 'modules/throttler/Project.lua').Project
 
 function SetPaused(units, state)
-	Pause(units, state, 'throttle')
+	Pause(units, state, 'ecomanager')
 end
 
 EcoManager = Class({
@@ -113,10 +113,15 @@ EcoManager = Class({
 
 	manageEconomy = function(self)
 
+		if not self.Active then
+			return false
+		end
+
 		local all_projects = {}
 		self.pause_list = {}
 		local eco = Economy()
 		self.eco = eco 
+		self.ProjectPositions = {}
 
 		for _, p in self:LoadProjects(eco) do
 			table.insert(all_projects, p)
@@ -163,8 +168,8 @@ EcoManager = Class({
 
 							ratio_inc = p.throttle - last_ratio
 							eco:setStallFactor()
-							eco.energyActual = eco.energyActual + p.energyRequested * (1-ratio_inc) * eco.massStallFactor --use consumption instead of requested? (but there is a rounding bug when stalling hard with many engineers)
-							eco.massActual = eco.massActual + p.massRequested * (1-ratio_inc) * eco.energyStallFactor
+							eco.energyActual = eco.energyActual + p.energyConsumed * (1-ratio_inc) --* eco.massStallFactor --use consumption instead of requested? (but there is a rounding bug when stalling hard with many engineers)
+							eco.massActual = eco.massActual + p.massConsumed * (1-ratio_inc) --* eco.energyStallFactor
 						end
 
 						if pause then
@@ -239,7 +244,10 @@ EcoManager = Class({
 	end,
 
 	releaseUnits = function(self)
-		Pause(Units.Get(), false, 'throttle')
+		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER)
+		SetPaused(units, false)
+		ToggleScriptBit(units, 4, true)
+		self.LastUnitsPauseState = {}
 	end,
 
 	setPause = function(self, units, toggle, pause)
