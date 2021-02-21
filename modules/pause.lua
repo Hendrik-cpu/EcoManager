@@ -42,6 +42,8 @@ function Pause(units, pause, module)
 		prio = 50
 	end
 
+	local cPaused = 0
+	local cUnpaused = 0
 	for _, u in units do
 		local id = u:GetEntityId()
 
@@ -51,19 +53,18 @@ function Pause(units, pause, module)
 					if not states[id] then
 						states[id] = {unit=u,prio=prio,module=module}
 					end
-
+					cPaused = cPaused +1
 					states[id]['paused'] = pause
 					table.insert(paused, u)
 				elseif(not pause) then
 					table.insert(unpaused, u)
-					states[id] = nil
+					states[id] = {unit=u,prio=prio,module=module}
+					cUnpaused = cUnpaused +1
 				end
-
-
 			end
+			states[id] = {unit=u,prio=prio,module=module}
 		end
 	end
-
 	SetPaused(paused, true)
 	SetPaused(unpaused, false)
 end
