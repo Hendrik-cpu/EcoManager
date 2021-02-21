@@ -52,12 +52,8 @@ function Pause(units, pause, module)
 			focusID = focus:GetEntityId()
 		end
 
-		if states[id] then
-			if states[id].focusID then
-				if states[id].focusID ~= focusID then
-					states[id] = nil
-				end
-			end
+		if states[id] and states[id].focusID and states[id].focusID ~= focusID then
+			states[id] = nil
 		end
 
 		if not states[id] or states[id]['paused'] ~= pause then
