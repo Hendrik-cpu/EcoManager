@@ -46,24 +46,37 @@ function Pause(units, pause, module)
 	local cUnpaused = 0
 	for _, u in units do
 		local id = u:GetEntityId()
+		local focus = u:GetFocus()
+		local focusID = nil
+		if focus then 
+			focusID = focus:GetEntityId()
+		end
+
+		if states[id] then
+			if states[id].focusID then
+				if states[id].focusID ~= focusID then
+					states[id] = nil
+				end
+			end
+		end
 
 		if not states[id] or states[id]['paused'] ~= pause then
 			if not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] then
 				if pause and not states[id]['paused'] then
-					if not states[id] then
-						states[id] = {unit=u,prio=prio,module=module}
-					end
+					-- if not states[id] then
+					--  	states[id] = {unit=u,prio=prio,module=module,focusID=focusID}
+					-- end
 					cPaused = cPaused +1
-					states[id]['paused'] = pause
+					--states[id]['paused'] = pause
 					table.insert(paused, u)
 				elseif(not pause) then
 					table.insert(unpaused, u)
-					states[id] = {unit=u,prio=prio,module=module}
+					--states[id] = {unit=u,prio=prio,module=module,focusID=focusID}
 					cUnpaused = cUnpaused +1
 				end
 			end
-			states[id] = {unit=u,prio=prio,module=module}
 		end
+		states[id] = {unit=u,prio=prio,module=module,focusID=focusID}
 	end
 	SetPaused(paused, true)
 	SetPaused(unpaused, false)
