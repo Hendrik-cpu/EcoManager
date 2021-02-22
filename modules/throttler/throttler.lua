@@ -4,6 +4,7 @@ local addCommand = import(modPath .. 'modules/commands.lua').addCommand
 local EcoManager = import(modPath .. 'modules/throttler/EcoManager.lua').EcoManager
 local removeListener = import(modPath .. 'modules/init.lua').removeListener
 local managerThreadKey = "EcoManager"
+local resetPauseStates = import(modPath .. 'modules/pause.lua').resetPauseStates
 
 manager = nil
 
@@ -30,12 +31,13 @@ end
 function toggleEcomanager()
 	manager.Active = not manager.Active 
 	if manager.Active then
-		manager:erasePauseMemory()
+		resetPauseStates()
 		addListener(manageEconomy, 0.3,'em_throttler',managerThreadKey)
 		print('Throttler started!')
 	else
 		manager:releaseUnits()
 		removeListener(managerThreadKey)
+		resetPauseStates()
 		print('Throttler terminated!')
 	end
 end
