@@ -218,7 +218,7 @@ function checkConstructions()
 	for _, c in constructions do
 		local u = c['unit']
 		local id = u:GetEntityId()
-		local bp = u:GetBlueprint()
+		--local bp = u:GetBlueprint()
 		local send_msg = false
 		local progress = -1
 		local eta = -1
