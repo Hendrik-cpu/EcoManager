@@ -16,22 +16,26 @@ MassPlugin = Class(ThrottlerPlugin) {
 	end,
 
 	add = function(self, project)
-		local category
-		local u = project.unit
+		if project.massRequested > 0 then 
 
-		cats = self.constructionCategories
-		for _, c in cats do
-			if EntityCategoryContains(c.category, u) then
-				category = c
-				break
+			local category
+			local u = project.unit
+
+			cats = self.constructionCategories
+			for _, c in cats do
+				if EntityCategoryContains(c.category, u) then
+					category = c
+					break
+				end
 			end
-		end
 
-		if category then
-			project.isMassProduction = category['massProduction']
-			project.prio = category['priority']
-			project.massMinStorage = category['storage']
-			table.insert(self.projects, project)
+			if category then
+				project.isMassProduction = category['massProduction']
+				project.prio = category['priority']
+				project.massMinStorage = category['storage']
+				table.insert(self.projects, project)
+			end
+			
 		end
 	end,
 

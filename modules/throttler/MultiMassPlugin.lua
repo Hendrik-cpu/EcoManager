@@ -17,7 +17,7 @@ MassBalancePlugin = Class(ThrottlerPlugin) {
 		{name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 40},
 		{name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 40},
 		{name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 40},
-		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, priority = 90},
+		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, priority = 80},
 		{name="ACU upgrades", category = categories.LAND * categories.MOBILE * categories.COMMAND, priority = 100},
 		{name="SCU upgrades", category = categories.LAND * categories.MOBILE * categories.SUBCOMMANDER, priority = 40},
 		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 2},
@@ -30,21 +30,23 @@ MassBalancePlugin = Class(ThrottlerPlugin) {
 	end,
 
 	add = function(self, project)
-		local category
-		local u = project.unit
+		if project.massRequested > 0  then
+			local category
+			local u = project.unit
 
-		cats = self.constructionCategories
-		for _, c in cats do
-			if EntityCategoryContains(c.category, u) then
-				category = c
-				break
+			cats = self.constructionCategories
+			for _, c in cats do
+				if EntityCategoryContains(c.category, u) then
+					category = c
+					break
+				end
 			end
-		end
 
-		if category then
-			project.prio = category['priority']
-			project.massMinStorage = category['storage']
-			table.insert(self.projects, project)
+			if category then
+				project.prio = category['priority']
+				project.massMinStorage = category['storage']
+				table.insert(self.projects, project)
+			end
 		end
 	end,
 
