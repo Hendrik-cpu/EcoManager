@@ -216,6 +216,24 @@ Project = Class({
         return sortPrio
     end,
 
+    mMultiPriority = function(self)
+        local sortPrio = self.prio / 100 + 1
+
+        if self.workProgress < 1 then
+            sortPrio = sortPrio * ((self.workProgress + 1) + (self.energyProportion + 1) * (self.workProgress + 1.5)) 
+        end
+
+        sortPrio = sortPrio * (self:ResourceProportion("energy","mass") + 1) * 100 - self.massMinStorage * 1000
+
+        --mass production
+        if self.massPayoffSeconds > 0 then
+            sortPrio = sortPrio - 250 + math.max(0, 500 - self.massPayoffSeconds)
+        end
+        --
+
+        return sortPrio
+    end,
+
     GetConsumption = function()
         return {mass=self.massRequested, energy=energyRequested}
     end,
