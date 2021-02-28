@@ -50,6 +50,7 @@ Project = Class({
     massMinStorage = 0,
     energyMinStorage = 0,
     isMassFabricator = false,
+    isMexUpgrade = false,
 
     throttle = {},
     index = 0,
@@ -261,6 +262,8 @@ Project = Class({
             self.energyConsumed = self.energyConsumed + data.energyConsumed
         end
         
+        isMexUpgrade = EntityCategoryContains(categories.MASSEXTRACTION, u)
+
         table.bininsert(self.assisters, {energyRequested=data.energyRequested, unit=u}, self._sortAssister)
         --self.CountAssisers = self.CountAssisers +1 
     end,
@@ -329,7 +332,9 @@ Project = Class({
 
             if not pause_list[key] then pause_list[key] = {pause={}, no_pause={}} end
 
-            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or (self.isConstruction and firstAssister) or (self.isConstruction and (self.timeLeft < 0.5 or self.workProgress == 1 or self.workProgress < 0.01)) then
+            local constructionLifeSupport = (self.isConstruction and (self.timeLeft < 0.5 or self.workProgress == 1 or (self.workProgress < 0.01 and not self.isMexUpgrade and not EntityCategoryContains(categories.STRUCTURE, u))))
+            print(tostring(constructionLifeSupport))
+            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or (self.isConstruction and firstAssister) or constructionLifeSupport then
                 if is_paused then
                     table.insert(pause_list[key]['no_pause'], u)
                 end
