@@ -1,8 +1,8 @@
 local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
-MassBalancePlugin = Class(ThrottlerPlugin) {
-	constructionCategories = {}
+MassMultiPlugin = Class(ThrottlerPlugin) {
+	constructionCategories = {},
 	constructionCategories["mT1"] = {name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 1000, massProduction = true},
 	constructionCategories["mT2"] = {name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 60, massProduction = true},
 	constructionCategories["mT3"] = {name="Mass Extractors T3", category = categories.STRUCTURE * categories.TECH3 * categories.MASSEXTRACTION, priority = 60, massProduction = true},

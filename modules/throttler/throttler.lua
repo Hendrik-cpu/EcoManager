@@ -10,8 +10,9 @@ manager = nil
 
 function init()
 	manager = EcoManager()
-	manager:addPlugin('Mass')
-	manager:addPlugin('MassBalance', false)
+	--manager:addPlugin('Mass')
+	--manager:addPlugin('MassBalance', false)
+	manager:addPlugin('MassMulti')
 	manager:addPlugin('Energy')
 	--manager:addPlugin('Storage')
 	addCommand('t', togglePlugin)
