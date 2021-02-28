@@ -14,7 +14,6 @@ function init()
 	--manager:addPlugin('MassBalance', false)
 	manager:addPlugin('MassMulti')
 	manager:addPlugin('Energy')
-	--manager:addPlugin('Storage')
 	addCommand('t', togglePlugin)
 	addListener(manageEconomy, 0.3,'em_throttler', managerThreadKey) 
 end
