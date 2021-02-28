@@ -3,13 +3,13 @@ local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua
 
 EnergyPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
-		{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1, storage = 0.8},
+		{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 20, storage = 0.6},
 		--{name="T2 Mass fabrication", category = categories.TECH2 * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1, storage = 0.8},
 		{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, priority = 3},
 		{name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 30},
 		{name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 50},
 		{name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 80},
-		{name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 30, storage = 0.5},
+		{name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 30, storage = 0.2},
 		{name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 30},
 		{name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 30},
 		{name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 30},
