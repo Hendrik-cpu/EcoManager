@@ -1,13 +1,14 @@
 local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
+
 MassMultiPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
-		{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 1000, massProduction = true},
-		{name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 1, massProduction = true},
-		{name="Mass Storage", category = categories.STRUCTURE * categories.MASSSTORAGE, priority = 1, storage = 0.01, massProduction = true},
-		{name="Mass Extractors T3", category = categories.STRUCTURE * categories.TECH3 * categories.MASSEXTRACTION, priority = 1, massProduction = true},
-		{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 0.5, massProduction = true},
+		{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
+		{name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
+		{name="Mass Storage", category = categories.STRUCTURE * categories.MASSSTORAGE, priority = 50, storage = 0.01, massProduction = true},
+		{name="Mass Extractors T3", category = categories.STRUCTURE * categories.TECH3 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
+		{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 50, massProduction = true},
 
 		{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, priority = 50},
 		{name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 40},
@@ -28,10 +29,11 @@ MassMultiPlugin = Class(ThrottlerPlugin) {
 		{name="Defense", category = categories.STRUCTURE * categories.DEFENSE, priority = 80},
 	},
 
-	MassProductionOnly = true,
+	massProductionOnly = true,
+	massProductionPriorityMultiplier = 350,
 
 	_sortProjects = function(a, b)
-		return a:mProdPriority() < b:mProdPriority()
+		return a:mMultiPriority() > b:mMultiPriority()
 	end,
 
 	add = function(self, project)
@@ -47,12 +49,16 @@ MassMultiPlugin = Class(ThrottlerPlugin) {
 				end
 			end
 
-			if self.MassProductionOnly and not category.massProduction then
+			if self.massProductionOnly and not category.massProduction then
 				category = nil
 			end
 
 			if category then
-				project.prio = category['priority']
+				if category.massProduction then
+					project.prio = self.massProductionPriorityMultiplier * category['priority']
+				else
+					project.prio = category['priority']
+				end
 				project.massMinStorage = category['storage']
 				table.insert(self.projects, project)
 			end
