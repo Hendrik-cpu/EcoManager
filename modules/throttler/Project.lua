@@ -30,6 +30,7 @@ Project = Class({
     workProgress = 0,
     workLeft = 0,
     buildRate = 0,
+
     massBuildCost = 0,
     energyBuildCost = 0,
     massRequested = 0,
@@ -46,12 +47,13 @@ Project = Class({
     energyPayoffSeconds = 0,
     massProportion = 0,
     energyProportion = 0,
-
     massMinStorage = 0,
     energyMinStorage = 0,
+
     isMassFabricator = false,
     isMexUpgrade = false,
 
+    energyUpkeep =0,
     throttle = {},
     index = 0,
     unit = nil,
@@ -76,6 +78,7 @@ Project = Class({
         self.energyProduction = Eco.ProductionPerSecondEnergy
         self.energyProductionActual = econData(unit).energyProduced
         self.energyUpkeep = Eco.energyUpkeep
+        --print(Eco.energyUpkeep)
     end,
 
     MassPerEnergy = function(self)
@@ -152,6 +155,9 @@ Project = Class({
             if self[t .. 'Production'] then
                 if self[t .. 'Production'] > 0 then
                     self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production'] + self.workTimeLeft
+                    self[t .. 'ReversePayoff'] = self[t .. 'Production'] / (self.timeLeft * self[t .. 'Production'] + self[t .. 'CostRemaining'] + self.energyUpkeep * 1.296) * 10000
+                    --LOG("prod: " .. self[t .. 'Production'] .. " timeLeft: " .. self.timeLeft .. " costRemaining: " .. self[t .. 'CostRemaining'] .. " energyUpkeepMass: " .. self.energyUpkeep * 1.296 .. " revpayoff: " .. self[t .. 'ReversePayoff'])
+                    --prod/(buildTime/buildRate*prod+costRemaining)*10000
                 end
             else
                 self[t .. 'PayoffSeconds'] = 0
@@ -220,17 +226,14 @@ Project = Class({
     mMultiPriority = function(self)
         local sortPrio = self.prio / 100 + 1
 
-        if self.workProgress < 1 then
-            sortPrio = sortPrio * ((self.workProgress + 1) + (self.energyProportion + 1) * (self.workProgress + 1.5)) 
+        if self.massReversePayoff > 0 then
+            sortPrio = sortPrio * self.massReversePayoff 
+        else
+            if self.workProgress < 1 then
+                sortPrio = sortPrio * ((self.workProgress + 1) + (self.energyProportion + 1) * (self.workProgress + 1.5)) 
+            end
+            sortPrio = sortPrio * (self:ResourceProportion("energy","mass") + 1) * 100 - self.massMinStorage * 1000
         end
-
-        sortPrio = sortPrio * (self:ResourceProportion("energy","mass") + 1) * 100 - self.massMinStorage * 1000
-
-        --mass production
-        if self.massPayoffSeconds > 0 then
-            sortPrio = sortPrio - 250 + math.max(0, 500 - self.massPayoffSeconds)
-        end
-        --
 
         return sortPrio
     end,
@@ -333,7 +336,6 @@ Project = Class({
             if not pause_list[key] then pause_list[key] = {pause={}, no_pause={}} end
 
             local constructionLifeSupport = (self.isConstruction and (self.timeLeft < 0.5 or self.workProgress == 1 or (self.workProgress < 0.01 and not self.isMexUpgrade and not EntityCategoryContains(categories.STRUCTURE, u))))
-            print(tostring(constructionLifeSupport))
             if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or (self.isConstruction and firstAssister) or constructionLifeSupport then
                 if is_paused then
                     table.insert(pause_list[key]['no_pause'], u)
