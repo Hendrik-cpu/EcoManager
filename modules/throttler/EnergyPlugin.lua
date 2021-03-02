@@ -4,7 +4,6 @@ local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua
 EnergyPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
 		{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 20, storage = 0.6},
-		--{name="T2 Mass fabrication", category = categories.TECH2 * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1, storage = 0.8},
 		{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, priority = 3},
 		{name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 30},
 		{name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 50},
@@ -18,14 +17,13 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		{name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, priority = 90},
 		{name="ACU upgrades", category = categories.LAND * categories.MOBILE * categories.COMMAND, priority = 100},
 		{name="SCU upgrades", category = categories.LAND * categories.MOBILE * categories.SUBCOMMANDER, priority = 50},
-		--{name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 99},
 		{name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 5, storage = 0.02},
 		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 97},
 		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
 		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 40},
 	},
 
-	_sortProjects = function(a, b) --sort algorithm selector
+	_sortProjects = function(a, b)
 		return a:eCalculatePriority() > b:eCalculatePriority()
 	end,
 	
@@ -57,12 +55,8 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		local net = eco:energyNet(project.energyMinStorage * eco.energyMax, project.prio, 1)
 		local new_net
 
-		-- if project.prio == 100 then
-		-- 	project.energyRequested = project.energyRequested * 5
-		-- end
-
 		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining) 
-		if new_net < 0 and (UnpausedCount > 0 or project.workLeft == 1) then
+		if new_net < 0 then
 			project:SetEnergyDrain(math.max(0, net))
 		else
 			UnpausedCount = UnpausedCount + 1
