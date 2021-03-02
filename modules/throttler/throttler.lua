@@ -23,7 +23,7 @@ function manageEconomy()
 end
 
 function ToggleMassBalance()
-	local NewStatus = not manager.plugins["massmulti"].massProductionOnly
+	local NewStatus = not manager.plugins["mass"].massProductionOnly
 	manager.plugins["mass"].massProductionOnly = NewStatus
 	print("MassThrottle = " .. tostring(not NewStatus))
 end
@@ -37,13 +37,13 @@ function ToggleMexMode()
 	end
 
 	if mexMode == 0 then
-		manager.plugins["massmulti"].massProductionPriorityMultiplier = 350 --balanced
+		manager.plugins["mass"].massProductionPriorityMultiplier = 350 --balanced
 		print("Balanced mex upgrading activated (multiplier = 350)")
 	elseif mexMode == 1 then
-		manager.plugins["massmulti"].massProductionPriorityMultiplier = 1 --pause eco
+		manager.plugins["mass"].massProductionPriorityMultiplier = 1 --pause eco
 		print("Low priority mex upgrading activated (multiplier = 1)")
 	elseif mexMode == 2 then
-		manager.plugins["massmulti"].massProductionPriorityMultiplier = 1000 --power eco
+		manager.plugins["mass"].massProductionPriorityMultiplier = 1000 --power eco
 		print("High priority mex upgrading activated (multiplier = 1000)")
 	end
 end
@@ -56,11 +56,11 @@ function decreaseMexPrio()
 end
 
 function adjustMexPrio(value)
-	local newVal = manager.plugins["massmulti"].massProductionPriorityMultiplier + value
+	local newVal = manager.plugins["mass"].massProductionPriorityMultiplier + value
 	if newVal < 0 then 
 		newVal = 0
 	end
-	manager.plugins["massmulti"].massProductionPriorityMultiplier = newVal
+	manager.plugins["mass"].massProductionPriorityMultiplier = newVal
 	print("multiplier set to: " .. newVal)
 end 
 
