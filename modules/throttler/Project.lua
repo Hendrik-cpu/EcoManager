@@ -1,6 +1,8 @@
 local modPath = '/mods/EM/'
-local isPaused = import(modPath .. 'modules/pause.lua').isPaused
 local econData = import(modPath .. 'modules/units.lua').econData
+local pauser = import(modPath .. 'modules/pause.lua')
+local isPaused = pauser.isPaused
+local throttler = import(modPath .. 'modules/throttler/throttler.lua')
 
 throttleIndex = 0
 firstAssister = true
@@ -61,7 +63,7 @@ Project = Class({
     isConstruction = false,
     Position = nil,
     prio = 0,
-    --CountAssisers = 0,
+    inactivityTicks = 0,
 
     __init = function(self, unit)
         local Eco = unit:GetBlueprint().Economy
@@ -78,7 +80,6 @@ Project = Class({
         self.energyProduction = Eco.ProductionPerSecondEnergy
         self.energyProductionActual = econData(unit).energyProduced
         self.energyUpkeep = Eco.energyUpkeep
-        --print(Eco.energyUpkeep)
     end,
 
     MassPerEnergy = function(self)
@@ -124,12 +125,11 @@ Project = Class({
         self.minTimeLeft = self.workTimeLeft * self:CalcMaxThrottle(eco)
         self.massCostRemaining = self.workLeft * self.massBuildCost
         self.energyCostRemaining = self.workLeft * self.energyBuildCost
-        --self.MinSecondsToCompletion = math.max(self.massCostRemaining / eco.massIncome, self.timeLeft, self.energyCostRemaining / eco.energyIncome)  
 
         --mass storages
         if EntityCategoryContains(categories.MASSSTORAGE*categories.STRUCTURE, self.unit) then
 			local mexMassProduction=0
-            for _, mp in import(modPath .. 'modules/throttler/throttler.lua').manager.mexPositions do
+            for _, mp in throttler.manager.mexPositions do
                 local pos2 = mp.position
 	    		if pos2 then
 		    		if VDist3(self.Position,pos2)<3 then
@@ -156,8 +156,6 @@ Project = Class({
                 if self[t .. 'Production'] > 0 then
                     self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production'] + self.workTimeLeft
                     self[t .. 'ReversePayoff'] = self[t .. 'Production'] / (self.timeLeft * self[t .. 'Production'] + self[t .. 'CostRemaining'] + self.energyUpkeep * 1.296) * 10000
-                    --LOG("prod: " .. self[t .. 'Production'] .. " timeLeft: " .. self.timeLeft .. " costRemaining: " .. self[t .. 'CostRemaining'] .. " energyUpkeepMass: " .. self.energyUpkeep * 1.296 .. " revpayoff: " .. self[t .. 'ReversePayoff'])
-                    --prod/(buildTime/buildRate*prod+costRemaining)*10000
                 end
             else
                 self[t .. 'PayoffSeconds'] = 0
@@ -169,7 +167,15 @@ Project = Class({
         --must be calculated after all assisters have been added
         self.massProportion = self.massRequested / (self.massRequested + self.energyRequested)
         self.energyProportion = self.energyRequested / (self.massRequested + self.energyRequested)
-
+        local inactivityTicks = throttler.manager.ProjectMetaData[self.id].lastAccess
+        local GameTick = GameTick()
+        if inactivityTicks then 
+            inactivityTicks = GameTick-inactivityTicks
+            if inactivityTicks > 600 then
+                inactivityTicks = 600
+            end
+        end
+        self.inactivityTicks = inactivityTicks
     end,
     
     CalcMaxThrottle = function(self, eco)
@@ -197,14 +203,29 @@ Project = Class({
 
         sortPrio = sortPrio * (self:MassPerEnergy() + 1) * 100 - self.energyMinStorage * 1000
 
-        --power production
         if self.energyPayoffSeconds > 0 then
             sortPrio = sortPrio + math.max(0, 140 - self.energyPayoffSeconds)
         end
-        --
-        return sortPrio
+        
+        return sortPrio - self.inactivityTicks / 10 
     end,
 
+    mMultiPriority = function(self)
+        local sortPrio = self.prio / 100 + 1
+
+        if self.massReversePayoff > 0 then
+            sortPrio = sortPrio * self.massReversePayoff 
+        else
+            if self.workProgress < 1 then
+                sortPrio = sortPrio * ((self.workProgress + 1) + (self.energyProportion + 1) * (self.workProgress + 1.5)) 
+            end
+            sortPrio = sortPrio * (self:ResourceProportion("energy","mass") + 1) * 100 - self.massMinStorage * 1000 
+        end
+
+        return sortPrio - self.inactivityTicks / 10 
+    end,
+
+    ---*outdated
     --mass production
     mProdPriority = function(self)
         return (self.massPayoffSeconds) / self.prio
@@ -222,21 +243,7 @@ Project = Class({
 
         return sortPrio
     end,
-
-    mMultiPriority = function(self)
-        local sortPrio = self.prio / 100 + 1
-
-        if self.massReversePayoff > 0 then
-            sortPrio = sortPrio * self.massReversePayoff 
-        else
-            if self.workProgress < 1 then
-                sortPrio = sortPrio * ((self.workProgress + 1) + (self.energyProportion + 1) * (self.workProgress + 1.5)) 
-            end
-            sortPrio = sortPrio * (self:ResourceProportion("energy","mass") + 1) * 100 - self.massMinStorage * 1000
-        end
-
-        return sortPrio
-    end,
+    ---*outdated
 
     GetConsumption = function()
         return {mass=self.massRequested, energy=energyRequested}
@@ -266,9 +273,7 @@ Project = Class({
         end
         
         isMexUpgrade = EntityCategoryContains(categories.MASSEXTRACTION, u)
-
         table.bininsert(self.assisters, {energyRequested=data.energyRequested, unit=u}, self._sortAssister)
-        --self.CountAssisers = self.CountAssisers +1 
     end,
 
     SetThrottleRatio = function(self, ratio)
@@ -279,6 +284,7 @@ Project = Class({
 
         if ratio > self.throttle then
             self.throttle = ratio
+            return ratio
         end
     end,
 
@@ -292,7 +298,7 @@ Project = Class({
 
     SetDrain = function(self, energy, mass)
         local ratio = 1-math.min(1, math.min(energy / self.energyRequested,  mass / self.massRequested))
-        self:SetThrottleRatio(ratio)
+        return self:SetThrottleRatio(ratio)
     end,
 
     SetEnergyDrain = function(self, energy)
@@ -309,8 +315,6 @@ Project = Class({
 
         for _, a in self.assisters do
             local u = a.unit
-            --local is_paused = isPaused(u)
-
             if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested then
                 currEnergyRequested = currEnergyRequested + a.energyRequested
             end
