@@ -71,7 +71,7 @@ MassMultiPlugin = Class(ThrottlerPlugin) {
 		local new_net
 
 		local new_net = net - math.min(project.massRequested, project.massCostRemaining)
-		if new_net < 0 and self.UnpausedCount > 0 then
+		if new_net < 0 then
 			project:SetMassDrain(math.max(0, net))
 		else
 			self.UnpausedCount = self.UnpausedCount + 1
