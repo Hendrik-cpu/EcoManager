@@ -30,7 +30,7 @@ end
 
 local mexMode = 0
 function ToggleMexMode()
-	if mexMode > 2 then
+	if mexMode > 1 then
 		mexMode = 0
 	else
 		mexMode = mexMode + 1
