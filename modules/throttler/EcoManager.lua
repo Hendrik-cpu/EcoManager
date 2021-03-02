@@ -23,7 +23,6 @@ EcoManager = Class({
 	plugins = {},
 	ProjectPositions = {},
 	mexPositions = {},
-	LastUnitsPauseState = {},
 	
 	__init = function(self)
 		--self.eco = Economy()
