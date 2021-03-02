@@ -23,7 +23,8 @@ EcoManager = Class({
 	plugins = {},
 	ProjectPositions = {},
 	mexPositions = {},
-	
+	ProjectMetaData = {},
+
 	__init = function(self)
 		--self.eco = Economy()
 	end,
@@ -40,7 +41,7 @@ EcoManager = Class({
 			local focusType = u:GetBlueprint().General.UnitName
 			local state = pauser.states[id]
 			local StateUntouched = not state or not state.toggleable or (state.toggleable and isPaused(u) == state.paused) 
-
+			
 			if not u:IsDead() then
 				if EntityCategoryContains(categories.STRUCTURE * categories.MASSEXTRACTION, u) then
 					table.insert(self.mexPositions, { position = u:GetPosition(), massProduction = u:GetBlueprint().Economy.ProductionPerSecondMass })
@@ -165,6 +166,10 @@ EcoManager = Class({
 
 							if p.throttle == 1 then
 								pause = true
+							end
+
+							if p.throttle ~= last_ratio then
+								self.ProjectMetaData[p.id] = {lastAccess = GameTick(), lastRatio = last_ratio}
 							end
 
 							ratio_inc = p.throttle - last_ratio
