@@ -12,7 +12,7 @@ function init()
 	manager = EcoManager()
 	--manager:addPlugin('Mass')
 	--manager:addPlugin('MassBalance', false)
-	manager:addPlugin('MassMulti')
+	manager:addPlugin('Mass')
 	manager:addPlugin('Energy')
 	addCommand('t', togglePlugin)
 	addListener(manageEconomy, 0.3,'em_throttler', managerThreadKey) 
@@ -24,8 +24,8 @@ end
 
 function ToggleMassBalance()
 	local NewStatus = not manager.plugins["massmulti"].massProductionOnly
-	manager.plugins["massmulti"].massProductionOnly = NewStatus
-	print("MassMultibalance = " .. tostring(not NewStatus))
+	manager.plugins["mass"].massProductionOnly = NewStatus
+	print("MassThrottle = " .. tostring(not NewStatus))
 end
 
 local mexMode = 0
