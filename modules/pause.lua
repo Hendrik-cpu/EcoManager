@@ -42,43 +42,99 @@ function getPrio(module, pause)
 	return prio
 end
 
-function Pause(units, pause, module)
+-- function Pause(units, pause, module)
 
-	local prio = getPrio(module, pause)
-	local paused = {}
-	local unpaused = {}
+-- 	local prio = getPrio(module, pause)
+-- 	local paused = {}
+-- 	local unpaused = {}
 
-	for _, u in units do
-		local id = u:GetEntityId()
-		local focus = u:GetFocus()
-		local focusType = nil
-		if focus then 
-			focusType = focus:GetBlueprint().General.UnitName
+-- 	for _, u in units do
+-- 		local id = u:GetEntityId()
+-- 		if userLocked(u) then continue end
+
+-- 		if not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] then
+-- 			if pause and not states[id]['paused'] then
+-- 				table.insert(paused, u)
+-- 			elseif(not pause) then
+-- 				table.insert(unpaused, u)
+-- 			end
+-- 			states[id] = {unit=u,prio=prio,module=module,focusType=focusType, paused=pause}
+-- 		end
+-- 	end 
+-- 	SetPaused(paused, true)
+-- 	SetPaused(unpaused, false)
+-- end
+
+function Pause(units, pause, module, toggle, all)
+	
+	units = changables(units, pause, module), pause
+
+	if toggle == 'pause' or all then
+		SetPaused(units, pause)
+	end
+	if toggle ~= 'pause' then
+		local bit = GetScriptBit(units, toggle)
+		local is_paused = bit 
+	
+		if toggle == 0 then 
+			is_paused = not is_paused 
 		end
 
-		if states[id] and states[id].focusType and states[id].focusType ~= focusType then
-			states[id] = nil
+		if pause ~= is_paused then
+			ToggleScriptBit(units, toggle, bit)
 		end
-
-		if not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] then
-			if pause and not states[id]['paused'] then
-				table.insert(paused, u)
-			elseif(not pause) then
-				table.insert(unpaused, u)
-			end
-			states[id] = {unit=u,prio=prio,module=module,focusType=focusType, paused=pause}
-		end
-	end 
-	SetPaused(paused, true)
-	SetPaused(unpaused, false)
+	end
 end
 
-function CanUnpause(unit, module)
-	local id = unit:GetEntityId()
-	id = nil -- XXX
-	local prio = pause_prios[module]['unpause'] or pause_prios[module]['pause']
+-- function Toggle(units, toggle, pause, module)
+-- 	ToggleScriptBit(changables(units, pause, module), toggle, pause)
+-- end
 
-	return not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or unit:IsIdle() or unit:GetWorkProgress() == 0
+
+function changables(units, pause, module)
+	local prio = getPrio(module, pause)
+	local changables = {}
+	for _, u in units do
+		local id = u:GetEntityId()
+		if canChangeState(u, module, pause, true) then
+			table.insert(changables, u)
+		end
+	end
+	return changables
+end
+
+-- function isUnlocked(u, changeObsolete)
+-- 	local id = u:GetEntityId()
+-- 	local pauseState = isPaused(u)
+-- 	changeObsolete = pauseState == pause
+
+-- 	--a change of focus resets the user introduced state
+-- 	local focus = u:GetFocus()
+-- 	local focusType = nil
+-- 	if focus then focusType = focus:GetBlueprint().General.UnitName	end
+-- 	if states[id] and states[id].focusType and states[id].focusType ~= focusType then states[id] = nil end
+
+-- 	return states[id] and not states[id].paused == pauseState or changeObsolete
+-- end
+
+function canChangeState(u, module, pause, update)
+	local id = u:GetEntityId()
+	local pauseState = isPaused(u)
+	local prio = getPrio(module, not pauseState)
+	local changeObsolete = update and pauseState == pause
+
+	--a change of focus resets the user introduced state
+	local focus = u:GetFocus()
+	local focusType = nil
+	if focus then focusType = focus:GetBlueprint().General.UnitName	end
+	if states[id] and states[id].focusType and states[id].focusType ~= focusType then states[id] = nil end
+
+	local notChangedByUser = states[id] and states[id].state == pauseState
+	local canChangeState = notChangedByUser and not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] and not changeObsolete
+	if update and canChangeState then
+		states[id] = {unit=u,prio=prio,module=module,focusType=focusType, state=pause}
+	end
+	return canChangeState
 end
 
 function CanUnpauseUnits(units, module)
@@ -96,4 +152,12 @@ function CanUnpauseUnits(units, module)
 	end
 
 	return filtered
+end
+
+function CanUnpause(unit, module)
+	local id = unit:GetEntityId()
+	id = nil -- XXX
+	local prio = pause_prios[module]['unpause'] or pause_prios[module]['pause']
+
+	return not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or unit:IsIdle() or unit:GetWorkProgress() == 0
 end
