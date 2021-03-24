@@ -10,10 +10,6 @@ local Economy = import(modPath .. 'modules/throttler/Economy.lua').Economy
 local Project = import(modPath .. 'modules/throttler/Project.lua').Project
 local moduleName = "ecomanager"
 
--- function Pause(units, state)
--- 	pauser.Pause(units, state, moduleName)
--- end
-
 EcoManager = Class({
 
 	Active = true,
@@ -40,14 +36,13 @@ EcoManager = Class({
 			local id = u:GetEntityId()
 			local focusType = u:GetBlueprint().General.UnitName
 			local state = pauser.states[id]
-			local StateUntouched = pauser.canChangeState(u,moduleName) --not state or not state.toggleable or (state.toggleable and isPaused(u) == state.paused) 
 			
 			if not u:IsDead() then
 				if EntityCategoryContains(categories.STRUCTURE * categories.MASSEXTRACTION, u) then
 					table.insert(self.mexPositions, { position = u:GetPosition(), massProduction = u:GetBlueprint().Economy.ProductionPerSecondMass })
 				end
 
-				if StateUntouched then
+				if pauser.canChangeState(u,moduleName) then
 
 					local focus = u:GetFocus()
 					local isConstruction = false
@@ -244,16 +239,13 @@ EcoManager = Class({
 			end
 		end
 	end,
-
-	releaseUnits = function(self)
-		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER)
-		--Pause(units, false)
-		--ToggleScriptBit(units, 4, true)
-		pauser.Pause(units, false, moduleName, 4, true)
-	end,
-
+	
 	setPause = function(self, units, toggle, pause)
-		pauser.Pause(units, pause, moduleName, toggle)
+		if toggle == 'pause' then
+			pauser.Pause(units, pause, moduleName)
+		else
+			pauser.Toggle(units, pause, moduleName, toggle)
+		end
 	end
 })
 

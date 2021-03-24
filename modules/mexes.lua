@@ -13,7 +13,7 @@ local Group = import('/lua/maui/group.lua').Group
 local UIUtil = import('/lua/ui/uiutil.lua')
 
 local Pause = import(modPath .. 'modules/pause.lua').Pause
-local CanUnpause = import(modPath .. 'modules/pause.lua').CanUnpause
+local CanUnpause = import(modPath .. 'modules/pause.lua').canChangeState
 
 local pause_queue = {}
 local overlays = {}
