@@ -1,29 +1,29 @@
 local modPath = '/mods/EM/'
 local EconomyPath = modPath .. 'modules/throttler/Economy.lua'
-local MyPath = 'ui_lua import("' .. modPath .. 'modules/ecocommands.lua")'
-
-local addCommand = import(modPath .. 'modules/commands.lua').addCommand
---local setMassStallMexesOnCount = import(throttleMassPath).setMassStallMexesOnCount
---local setEnergyStallMexesOnCount = import(throttleMassPath).setEnergyStallMexesOnCount
-local Pause = import(modPath .. 'modules/pause.lua').Pause
+local MyPath = modPath .. 'modules/ecocommands.lua")'
+local throttler = modPath .. 'modules/throttler/throttler.lua'
+local pauser = import(modPath .. 'modules/pause.lua')
 local Units = import('/mods/common/units.lua')
 
 function init()
-	IN_AddKeyMapTable({['Ctrl-V' ] = {action =  MyPath .. '.PauseAll()'},})
-	IN_AddKeyMapTable({['Ctrl-T' ] = {action =  'ui_lua import("' .. modPath .. 'modules/throttler/throttler.lua").toggleEcomanager()'},})
+	addHotkey('Ctrl-V', MyPath .. '.PauseAll')
+	addHotkey('Ctrl-B', EconomyPath .. '").PauseEcoM80_E90')
+	addHotkey('Ctrl-N', EconomyPath .. '").PauseEcoM10_E190')
+	addHotkey('Ctrl-T', throttler .. '").toggleEcomanager')
+	addHotkey('Ctrl-M', throttler .. '").ToggleMassBalance')
+	addHotkey('Ctrl-P', throttler .. '").ToggleMexMode')
+	addHotkey('Ctrl-O', throttler .. '").increaseMexPrio')
+	addHotkey('Ctrl-L', throttler .. '").decreaseMexPrio')
+end
 
-	IN_AddKeyMapTable({['Ctrl-B' ] = {action =  'ui_lua import("' .. EconomyPath .. '").PauseEcoM80_E90()'},})
-	IN_AddKeyMapTable({['Ctrl-N' ] = {action =  'ui_lua import("' .. EconomyPath .. '").PauseEcoM10_E190()'},})
-	IN_AddKeyMapTable({['Ctrl-M' ] = {action =  'ui_lua import("' .. modPath .. 'modules/throttler/throttler.lua' .. '").ToggleMassBalance()'},})
-	IN_AddKeyMapTable({['Ctrl-P' ] = {action =  'ui_lua import("' .. modPath .. 'modules/throttler/throttler.lua' .. '").ToggleMexMode()'},})
-	IN_AddKeyMapTable({['Ctrl-O' ] = {action =  'ui_lua import("' .. modPath .. 'modules/throttler/throttler.lua' .. '").increaseMexPrio()'},})
-	IN_AddKeyMapTable({['Ctrl-L' ] = {action =  'ui_lua import("' .. modPath .. 'modules/throttler/throttler.lua' .. '").decreaseMexPrio()'},})
-	
-	--IN_AddKeyMapTable({['Ctrl-M'] = {action =  'ui_lua import("' .. throttleMassPath .. '").PauseAllNonECO()'},})
-	--IN_AddKeyMapTable({['Ctrl-Shift-T' ] = {action =  'ui_lua import("/mods/EM/modules/throttle.lua").togglePowerThrottle()'},})
-
-	--addCommand('mm', setMassStallMexesOnCount)
-	--addCommand('me', setEnergyStallMexesOnCount)
+local hotkeys = {}
+function addHotkey(hotkey, f)
+	LOG('ui_lua import("' .. f .. "()")
+	IN_AddKeyMapTable({[hotkey] = {action = 'ui_lua import("' .. f .. "()"},})
+	hotkeys[hotkey] = f
+end
+function getHotkeys()
+	return hotkeys
 end
 
 local AllIsPause=false
@@ -42,12 +42,12 @@ function PauseAll()
 	end
 
 	AllIsPause=not AllIsPause
-	Pause(units, AllIsPause, 'user')
+	pauser.Pause(units, AllIsPause, 'user')
 
 	if AllIsPause then
 		print("Paused all units except selection!")
 	else
-		import(modPath .. 'modules/throttler/ecomanager.lua').ResetPauseStates()
+		pauser.ResetPauseStates()
 		print("Unpaused all units!")
 	end
 end
