@@ -86,7 +86,7 @@ function canChangeState(u, module, pause, update)
 	if states[id] and states[id].focusType and states[id].focusType ~= focusType then states[id] = nil end
 
 	local changedByUser = states[id] and states[id].state ~= pauseState
-	if changedByUser then
+	if changedByUser then --should only be triggered by toggle since pause is hooked already
 		module = "user"
 		prio = getPrio(module, not pauseState)
 		states[id] = {unit=u,prio=prio,module=module, state=pauseState, focusType=focusType}
