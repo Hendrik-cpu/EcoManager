@@ -15,6 +15,9 @@ function init()
 	manager:addPlugin('Mass')
 	manager:addPlugin('Energy')
 	addCommand('t', togglePlugin)
+	addCommand('energy', energyPriority)
+	addCommand('mass', massPriority)
+	addCommand('printcats', printCategories)
 	addListener(manageEconomy, 0.3,'em_throttler', managerThreadKey) 
 end
 
@@ -121,3 +124,35 @@ function togglePlugin(args)
 	end
 end
 
+function energyPriority(args)
+	changePriority(args, "energy")
+end
+function massPriority(args)
+	changePriority(args, "mass")
+end
+
+function changePriority(args, plugin)
+	local category = args[2]
+	local priority = args[3]
+	
+	if manager.plugins[plugin].constructionCategories[category].priority then
+		manager.plugins[plugin].constructionCategories[category].priority = tonumber(priority)
+		print(plugin .. " " ..  category .. " priority set to " .. priority)
+	else
+		print("Invalid input!")
+	end
+end
+
+function printCategories()
+	local str = ""
+	for key, plugin in pairs(manager.plugins) do
+		str = str .. key .. ':\n' 
+		for key, category in pairs(plugin.constructionCategories) do
+			str = str .. " ".. key .. '\n' 
+			for key, value in pairs(category) do
+				str = str .. " " .. key .. " = " .. tostring(value) .. "\n"
+			end
+		end
+	end
+	LOG(str)
+end
