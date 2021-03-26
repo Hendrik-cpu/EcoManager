@@ -90,7 +90,6 @@ function canChangeState(u, module, pause, update)
 		module = "user"
 		prio = getPrio(module, not pauseState)
 		states[id] = {unit=u,prio=prio,module=module, state=pauseState, focusType=focusType}
-		print("user change detected: " .. id)
 	end
 
 	local canChangeState = not changedByUser and not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] and not changeObsolete
