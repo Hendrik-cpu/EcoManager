@@ -59,8 +59,7 @@ end
 function watchdogThread()
 	while true do
 		if watch_tick == current_tick then -- main thread has died
-			--print "EM: mainThread crashed! Restarting..."
-
+			LOG("EM: mainThread crashed! Restarting...")
 			if mThread then
 				KillThread(mThread)
 			end
@@ -75,15 +74,9 @@ function watchdogThread()
 end
 
 function setup(isReplay, parent)
-	--local mods = {'economy', 'factories', 'pause', 'options', 'shields', 'mexes', 'buildoverlay'}
 	local mods = {'options','mexes','buildoverlay', 'commands'}
-	--local mods = {}
 
 	if not isReplay then
-		--WARN("setup running")
-		--table.insert(mods, 'autoshare');
-		--table.insert(mods, 'throttlemass');
-		--table.insert(mods, 'throttle');
 		table.insert(mods, 'ecocommands');
 		table.insert(mods, 'throttler/throttler');
 	end
