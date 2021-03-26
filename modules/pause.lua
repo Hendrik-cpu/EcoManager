@@ -1,6 +1,3 @@
-local modPath = '/mods/EM/'
-local addListener = import(modPath .. 'modules/init.lua').addListener
-
 states = {}
 local pause_prios = {
 	mexes={pause=80, unpause=50},
@@ -8,10 +5,6 @@ local pause_prios = {
 	user={pause=100},
 	unpause={pause=90, unpause=90},
 }
-
-function init()
-	--addListener(DoPause, 0.1)
-end
 
 function isPaused(unit)
 	local is_paused
@@ -106,11 +99,3 @@ function canChangeState(u, module, pause, update)
 	end
 	return canChangeState
 end
-
--- function CanUnpause(unit, module)
--- 	local id = unit:GetEntityId()
--- 	id = nil -- XXX
--- 	local prio = pause_prios[module]['unpause'] or pause_prios[module]['pause']
-
--- 	return not states[id] or module == states[id]['module'] or states[id]['prio'] <= prio or unit:IsIdle() or unit:GetWorkProgress() == 0
--- end
