@@ -3,7 +3,7 @@ local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua
 
 EnergyPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
-		{name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 20, storage = 0.2},
+		fabs = {name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1, storage = 0.2},
 		{name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, priority = 3},
 		{name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 30},
 		{name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 50},
@@ -20,7 +20,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		{name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 5, storage = 0.02},
 		{name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 97},
 		{name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
-		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION, priority = 40},
+		{name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION - categories.MASSFABRICATION, priority = 40},
 	},
 
 	_sortProjects = function(a, b)

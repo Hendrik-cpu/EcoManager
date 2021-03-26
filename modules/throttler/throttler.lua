@@ -35,16 +35,21 @@ function ToggleMexMode()
 	else
 		mexMode = mexMode + 1
 	end
+	local energy = manager.plugins["energy"]
+	local mass = manager.plugins["mass"]
 
 	if mexMode == 0 then
-		manager.plugins["mass"].massProductionPriorityMultiplier = 350 --balanced
+		mass.massProductionPriorityMultiplier = 350 --balanced
+		energy.constructionCategories.fabs.priority = 1
 		print("Balanced mex upgrading activated (multiplier = 350)")
 	elseif mexMode == 1 then
-		manager.plugins["mass"].massProductionPriorityMultiplier = 1 --pause eco
+		mass.massProductionPriorityMultiplier = 1 --pause eco
+		energy.constructionCategories.fabs.priority = 1
 		print("Low priority mex upgrading activated (multiplier = 1)")
 	elseif mexMode == 2 then
-		manager.plugins["mass"].massProductionPriorityMultiplier = 1000 --power eco
-		print("High priority mex upgrading activated (multiplier = 1000)")
+		mass.massProductionPriorityMultiplier = 1000 --power eco
+		energy.constructionCategories.fabs.priority = 99
+		print("High priority mex upgrading activated (multiplier = 1000), fabs won't pause")
 	end
 end
 
