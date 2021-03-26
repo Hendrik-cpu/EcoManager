@@ -76,7 +76,7 @@ end
 
 function setup(isReplay, parent)
 	--local mods = {'economy', 'factories', 'pause', 'options', 'shields', 'mexes', 'buildoverlay'}
-	local mods = {'pause','options','mexes','buildoverlay'}
+	local mods = {'options','mexes','buildoverlay'}
 	--local mods = {}
 
 	if not isReplay then
