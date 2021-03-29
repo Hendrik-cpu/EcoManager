@@ -7,7 +7,6 @@ local UIUtil = import('/lua/ui/uiutil.lua')
 local GameCommon = import('/lua/ui/game/gamecommon.lua')
 local ToolTip = import('/lua/ui/game/tooltip.lua')
 local TooltipInfo = import('/lua/ui/help/tooltips.lua').Tooltips
-local AvatarsClickFunc = import('/lua/ui/game/avatars.lua').ClickFunc
 local GameMain = import('/lua/ui/game/gamemain.lua')
 
 local modFolder = 'EM/modules/SupremeEconomyEM'
