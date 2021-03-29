@@ -6,19 +6,33 @@ local modFolder = 'EM/modules/SupremeEconomyEM'
 local CreateGrid = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGrid
 local CreateGenericButton = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGenericButton
 
+local GameMain = import('/lua/ui/game/gamemain.lua')
+
+
 function init(isReplay)
 	local parent = import('/lua/ui/game/borders.lua').GetMapGroup()
 	CreateModUI(isReplay, parent)
 end
 
-local maxImages = 2
+local rows = 2
+local cols = 2
 local grid = {}
 
+function updateUI()
+	-- hide all buttons
+	for r = 1, rows do
+		for c = 1, cols do
+			local button = grid[r][c]
+			button:Hide()
+		end
+	end
+end
+
 function CreateModUI(isReplay, parent)
-	local xPosition = 400
+	local xPosition = 360
 	local yPosition = 5
 
-	grid = CreateGrid(parent, xPosition, yPosition, maxImages, 2 , CreateGenericButton)
+	grid = CreateGrid(parent, xPosition, yPosition, rows, cols , CreateGenericButton)
 
 	local resourceIconHeight = 32
 
@@ -45,5 +59,5 @@ function CreateModUI(isReplay, parent)
 	img:SetTexture(UIUtil.UIFile('/game/resources/energy_btn_up.dds'))
 	LayoutHelpers.CenteredAbove(img, grid[2][1], 0)
 
-	--GameMain.AddBeatFunction(UpdateResourceUsage)
+	GameMain.AddBeatFunction(updateUI)
 end
