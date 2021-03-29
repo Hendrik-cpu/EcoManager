@@ -75,7 +75,7 @@ end
 function toggleEcomanager()
 	manager.Active = not manager.Active 
 	if manager.Active then
-		resetPauseStates({ecomanager = true})
+		resetPauseStates()
 		addListener(manageEconomy, 0.3,'em_throttler',managerThreadKey)
 		print('Throttler started!')
 	else
