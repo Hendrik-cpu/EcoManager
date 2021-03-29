@@ -74,7 +74,7 @@ function watchdogThread()
 end
 
 function setup(isReplay, parent)
-	local mods = {'options','mexes','buildoverlay', 'commands'}
+	local mods = {'options','mexes','buildoverlay', 'commands','controlPannel/controlPannel', 'SupremeEconomyEM/resourceusage','SupremeEconomyEM/mexes'}
 
 	if not isReplay then
 		table.insert(mods, 'ecocommands');
