@@ -1,5 +1,4 @@
 local modPath = '/mods/EM/'
-local modulesPath = modPath .. 'modules/'
 local ThrottlerPlugin = import(modPath .. 'throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
 EnergyPlugin = Class(ThrottlerPlugin) {
