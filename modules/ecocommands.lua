@@ -50,7 +50,7 @@ function PauseAll()
 	if AllIsPause then
 		print("Paused all units except selection!")
 	else
-		pauser.ResetPauseStates()
+		pauser.resetPauseStates()
 		print("Unpaused all units!")
 	end
 end
