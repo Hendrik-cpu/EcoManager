@@ -1,4 +1,6 @@
 local modPath = '/mods/EM/'
+local modulesPath = modPath .. 'modules/'
+
 local Units = import('/mods/common/units.lua')
 local KeyMapper = import('/lua/keymap/keymapper.lua')
 
@@ -12,7 +14,7 @@ function OnSelectionChanged(oldSelection, newSelection, added, removed)
         local mexes = EntityCategoryFilterDown(categories.MASSEXTRACTION * categories.STRUCTURE, newSelection)
 
         if mexes and table.getsize(mexes) == 1 then
-            local options = import(modPath .. 'modules/utils.lua').getOptions(true)
+            local options = import(modulesPath .. 'utils.lua').getOptions(true)
             local mex = mexes[1]
             local data = Units.Data(mex)
 

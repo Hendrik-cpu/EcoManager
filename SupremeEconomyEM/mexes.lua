@@ -9,7 +9,7 @@ local ToolTip = import('/lua/ui/game/tooltip.lua')
 local TooltipInfo = import('/lua/ui/help/tooltips.lua').Tooltips
 local GameMain = import('/lua/ui/game/gamemain.lua')
 
-local modFolder = 'EM/modules/SupremeEconomyEM'
+local modFolder = 'EM/SupremeEconomyEM'
 local GetAllUnits = import('/mods/common/units.lua').Get
 local CreateGrid = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGrid
 local CreateGenericButton = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGenericButton

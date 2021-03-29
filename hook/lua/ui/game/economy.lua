@@ -1,5 +1,7 @@
 local modPath = '/mods/EM/'
---local getCurrentThrottle = import(modPath .. 'modules/throttle.lua').getCurrentThrottle
+local modulesPath = modPath .. 'modules/'
+
+--local getCurrentThrottle = import(modulesPath .. 'throttle.lua').getCurrentThrottle
 
 local oldCreateUI = CreateUI
 function CreateUI()

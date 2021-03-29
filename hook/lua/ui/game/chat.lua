@@ -1,6 +1,7 @@
 local modPath = '/mods/EM/'
+local modulesPath = modPath .. 'modules/'
 
-local runCommand = import(modPath .. 'modules/commands.lua').runCommand
+local runCommand = import(modulesPath .. 'commands.lua').runCommand
 
 local oldCreateChatEdit = import('/lua/ui/game/chat.lua').CreateChatEdit
 local oldOnEnterPressed

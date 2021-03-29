@@ -1,10 +1,12 @@
 local modPath = '/mods/EM/'
-local addListener = import(modPath .. 'modules/init.lua').addListener
-local addCommand = import(modPath .. 'modules/commands.lua').addCommand
-local EcoManager = import(modPath .. 'modules/throttler/EcoManager.lua').EcoManager
-local removeListener = import(modPath .. 'modules/init.lua').removeListener
+local modulesPath = modPath .. 'modules/'
+
+local addListener = import(modulesPath .. 'init.lua').addListener
+local addCommand = import(modulesPath .. 'commands.lua').addCommand
+local EcoManager = import(modPath .. 'throttler/EcoManager.lua').EcoManager
+local removeListener = import(modulesPath .. 'init.lua').removeListener
 local managerThreadKey = "EcoManager"
-local resetPauseStates = import(modPath .. 'modules/pause.lua').resetPauseStates
+local resetPauseStates = import(modulesPath .. 'pause.lua').resetPauseStates
 
 manager = nil
 

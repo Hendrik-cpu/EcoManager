@@ -1,5 +1,5 @@
 local modPath = '/mods/EM/'
-local ThrottlerPlugin = import(modPath .. 'modules/throttler/ThrottlerPlugin.lua').ThrottlerPlugin
+local ThrottlerPlugin = import(modPath .. 'throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
 
 MassPlugin = Class(ThrottlerPlugin) {

@@ -1,9 +1,10 @@
 local modPath = '/mods/EM/'
+local modulesPath = modPath .. 'modules/'
 
 local Units = import('/mods/common/units.lua')
 
-local addListener = import(modPath .. 'modules/init.lua').addListener
-local econData = import(modPath .. 'modules/units.lua').econData
+local addListener = import(modulesPath .. 'init.lua').addListener
+local econData = import(modulesPath .. 'units.lua').econData
 
 local RegisterChatFunc = import('/lua/ui/game/gamemain.lua').RegisterChatFunc
 local FindClients = import('/lua/ui/game/chat.lua').FindClients

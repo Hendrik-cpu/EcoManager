@@ -1,5 +1,6 @@
 local modPath = '/mods/EM/'
-local queuePause = import(modPath .. 'modules/mexes.lua').queuePause
+local modulesPath = modPath .. 'modules/'
+local queuePause = import(modulesPath .. 'mexes.lua').queuePause
 local Select = import('/lua/ui/game/selection.lua')
 
 local oldOnCommandIssued = OnCommandIssued
@@ -58,7 +59,7 @@ function AssistMex(command)
         if order == 'cap' then
             SimCallback({Func = 'CapMex', Args = {target = command.Target.EntityId}}, true)
         else
-            local options = import(modPath .. 'modules/utils.lua').getOptions(true)
+            local options = import(modulesPath .. 'utils.lua').getOptions(true)
             if options['em_mexes'] ~= 'click' then return end
             local postfix = order == 't2' and '1202' or '1302'
             UpgradeMex(mex, prefix .. postfix)

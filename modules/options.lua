@@ -1,5 +1,7 @@
 local modPath = '/mods/EM/'
-local addCommand = import(modPath .. 'modules/commands.lua').addCommand
+local modulesPath = modPath .. 'modules/'
+
+local addCommand = import(modulesPath .. 'commands.lua').addCommand
 
 function printOptions(args)
 	local options = SessionGetScenarioInfo()

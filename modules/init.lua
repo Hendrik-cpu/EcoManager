@@ -1,4 +1,5 @@
 local modPath = '/mods/EM/'
+local modulesPath = modPath .. 'modules/'
 
 local WAIT_SECONDS = 0.1
 local current_tick = 0
@@ -35,8 +36,8 @@ function mainThread()
 				local current_second = current_tick * WAIT_SECONDS
 
 				if not options or math.mod(current_tick, 10) == 0 then
-					options = import(modPath .. 'modules/utils.lua').getOptions(true)
-					--options = import(modPath .. 'modules/prefs.lua').getPrefs()
+					options = import(modulesPath .. 'utils.lua').getOptions(true)
+					--options = import(modulesPath .. 'prefs.lua').getPrefs()
 				end
 
 				if math.mod(current_second*10, l['wait']*10) == 0 and (not l.option or options[l.option] ~= 0) then
@@ -74,15 +75,17 @@ function watchdogThread()
 end
 
 function setup(isReplay, parent)
-	local mods = {'options','mexes','buildoverlay', 'commands','controlPannel/controlPannel', 'SupremeEconomyEM/resourceusage','SupremeEconomyEM/mexes'}
 
+	local mods = {modules = {'options','mexes','buildoverlay', 'commands'}, throttler = {'throttler'}, SupremeEconomyEM = {'resourceusage','mexes'}, controlPannel = {'controlPannel'}}
 	if not isReplay then
-		table.insert(mods, 'ecocommands');
-		table.insert(mods, 'throttler/throttler');
+		table.insert(mods.modules, 'ecocommands');
+		table.insert(mods.throttler, 'throttler');
 	end
 
-	for _, m in mods do
-		import(modPath .. 'modules/' .. m .. '.lua').init(isReplay, parent)
+	for k, cats in pairs(mods) do
+		for _, m in cats do
+			import(modPath .. k ..'/' .. m .. '.lua').init(isReplay, parent)
+		end
 	end
 end
 

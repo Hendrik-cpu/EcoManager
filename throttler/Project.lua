@@ -1,8 +1,10 @@
 local modPath = '/mods/EM/'
-local econData = import(modPath .. 'modules/units.lua').econData
-local pauser = import(modPath .. 'modules/pause.lua')
+local modulesPath = modPath .. 'modules/'
+
+local econData = import(modulesPath .. 'units.lua').econData
+local pauser = import(modulesPath .. 'pause.lua')
 local isPaused = pauser.isPaused
-local throttler = import(modPath .. 'modules/throttler/throttler.lua')
+local throttler = import(modPath .. 'throttler/throttler.lua')
 
 throttleIndex = 0
 firstAssister = true

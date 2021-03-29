@@ -1,13 +1,16 @@
 local modPath = '/mods/EM/'
-
-local pauser = import(modPath .. 'modules/pause.lua')
-local isPaused = pauser.isPaused
+local modulesPath = modPath .. 'modules/'
+local throttlerPath = modPath .. 'throttler/'
 
 local Units = import('/mods/common/units.lua')
-local econData = import(modPath .. 'modules/units.lua').econData
 
-local Economy = import(modPath .. 'modules/throttler/Economy.lua').Economy
-local Project = import(modPath .. 'modules/throttler/Project.lua').Project
+local pauser = import(modulesPath .. 'pause.lua')
+local isPaused = pauser.isPaused
+
+local econData = import(modulesPath .. 'units.lua').econData
+
+local Economy = import(throttlerPath .. 'Economy.lua').Economy
+local Project = import(throttlerPath .. 'Project.lua').Project
 local moduleName = "ecomanager"
 
 EcoManager = Class({
@@ -103,7 +106,7 @@ EcoManager = Class({
 
 	addPlugin = function(self, name, active, timer)
 		FullName = name .. 'Plugin'
-		local plugin = import(modPath .. 'modules/throttler/' .. FullName .. '.lua')[FullName](self.eco)
+		local plugin = import(throttlerPath .. FullName .. '.lua')[FullName](self.eco)
 		plugin.Active = active
 		self.plugins[string.lower(name)] = plugin
 	end,
@@ -127,8 +130,8 @@ EcoManager = Class({
 		--print ("n_projects " .. table.getsize(all_projects))
 		--LOG("NEW BALANCE ROUND")
 
-		import(modPath .. 'modules/throttler/Project.lua').throttleIndex = 0
-		import(modPath .. 'modules/throttler/Project.lua').firstAssister = true
+		import(throttlerPath .. 'Project.lua').throttleIndex = 0
+		import(throttlerPath .. 'Project.lua').firstAssister = true
 		--LOG("start: " .. eco.energyActual .. " mass:".. eco.massActual)
 		local energyActual = eco.energyActual
 		local massActual = eco.massActual

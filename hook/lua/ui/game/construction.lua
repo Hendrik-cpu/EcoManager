@@ -1,8 +1,10 @@
 local modPath = '/mods/EM/'
+local modulesPath = modPath .. 'modules/'
+
 local triggerEvent = import('/mods/EM/modules/events.lua').triggerEvent
 
 function SetPaused(units, state)
-    import(modPath .. 'modules/pause.lua').Pause(units, state, 'user')
+    import(modulesPath .. 'pause.lua').Pause(units, state, 'user')
 end
 
 function CreateExtraControls(controlType)

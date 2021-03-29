@@ -1,9 +1,11 @@
 local modPath = '/mods/EM/'
+local modulesPath = modPath .. 'modules/'
+
 local Select = import('/mods/common/select.lua')
 local Units = import('/mods/common/units.lua')
 
-local triggerEvent = import(modPath .. 'modules/events.lua').triggerEvent
-local addListener = import(modPath .. 'modules/init.lua').addListener
+local triggerEvent = import(modulesPath .. 'events.lua').triggerEvent
+local addListener = import(modulesPath .. 'init.lua').addListener
 --local getEconomy = import(modPath ..'modules/economy.lua').getEconomy
 
 local LayoutHelpers = import('/lua/maui/layouthelpers.lua')
@@ -12,8 +14,8 @@ local ItemList = import('/lua/maui/itemlist.lua').ItemList
 local Group = import('/lua/maui/group.lua').Group
 local UIUtil = import('/lua/ui/uiutil.lua')
 
-local Pause = import(modPath .. 'modules/pause.lua').Pause
-local CanUnpause = import(modPath .. 'modules/pause.lua').canChangeState
+local Pause = import(modulesPath .. 'pause.lua').Pause
+local CanUnpause = import(modulesPath .. 'pause.lua').canChangeState
 
 local pause_queue = {}
 local overlays = {}
@@ -224,7 +226,7 @@ function UpdateMexOverlay(mex)
 end
 
 function mexOverlay()
-	options = import(modPath .. 'modules/utils.lua').getOptions(true)
+	options = import(modulesPath .. 'utils.lua').getOptions(true)
 	mexes = getMexes()
 
 	if options['em_mexoverlay'] == 1 then
@@ -248,7 +250,7 @@ function checkMexes()
 
 	mexes = getMexes()
 
-	options = import(modPath .. 'modules/utils.lua').getOptions(true)
+	options = import(modulesPath .. 'utils.lua').getOptions(true)
 
 	if table.getsize(mexes['idle']) > 0 then
 		local auto_upgrade = options['em_mexes'] == 'auto';

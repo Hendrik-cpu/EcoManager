@@ -8,7 +8,7 @@ local GameCommon = import('/lua/ui/game/gamecommon.lua')
 local ToolTip = import('/lua/ui/game/tooltip.lua')
 local GameMain = import('/lua/ui/game/gamemain.lua')
 
-local modFolder = 'EM/modules/SupremeEconomyEM'
+local modFolder = 'EM/SupremeEconomyEM'
 local GetScore = import('/mods/' .. modFolder .. '/mciscore.lua').GetScore
 local GetAllUnits = import('/mods/common/units.lua').Get
 local CreateGrid = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGrid

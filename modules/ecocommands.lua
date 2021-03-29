@@ -1,8 +1,11 @@
 local modPath = '/mods/EM/'
-local EconomyPath = modPath .. 'modules/throttler/Economy.lua'
-local MyPath = modPath .. 'modules/ecocommands.lua")'
-local throttler = modPath .. 'modules/throttler/throttler.lua'
-local pauser = import(modPath .. 'modules/pause.lua')
+local modulesPath = modPath .. 'modules/'
+local throttlerPath = modPath .. 'throttler/'
+
+local EconomyPath = throttlerPath .. 'Economy.lua'
+local MyPath = modulesPath .. 'ecocommands.lua")'
+local throttler = throttlerPath .. 'throttler.lua'
+local pauser = import(modulesPath .. 'pause.lua')
 local Units = import('/mods/common/units.lua')
 
 function init()

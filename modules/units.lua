@@ -1,7 +1,8 @@
 local modPath = '/mods/EM/'
+local modulesPath = modPath .. 'modules/'
 
-local boolstr = import(modPath .. 'modules/utils.lua').boolstr
-local addListener = import(modPath .. 'modules/init.lua').addListener
+local boolstr = import(modulesPath .. 'utils.lua').boolstr
+local addListener = import(modulesPath .. 'init.lua').addListener
 
 local econ_cache = {}
 
