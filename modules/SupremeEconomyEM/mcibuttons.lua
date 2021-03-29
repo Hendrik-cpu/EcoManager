@@ -11,7 +11,6 @@ local AvatarsClickFunc = import('/lua/ui/game/avatars.lua').ClickFunc
 local StatusBar = import('/lua/maui/statusbar.lua').StatusBar
 
 local modFolder = 'EM/modules/SupremeEconomyEM'
-local GetAllUnits = import('/mods/' .. modFolder .. '/mciallunits.lua').GetAllUnits
 
 function PrintUnitDebugInfo(unit)
 	LOG("GetArmy " .. repr(unit:GetArmy()))

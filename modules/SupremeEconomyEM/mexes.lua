@@ -11,7 +11,7 @@ local AvatarsClickFunc = import('/lua/ui/game/avatars.lua').ClickFunc
 local GameMain = import('/lua/ui/game/gamemain.lua')
 
 local modFolder = 'EM/modules/SupremeEconomyEM'
-local GetAllUnits = import('/mods/' .. modFolder .. '/mciallunits.lua').GetAllUnits
+local GetAllUnits = import('/mods/common/units.lua').Get
 local CreateGrid = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGrid
 local CreateGenericButton = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGenericButton
 
