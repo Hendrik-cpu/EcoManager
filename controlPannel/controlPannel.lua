@@ -59,5 +59,5 @@ function CreateModUI(isReplay, parent)
 	img:SetTexture(UIUtil.UIFile('/game/resources/energy_btn_up.dds'))
 	LayoutHelpers.CenteredAbove(img, grid[2][1], 0)
 
-	GameMain.AddBeatFunction(updateUI)
+	--GameMain.AddBeatFunction(updateUI)
 end
