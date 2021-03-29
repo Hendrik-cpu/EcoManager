@@ -29,19 +29,19 @@ table.insert(options.ui.items,
     })
     ]]
 
-table.insert(options.gameplay.items,
-    {
-        title = "EM: Autoshare",
-        key = 'em_autoshare',
-        type = 'toggle',
-        default = 1,
-        custom = {
-            states = {
-                {text = "<LOC _Off>", key = 0 },
-                {text = "<LOC _On>", key = 1 },
-            },
-        },
-    })
+-- table.insert(options.gameplay.items,
+--     {
+--         title = "EM: Autoshare",
+--         key = 'em_autoshare',
+--         type = 'toggle',
+--         default = 1,
+--         custom = {
+--             states = {
+--                 {text = "<LOC _Off>", key = 0 },
+--                 {text = "<LOC _On>", key = 1 },
+--             },
+--         },
+--     })
 
 table.insert(options.gameplay.items,
     {
@@ -60,7 +60,7 @@ table.insert(options.gameplay.items,
 table.insert(options.gameplay.items,
     {
         title = "EM: Throttle energy",
-        key = 'em_throttle',
+        key = 'energy',
         type = 'toggle',
         default = 0,
         custom = {
@@ -74,14 +74,29 @@ table.insert(options.gameplay.items,
 
 table.insert(options.gameplay.items,
     {
-        title = "EM: MEX Upgrade Optimization",
-        key = 'em_mexOpti',
+        title = "EM: Throttle mass",
+        key = 'mass',
         type = 'toggle',
         default = 0,
         custom = {
             states = {
                 {text = "<LOC _Off>", key = 0 },
-                {text = "Optimize Payoff", key = 'auto' },
+                {text = "<LOC _On>", key = 1 },
+                {text = "Throttle only Mass Production", key = 2 },
             },
         },
     })
+
+-- table.insert(options.gameplay.items,
+--     {
+--         title = "EM: MEX Upgrade Optimization",
+--         key = 'em_mexOpti',
+--         type = 'toggle',
+--         default = 0,
+--         custom = {
+--             states = {
+--                 {text = "<LOC _Off>", key = 0 },
+--                 {text = "Optimize Payoff", key = 'auto' },
+--             },
+--         },
+--     })
