@@ -76,7 +76,21 @@ end
 
 function setup(isReplay, parent)
 
-	local mods = {modules = {'options','mexes','buildoverlay', 'commands'}, throttler = {'throttler'}, SupremeEconomyEM = {'resourceusage','mexes'}, controlPannel = {'controlPannel'}}
+	local mods = {
+		modules = {
+			'options',
+			'mexes',
+			'buildoverlay', 
+			'commands'
+		},
+		throttler = {'throttler'}, 
+		SupremeEconomyEM = {
+			'resourceusage',
+			'mexes'
+		}, 
+		controlPannel = {'controlPannel'}
+	}
+
 	if not isReplay then
 		table.insert(mods.modules, 'ecocommands');
 		table.insert(mods.throttler, 'throttler');
