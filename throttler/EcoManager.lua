@@ -45,7 +45,7 @@ EcoManager = Class({
 					table.insert(self.mexPositions, { position = u:GetPosition(), massProduction = u:GetBlueprint().Economy.ProductionPerSecondMass })
 				end
 
-				if pauser.canChangeState(u,moduleName) then
+				if pauser.canInvertState(u,moduleName) then
 
 					local focus = u:GetFocus()
 					local isConstruction = false

@@ -1,4 +1,6 @@
 states = {}
+toggleStates = {}
+
 local pause_prios = {
 	mexes={pause=80, unpause=50},
 	ecomanager={pause=70},
@@ -18,15 +20,29 @@ function isPaused(unit)
 end
 
 function resetPauseStates(modules)
-	local units = {}
-	for _, s in states do
-		if modules[s.module] then
-			table.insert(units, s.unit)
+	local unpause = {}
+	for id, s in states do
+		if (not modules or modules and modules[s.module]) and not s.unit:IsDead() then
+			table.insert(unpause,s.unit)
+			states[id] = nil
 		end
 	end
-	states = {}
-	SetPaused(units, false)
-	ToggleScriptBit(units, 4, true)
+	SetPaused(unpause, false)
+
+	local toggle = {}
+	for id, s in toggleStates do
+		if (not modules or modules and modules[s.module]) and not s.unit:IsDead() then
+			if toggle[s.toggle] then 
+				table.insert(toggle[s.toggle],s.unit)
+			else
+				toggle[s.toggle] = {s.unit}
+			end
+			toggleStates[id] = nil
+		end
+	end
+	for tkey, units in pairs(toggle) do
+		ToggleScriptBit(units, tkey, true)
+	end
 end
 
 function getPrio(module, pause)
@@ -44,7 +60,15 @@ function getPrio(module, pause)
 end
 
 function Pause(units, pause, module)
-	SetPaused(changables(units, pause, module), pause)
+	local prio = getPrio(module, pause)
+	local changables = {}
+	for _, u in units do
+		local id = u:GetEntityId()
+		if canPause(u, module, pause, true) then
+			table.insert(changables, u)
+		end
+	end
+	SetPaused(changables, pause)
 end
 
 function Toggle(units, pause, module, toggle)
@@ -57,24 +81,54 @@ function Toggle(units, pause, module, toggle)
 	end
 
 	if pause ~= is_paused then
-		ToggleScriptBit(changables(units, pause, module), toggle, bit)
-	end
-end
-
-function changables(units, pause, module)
-	local prio = getPrio(module, pause)
-	local changables = {}
-	for _, u in units do
-		local id = u:GetEntityId()
-		if canChangeState(u, module, pause, true) then
-			table.insert(changables, u)
+		local prio = getPrio(module, pause)
+		local changables = {}
+		for _, u in units do
+			local id = u:GetEntityId()
+			if canToggle(u, module, pause, true, toggle) then
+				table.insert(changables, u)
+			end
 		end
+		ToggleScriptBit(changables, toggle, bit)
 	end
-	return changables
 end
 
-function canChangeState(u, module, pause, update)
+function canInvertState(u, module)
+	local pauseState = isPaused(u)
+	return canPause(u, module, not pauseState) and canToggle(u, module, not pauseState)
+end
+
+function canToggle(u, module, pause, update, toggle)
 	local id = u:GetEntityId()
+	if toggleStates[id] and toggleStates[id].unit:IsDead() then 
+		toggleStates[id] = nil
+		return true
+	end
+
+	local pauseState = isPaused(u)
+	local prio = getPrio(module, not pauseState)
+
+	local changedByUser = toggleStates[id] and toggleStates[id].state ~= pauseState
+	if changedByUser and update then
+		module = "user"
+		prio = getPrio(module, not pauseState)
+		toggleStates[id] = {unit=u,prio=prio,module=module, state=pauseState, toggle = toggle}
+	end
+
+	local canChangeState = not changedByUser and not toggleStates[id] or toggleStates[id]['module'] == module or prio >= toggleStates[id]['prio']
+	if update and canChangeState then
+		toggleStates[id] = {unit=u,prio=prio,module=module, state=pause, toggle = toggle}
+	end
+	return canChangeState
+end
+
+function canPause(u, module, pause, update)
+	local id = u:GetEntityId()
+	if states[id] and states[id].unit:IsDead() then 
+		states[id] = nil 
+		return true
+	end
+
 	local pauseState = isPaused(u)
 	local prio = getPrio(module, not pauseState)
 	local changeObsolete = update and pauseState == pause
@@ -85,14 +139,7 @@ function canChangeState(u, module, pause, update)
 	if focus then focusType = focus:GetBlueprint().General.UnitName	end
 	if states[id] and states[id].focusType and states[id].focusType ~= focusType then states[id] = nil end
 
-	local changedByUser = states[id] and states[id].state ~= pauseState
-	if changedByUser then --should only be triggered by toggle since pause is hooked already
-		module = "user"
-		prio = getPrio(module, not pauseState)
-		states[id] = {unit=u,prio=prio,module=module, state=pauseState, focusType=focusType}
-	end
-
-	local canChangeState = not changedByUser and not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] and not changeObsolete
+	local canChangeState = not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] and not changeObsolete
 	if update and canChangeState then
 		states[id] = {unit=u,prio=prio,module=module, state=pause, focusType=focusType}
 	end
