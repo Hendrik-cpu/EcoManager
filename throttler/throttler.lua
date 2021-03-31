@@ -18,7 +18,15 @@ function init()
 	addCommand('energy', energyPriority)
 	addCommand('mass', massPriority)
 	addCommand('printcats', printCategories)
+	addCommand('toggle', toggleAll)
 	addListener(manageEconomy, 0.3,'em_throttler', managerThreadKey) 
+end
+
+local toggle = true
+function toggleAll(args)
+	local toggleKey = args[2]
+	ToggleScriptBit(import('/mods/common/units.lua').Get(),tonumber(toggleKey),toggle)
+	toggle = not toggle
 end
 
 function manageEconomy()

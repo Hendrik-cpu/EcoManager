@@ -136,12 +136,27 @@ function canPause(u, module, pause, update)
 	--a change of focus resets the user introduced state
 	local focus = u:GetFocus()
 	local focusType = nil
+	local gameTick = GameTick()
 	if focus then focusType = focus:GetBlueprint().General.UnitName	end
-	if states[id] and states[id].focusType and states[id].focusType ~= focusType then states[id] = nil end
+	if states[id] and states[id].module == "user" and states[id].focusType and states[id].focusType ~= focusType then 
+		if states[id].lastFocusChange and (gameTick-states[id].lastFocusChange) / 10 > 1 then
+			print(tostring(gameTick-states[id].lastFocusChange))
+			states[id] = nil
+		elseif states[id].lastFocusChange then
+			print(tostring(gameTick-states[id].lastFocusChange))
+		end
+		if states[id] then 
+			states[id].lastFocusChange = gameTick
+			print(tostring(gameTick-states[id].lastFocusChange))
+		end
+	end
 
 	local canChangeState = not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] and not changeObsolete
-	if update and canChangeState then
-		states[id] = {unit=u,prio=prio,module=module, state=pause, focusType=focusType}
+	if update then
+		if canChangeState then
+			states[id] = {unit=u,prio=prio,module=module, state=pause}
+		end
+		if states[id] then states[id].focusType=focusType end
 	end
 	return canChangeState
 end
