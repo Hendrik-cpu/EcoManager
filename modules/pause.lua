@@ -140,14 +140,11 @@ function canPause(u, module, pause, update)
 	if focus then focusType = focus:GetBlueprint().General.UnitName	end
 	if states[id] and states[id].module == "user" and states[id].focusType and states[id].focusType ~= focusType then 
 		if states[id].lastFocusChange and (gameTick-states[id].lastFocusChange) / 10 > 1 then
-			print(tostring(gameTick-states[id].lastFocusChange))
 			states[id] = nil
 		elseif states[id].lastFocusChange then
-			print(tostring(gameTick-states[id].lastFocusChange))
 		end
 		if states[id] then 
 			states[id].lastFocusChange = gameTick
-			print(tostring(gameTick-states[id].lastFocusChange))
 		end
 	end
 
