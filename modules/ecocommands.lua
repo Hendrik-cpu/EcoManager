@@ -46,7 +46,8 @@ function PauseAll()
 
 	AllIsPause=not AllIsPause
 	pauser.Pause(units, AllIsPause, 'user')
-
+	ToggleScriptBit(units, 4, not AllIsPause)
+	
 	if AllIsPause then
 		print("Paused all units except selection!")
 	else
