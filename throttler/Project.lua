@@ -82,6 +82,9 @@ Project = Class({
         self.energyProduction = Eco.ProductionPerSecondEnergy
         self.energyProductionActual = econData(unit).energyProduced
         self.energyUpkeep = Eco.energyUpkeep
+        self.lastRatio = throttler.manager.ProjectMetaData[self.id].lastRatio
+        if not self.lastRatio then self.lastRatio = 0 end
+
     end,
 
     MassPerEnergy = function(self)
@@ -209,7 +212,7 @@ Project = Class({
             sortPrio = sortPrio + math.max(0, 140 - self.energyPayoffSeconds)
         end
         
-        return sortPrio - self.inactivityTicks / 10 
+        return sortPrio + 1 - self.lastRatio ---self.inactivityTicks / 10 
     end,
 
     mMultiPriority = function(self)
@@ -224,28 +227,28 @@ Project = Class({
             sortPrio = sortPrio * (self:ResourceProportion("energy","mass") + 1) * 100 - self.massMinStorage * 1000 
         end
 
-        return sortPrio - self.inactivityTicks / 10 
+        return sortPrio + 1 - self.lastRatio --- self.inactivityTicks / 10 
     end,
 
-    ---*outdated
-    --mass production
-    mProdPriority = function(self)
-        return (self.massPayoffSeconds) / self.prio
-    end,
-    --
+    -- ---*outdated
+    -- --mass production
+    -- mProdPriority = function(self)
+    --     return (self.massPayoffSeconds) / self.prio
+    -- end,
+    -- --
 
-    mCalculatePriority = function(self)
-        local sortPrio = self.prio / 100 + 1
+    -- mCalculatePriority = function(self)
+    --     local sortPrio = self.prio / 100 + 1
 
-        if self.workProgress < 1 then
-            sortPrio = sortPrio * ((self.workProgress + 1) + (self.energyProportion + 1) * (self.workProgress + 1.5)) 
-        end
+    --     if self.workProgress < 1 then
+    --         sortPrio = sortPrio * ((self.workProgress + 1) + (self.energyProportion + 1) * (self.workProgress + 1.5)) 
+    --     end
 
-        sortPrio = sortPrio * (self:ResourceProportion("energy","mass") + 1) * 100 - self.massMinStorage * 1000
+    --     sortPrio = sortPrio * (self:ResourceProportion("energy","mass") + 1) * 100 - self.massMinStorage * 1000
 
-        return sortPrio
-    end,
-    ---*outdated
+    --     return sortPrio
+    -- end,
+    -- ---*outdated
 
     GetConsumption = function()
         return {mass=self.massRequested, energy=energyRequested}
