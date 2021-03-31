@@ -133,7 +133,7 @@ function canPause(u, module, pause, update)
 	local prio = getPrio(module, not pauseState)
 	local changeObsolete = update and pauseState == pause
 
-	--a change of focus resets the user introduced state
+	--a change of focus resets the user introduced state, if there is a >1 second break
 	local focus = u:GetFocus()
 	local focusType = nil
 	local gameTick = GameTick()
