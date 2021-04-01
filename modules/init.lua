@@ -81,7 +81,6 @@ function setup(isReplay, parent)
 			'options',
 			'mexes',
 			'buildoverlay', 
-			'commands'
 		},
 		throttler = {'throttler'}, 
 		SupremeEconomyEM = {
@@ -92,8 +91,8 @@ function setup(isReplay, parent)
 	}
 
 	if not isReplay then
-		table.insert(mods.modules, 'ecocommands');
 		table.insert(mods.throttler, 'throttler');
+		table.insert(mods.modules, 'commands');
 	end
 
 	for k, cats in pairs(mods) do

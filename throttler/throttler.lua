@@ -1,8 +1,15 @@
 local modPath = '/mods/EM/'
 local modulesPath = modPath .. 'modules/'
+local throttlerPath = modPath .. 'throttler/'
+local EconomyPath = throttlerPath .. 'Economy.lua")'
+local throttler = throttlerPath .. 'throttler.lua")'
+
+local pauser = import(modulesPath .. 'pause.lua')
+local Units = import('/mods/common/units.lua')
 
 local addListener = import(modulesPath .. 'init.lua').addListener
 local addCommand = import(modulesPath .. 'commands.lua').addCommand
+local addHotkey = import(modulesPath .. 'commands.lua').addHotkey
 local EcoManager = import(modPath .. 'throttler/EcoManager.lua').EcoManager
 local removeListener = import(modulesPath .. 'init.lua').removeListener
 local managerThreadKey = "EcoManager"
@@ -14,12 +21,22 @@ function init()
 	manager = EcoManager()
 	manager:addPlugin('Mass')
 	manager:addPlugin('Energy')
+	addListener(manageEconomy, 0.3,'em_throttler', managerThreadKey)
+
 	addCommand('t', togglePlugin)
 	addCommand('energy', energyPriority)
 	addCommand('mass', massPriority)
 	addCommand('printcats', printCategories)
 	addCommand('toggle', toggleAll)
-	addListener(manageEconomy, 0.3,'em_throttler', managerThreadKey) 
+	
+	addHotkey('Ctrl-V', throttler .. '.PauseAll')
+	addHotkey('Ctrl-B', EconomyPath .. '.PauseEcoM80_E90')
+	addHotkey('Ctrl-N', EconomyPath .. '.PauseEcoM10_E90')
+	addHotkey('Ctrl-T', throttler .. '.toggleEcomanager')
+	addHotkey('Ctrl-M', throttler .. '.ToggleMassBalance')
+	addHotkey('Ctrl-P', throttler .. '.ToggleMexMode')
+	addHotkey('Ctrl-O', throttler .. '.increaseMexPrio')
+	addHotkey('Ctrl-L', throttler .. '.decreaseMexPrio')
 end
 
 local toggle = true
@@ -27,6 +44,33 @@ function toggleAll(args)
 	local toggleKey = args[2]
 	ToggleScriptBit(import('/mods/common/units.lua').Get(),tonumber(toggleKey),toggle)
 	toggle = not toggle
+end
+
+local AllIsPause=false
+function PauseAll()
+	local units={}
+	local selected={}
+
+	for _, u in GetSelectedUnits() or {} do
+		selected[u:GetEntityId()]=true
+	end
+
+	for _, u in Units.Get() do
+		if not selected[u:GetEntityId()] then
+			table.insert(units, u)
+		end
+	end
+
+	AllIsPause=not AllIsPause
+	pauser.Pause(units, AllIsPause, 'user')
+	ToggleScriptBit(units, 4, not AllIsPause)
+	
+	if AllIsPause then
+		print("Paused all units except selection!")
+	else
+		pauser.resetPauseStates()
+		print("Unpaused all units!")
+	end
 end
 
 function manageEconomy()

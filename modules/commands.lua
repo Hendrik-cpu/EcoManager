@@ -1,5 +1,5 @@
 local command_table = {}
-local hotkeys = import('/mods/EM/modules/ecocommands.lua').getHotkeys
+local hotkeys = {}
 
 function addCommand(command, f)
 	command_table[string.lower(command)] = f
@@ -16,13 +16,19 @@ function runCommand(args)
 	return false
 end
 
+function addHotkey(hotkey, f)
+	LOG('ui_lua import("' .. f .. "()")
+	IN_AddKeyMapTable({[hotkey] = {action = 'ui_lua import("' .. f .. "()"},})
+	hotkeys[hotkey] = f
+end
+
 function printCommands()
 	local str = "Commmands: \n"
 	for cmd,_ in command_table do
 		str = str .. "  " .. cmd .. "\n"
 	end
 	str = str .. "Hotkeys: \n"
-	for hk,func in hotkeys() do
+	for hk,func in hotkeys do
 		str = str .. "  " .. hk .. " = " .. func .. "\n"
 	end
 	print(str)

@@ -14,7 +14,7 @@ function PauseEcoM10_E90()
 		preventM_Stall=0
 		preventE_Stall=0
 		EcoIsPaused=true
-		print("Mass upgrades have been paused and will resume when storages are filling up (1%m/1%e).")
+		print("Mass upgrades have been paused and will resume when storages are filling up (10%m/90%e).")
 	end
 end
 function PauseEcoM80_E90()
