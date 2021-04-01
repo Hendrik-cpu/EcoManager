@@ -60,7 +60,6 @@ function getPrio(module, pause)
 end
 
 function Pause(units, pause, module)
-	local prio = getPrio(module, pause)
 	local changables = {}
 	for _, u in units do
 		local id = u:GetEntityId()
@@ -72,25 +71,14 @@ function Pause(units, pause, module)
 end
 
 function Toggle(units, pause, module, toggle)
-
-	local bit = GetScriptBit(units, toggle)
-	local is_paused = bit 
-
-	if toggle == 0 then 
-		is_paused = not is_paused 
-	end
-
-	if pause ~= is_paused then
-		local prio = getPrio(module, pause)
-		local changables = {}
-		for _, u in units do
-			local id = u:GetEntityId()
-			if canToggle(u, module, pause, true, toggle) then
-				table.insert(changables, u)
-			end
+	local changables = {}
+	for _, u in units do
+		local id = u:GetEntityId()
+		if canToggle(u, module, pause, true, toggle) then
+			table.insert(changables, u)
 		end
-		ToggleScriptBit(changables, toggle, bit)
 	end
+	ToggleScriptBit(changables, 4, not pause)
 end
 
 function canInvertState(u, module)

@@ -56,7 +56,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		local new_net
 
 		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining) 
-		if new_net < 0 then
+		if new_net < 0 and UnpausedCount > 0 then
 			project:SetEnergyDrain(math.max(0, net))
 		else
 			UnpausedCount = UnpausedCount + 1
