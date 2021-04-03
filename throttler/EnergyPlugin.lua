@@ -24,7 +24,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	},
 
 	_sortProjects = function(a, b)
-		return a:eCalculatePriority() > b:eCalculatePriority()
+		return a.energyFinalFactor > b.energyFinalFactor
 	end,
 	
 	add = function(self, project)

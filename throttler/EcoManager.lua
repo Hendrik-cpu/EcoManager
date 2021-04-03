@@ -74,6 +74,9 @@ EcoManager = Class({
 							project = Project(focus)
 							project.isConstruction = isConstruction
 							project.isMassFabricator = isMassFabricator
+							if isMassFabricator then
+								project.workProgress = 1
+							end
 							
 							-- map positions
 							local pos = focus:GetPosition()

@@ -33,7 +33,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 	massProductionPriorityMultiplier = 350,
 
 	_sortProjects = function(a, b)
-		return a:mMultiPriority() > b:mMultiPriority()
+		return a.massFinalFactor > b.massFinalFactor
 	end,
 
 	add = function(self, project)
