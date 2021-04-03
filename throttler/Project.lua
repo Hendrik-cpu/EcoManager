@@ -57,7 +57,6 @@ Project = Class({
     isMassFabricator = false,
     isMexUpgrade = false,
 
-    energyUpkeep =0,
     throttle = {},
     index = 0,
     unit = nil,
@@ -68,7 +67,8 @@ Project = Class({
     inactivityTicks = 0,
 
     __init = function(self, unit)
-        local Eco = unit:GetBlueprint().Economy
+        local bp = unit:GetBlueprint()
+        local Eco = bp.Economy
         self.id = unit:GetEntityId()
         self.unit = unit
         self.assisters = {}
@@ -81,10 +81,10 @@ Project = Class({
         if not self.massProductionActual then self.massProductionActual = 0 end
         self.energyProduction = Eco.ProductionPerSecondEnergy
         self.energyProductionActual = econData(unit).energyProduced
-        self.energyUpkeep = Eco.energyUpkeep
+        self.MaintenanceConsumptionPerSecondEnergy = Eco.MaintenanceConsumptionPerSecondEnergy 
         self.lastRatio = throttler.manager.ProjectMetaData[self.id].lastRatio
         if not self.lastRatio then self.lastRatio = 0 end
-
+        self.unitName = bp.General.UnitName or bp.Description
     end,
 
     MassPerEnergy = function(self)
@@ -128,8 +128,6 @@ Project = Class({
         self.timeLeft = self.workLeft * self.buildTime
         self.workTimeLeft = (self.timeLeft / self.buildRate) 
         self.minTimeLeft = self.workTimeLeft * self:CalcMaxThrottle(eco)
-        self.massCostRemaining = self.workLeft * self.massBuildCost
-        self.energyCostRemaining = self.workLeft * self.energyBuildCost
 
         --mass storages
         if EntityCategoryContains(categories.MASSSTORAGE*categories.STRUCTURE, self.unit) then
@@ -149,40 +147,53 @@ Project = Class({
         	elseif mexMassProduction==6 then
 	        	self.massProduction=0.75
 	        end
-        end
-        --
+        --elseif EntityCategoryContains(categories.MASSFABRICATOR*categories.STRUCTURE, self.unit)
 
+        end
+
+        local ot = {mass = "energy", energy = "mass"}
         for _, t in {'mass', 'energy'} do
-            self[t .. 'Drain'] = self[t .. 'BuildCost'] / (self.buildTime / self.buildRate)
             self[t .. 'CostRemaining'] = self[t .. 'BuildCost'] * self.workLeft
-            
-            --power and mass production
-            if self[t .. 'Production'] then
-                if self[t .. 'Production'] > 0 then
-                    self[t .. 'PayoffSeconds'] = self[t .. 'CostRemaining'] / self[t .. 'Production'] + self.workTimeLeft
-                    self[t .. 'ReversePayoff'] = self[t .. 'Production'] / (self.timeLeft * self[t .. 'Production'] + self[t .. 'CostRemaining'] + self.energyUpkeep * 1.296) * 10000
-                end
+            if self.timeLeft > 0 then
+                self[t .. 'AdjacencyBonus'] = (self[t .. 'Drain'] - self[t .. 'Requested']) / self[t .. 'Drain']
+            end
+
+            if self[t .. 'Production'] > 0 then
+                self[t .. 'ReversePayoff'] = self[t .. 'Production'] / (self.timeLeft * self[t .. 'Production'] + self[t .. 'CostRemaining'] + self[ot[t] .. 'Requested'])
             else
-                self[t .. 'PayoffSeconds'] = 0
-            end
-            --
-
-        end
-
-        --must be calculated after all assisters have been added
-        self.massProportion = self.massRequested / (self.massRequested + self.energyRequested)
-        self.energyProportion = self.energyRequested / (self.massRequested + self.energyRequested)
-        local inactivityTicks = throttler.manager.ProjectMetaData[self.id].lastAccess
-        local GameTick = GameTick()
-        if inactivityTicks then 
-            inactivityTicks = GameTick-inactivityTicks
-            if inactivityTicks > 600 then
-                inactivityTicks = 600
+                self[t .. 'ReversePayoff'] = 0
             end
         end
-        self.inactivityTicks = inactivityTicks
+
+        self.massProportion = self.massRequested * 10 / (self.massRequested * 10 + self.energyRequested)
+        self.energyProportion = self.energyRequested / (self.massRequested * 10 + self.energyRequested)
+
+        if self.workProgress < 1 and self.timeLeft < 5 then
+            self.completionBonus = (1 - self.timeLeft / 5) * 100 * self.workProgress
+        else
+            self.completionBonus = 0
+        end
+        if self.workProgress == 1 then
+            self.progressBonus = 0 
+        else
+            self.progressBonus = self.workProgress
+        end
+
+        --adjacency
+        self.energyAdjacencyBonus = self.energyAdjacencyBonus or 0
+        self.massAdjacencyBonus = self.massAdjacencyBonus or 0
+        if self.MaintenanceConsumptionPerSecondEnergy > 0 then
+            self.energyAdjacencyBonus = (self.MaintenanceConsumptionPerSecondEnergy - self.energyRequested) / self.MaintenanceConsumptionPerSecondEnergy
+        end
+        local adjacency = (self.energyAdjacencyBonus +1) * (self.massAdjacencyBonus +1)
+
+        --neutral factor
+        self.neutralFactor = adjacency + self.completionBonus + self.progressBonus  
+        self.energyFinalFactor = (self.neutralFactor + self.massReversePayoff * 100 + self.energyReversePayoff * 1000) * (1 + self.massProportion) 
+        self.massFinalFactor = (self.neutralFactor + self.energyReversePayoff * 100 + self.massReversePayoff * 5000) * (1 + self.energyProportion)
     end,
     
+
     CalcMaxThrottle = function(self, eco)
         local maxThrottleE = 0
         local maxThrottleM = 0
@@ -199,42 +210,6 @@ Project = Class({
         return math.min(maxThrottleE,maxThrottleM)
     end,
 
-    eCalculatePriority = function(self)
-        local sortPrio = self.prio / 100 + 1
-
-        if self.workProgress < 1 then
-            sortPrio = sortPrio * ((self.workProgress + 1) + (self.massProportion + 1) * (self.workProgress + 1.5)) 
-        end
-
-        sortPrio = sortPrio * (self:MassPerEnergy() + 1) * 100 - self.energyMinStorage * 1000
-
-        if self.energyPayoffSeconds > 0 then
-            sortPrio = sortPrio + math.max(0, 140 - self.energyPayoffSeconds)
-        end
-        
-        return sortPrio + 1 - self.lastRatio ---self.inactivityTicks / 10 
-    end,
-
-    mMultiPriority = function(self)
-        local sortPrio = self.prio / 100 + 1
-
-        if self.massReversePayoff > 0 then
-            sortPrio = sortPrio * self.massReversePayoff 
-        else
-            if self.workProgress < 1 then
-                sortPrio = sortPrio * ((self.workProgress + 1) + (self.energyProportion + 1) * (self.workProgress + 1.5)) 
-            end
-            sortPrio = sortPrio * (self:ResourceProportion("energy","mass") + 1) * 100 - self.massMinStorage * 1000 
-        end
-
-        return sortPrio + 1 - self.lastRatio --- self.inactivityTicks / 10 
-    end,
-
-    --neutral factor
-    neutralFactor = function(self)
-        
-    end
-
     GetConsumption = function()
         return {mass=self.massRequested, energy=energyRequested}
     end,
@@ -250,10 +225,13 @@ Project = Class({
             return
         end
 
-        self.buildRate = self.buildRate + u:GetBuildRate()
+        local uBuildRate = u:GetBuildRate()
+        self.buildRate = self.buildRate + uBuildRate
         self.workProgress = math.max(self.workProgress, u:GetWorkProgress())
         self.energyRequested = self.energyRequested + data.energyRequested
         self.massRequested = self.massRequested + data.massRequested
+        self.massDrain = self.massDrain + math.floor(self.massBuildCost / (self.buildTime/uBuildRate))
+        self.energyDrain = self.energyDrain + math.floor(self.energyBuildCost / (self.buildTime/uBuildRate))
 
         if not isPaused(u) then
             eco.massActual = eco.massActual - data.massConsumed 
