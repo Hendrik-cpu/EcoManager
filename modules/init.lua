@@ -87,7 +87,7 @@ function setup(isReplay, parent)
 			'resourceusage',
 			'mexes'
 		}, 
-		controlPannel = {'controlPannel'}
+		--controlPannel = {'controlPannel'}
 	}
 
 	if not isReplay then
