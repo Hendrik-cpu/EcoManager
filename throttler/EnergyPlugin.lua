@@ -40,8 +40,12 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		end
 
 		if category then
-			project.prio = category['priority']
-			project.energyMinStorage = category['storage']
+			if project.isMassFabricator then 
+				project.prio = category.priority
+			else
+				project.prio = self.constructionCategories.build.priority
+			end
+			project.energyMinStorage = category.storage
 			project.energyFinalFactor = project.energyFinalFactor * project.prio - project.lastRatio - project.energyMinStorage
 
 			table.insert(self.projects, project)

@@ -96,14 +96,14 @@ function canToggle(u, module, pause, update, toggle)
 	local pauseState = isPaused(u)
 	local prio = getPrio(module, not pauseState)
 
-	local changedByUser = toggleStates[id] and toggleStates[id].state ~= pauseState
-	if changedByUser and update then
-		module = "user"
-		prio = getPrio(module, not pauseState)
-		toggleStates[id] = {unit=u,prio=prio,module=module, state=pauseState, toggle = toggle}
-	end
-
-	local canChangeState = not changedByUser and not toggleStates[id] or toggleStates[id]['module'] == module or prio >= toggleStates[id]['prio']
+	-- local changedByUser = toggleStates[id] and toggleStates[id].state ~= pauseState
+	-- if changedByUser and update then
+	-- 	module = "user"
+	-- 	prio = getPrio(module, not pauseState)
+	-- 	toggleStates[id] = {unit=u,prio=prio,module=module, state=pauseState, toggle = toggle}
+	-- end
+	--not changedByUser and
+	local canChangeState =  not toggleStates[id] or toggleStates[id]['module'] == module or prio >= toggleStates[id]['prio']
 	if update and canChangeState then
 		toggleStates[id] = {unit=u,prio=prio,module=module, state=pause, toggle = toggle}
 	end
