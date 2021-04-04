@@ -60,7 +60,6 @@ Project = Class({
     throttle = {},
     index = 0,
     unit = nil,
-    assisters = {},
     isConstruction = false,
     Position = nil,
     prio = 0,
@@ -81,7 +80,7 @@ Project = Class({
         if not self.massProductionActual then self.massProductionActual = 0 end
         self.energyProduction = Eco.ProductionPerSecondEnergy
         self.energyProductionActual = econData(unit).energyProduced
-        self.MaintenanceConsumptionPerSecondEnergy = Eco.MaintenanceConsumptionPerSecondEnergy 
+        self.MaintenanceConsumptionPerSecondEnergy = Eco.MaintenanceConsumptionPerSecondEnergy or 0
         self.lastRatio = throttler.manager.ProjectMetaData[self.id].lastRatio
         if not self.lastRatio then self.lastRatio = 0 end
         self.unitName = bp.General.UnitName or bp.Description
@@ -157,17 +156,25 @@ Project = Class({
             if self.timeLeft > 0 then
                 self[t .. 'AdjacencyBonus'] = (self[t .. 'Drain'] - self[t .. 'Requested']) / self[t .. 'Drain']
             end
-
-            if self[t .. 'Production'] > 0 then
-                self[t .. 'ReversePayoff'] = self[t .. 'Production'] / (self.timeLeft * self[t .. 'Production'] + self[t .. 'CostRemaining'] + self[ot[t] .. 'Requested'])
-            else
-                self[t .. 'ReversePayoff'] = 0
-            end
         end
 
+        --prod score
+        if self.energyProduction > 0 then
+            self.energyReversePayoff = self.energyProduction / (self.timeLeft * self.energyProduction + self.energyCostRemaining)
+        else
+            self.energyReversePayoff  = 0
+        end
+        if self.massProduction > 0 then
+            self.massReversePayoff = self.massProduction / (self.timeLeft * self.massProduction + self.massCostRemaining + self.MaintenanceConsumptionPerSecondEnergy * 1.296)
+        else
+            self.massReversePayoff  = 0
+        end
+
+        --resource proportion
         self.massProportion = self.massRequested * 10 / (self.massRequested * 10 + self.energyRequested)
         self.energyProportion = self.energyRequested / (self.massRequested * 10 + self.energyRequested)
 
+        --progress rating
         if self.workProgress < 1 and self.timeLeft < 5 then
             self.completionBonus = (1 - self.timeLeft / 5) * 100 * self.workProgress
         else
@@ -183,16 +190,23 @@ Project = Class({
         self.energyAdjacencyBonus = self.energyAdjacencyBonus or 0
         self.massAdjacencyBonus = self.massAdjacencyBonus or 0
         if self.MaintenanceConsumptionPerSecondEnergy > 0 then
-            self.energyAdjacencyBonus = (self.MaintenanceConsumptionPerSecondEnergy - self.energyRequested) / self.MaintenanceConsumptionPerSecondEnergy
+            self.energyAdjacencyBonus = (self.MaintenanceConsumptionPerSecondEnergy + self.energyDrain - self.energyRequested) / self.MaintenanceConsumptionPerSecondEnergy
         end
         local adjacency = (self.energyAdjacencyBonus +1) * (self.massAdjacencyBonus +1)
 
         --neutral factor
-        self.neutralFactor = adjacency + self.completionBonus + self.progressBonus  
+        self.neutralFactor = adjacency + self.completionBonus + self.progressBonus 
+
+        --final factors
         self.energyFinalFactor = (self.neutralFactor + self.massReversePayoff * 100 + self.energyReversePayoff * 1000) * (1 + self.massProportion) 
         self.massFinalFactor = (self.neutralFactor + self.energyReversePayoff * 100 + self.massReversePayoff * 5000) * (1 + self.energyProportion)
+
+        --debug
+        -- if self.isMexUpgrade then
+        --     print("massFinalFactor: " .. self.massFinalFactor .. "|neutralFactor: " .. self.neutralFactor)
+        -- end
+
     end,
-    
 
     CalcMaxThrottle = function(self, eco)
         local maxThrottleE = 0
@@ -240,7 +254,7 @@ Project = Class({
             self.energyConsumed = self.energyConsumed + data.energyConsumed
         end
         
-        isMexUpgrade = EntityCategoryContains(categories.MASSEXTRACTION, u)
+        self.isMexUpgrade = EntityCategoryContains(categories.MASSEXTRACTION, u)
         table.bininsert(self.assisters, {energyRequested=data.energyRequested, unit=u}, self._sortAssister)
     end,
 
