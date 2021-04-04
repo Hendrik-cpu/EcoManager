@@ -42,10 +42,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		if category then
 			project.prio = category['priority']
 			project.energyMinStorage = category['storage']
-			project.massRatio = 0
-			if project.energyRequested > 0 and project.massProduction > 0 then
-				project.massRatio = project.massProduction / project.energyRequested
-			end
+			project.energyFinalFactor = project.energyFinalFactor * project.prio - project.lastRatio - project.energyMinStorage
 
 			table.insert(self.projects, project)
 		end
@@ -56,7 +53,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		local new_net
 
 		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining) 
-		if new_net < 0 and UnpausedCount > 0 then
+		if new_net < 0 then
 			project:SetEnergyDrain(math.max(0, net))
 		else
 			UnpausedCount = UnpausedCount + 1
