@@ -115,7 +115,7 @@ EcoManager = Class({
 	end,
 
 	manageEconomy = function(self)
-
+		
 		if not self.Active then
 			return false
 		end
@@ -158,6 +158,7 @@ EcoManager = Class({
 					if p.throttle < 1 then
 						if not pause then
 							local last_ratio = p.throttle
+							local lastThrottle = self.ProjectMetaData[p.id].lastRatio
 							plugin:throttle(eco, p)
 							if p.throttle > 0 and p.throttle < 1 then
 								--LOG("ADJUST THIS SHIT")
@@ -169,8 +170,8 @@ EcoManager = Class({
 								pause = true
 							end
 
-							if p.throttle ~= last_ratio then
-								self.ProjectMetaData[p.id] = {lastAccess = GameTick(), lastRatio = last_ratio}
+							if p.throttle ~= lastThrottle then
+								self.ProjectMetaData[p.id] = {lastAccess = GameTick(), lastRatio = p.throttle}
 							end
 
 							ratio_inc = p.throttle - last_ratio
