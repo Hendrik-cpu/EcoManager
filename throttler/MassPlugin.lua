@@ -25,12 +25,12 @@ MassPlugin = Class(ThrottlerPlugin) {
 		scu = {name="SCU upgrades", category = categories.LAND * categories.MOBILE * categories.SUBCOMMANDER, priority = 40},
 		estor = {name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 2},
 		eprod = {name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 1},
-		build = {name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION - categories.DEFENSE, priority = 30},
 		def = {name="Defense", category = categories.STRUCTURE * categories.DEFENSE, priority = 80},
+		build = {name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION - categories.ENERGYSTORAGE - categories.ENERGYPRODUCTION - categories.MASSFABRICATION - categories.DEFENSE, priority = 30},
 	},
 
 	massProductionOnly = true,
-	massProductionPriorityMultiplier = 350,
+	massProductionPriorityMultiplier = 1,
 
 	_sortProjects = function(a, b)
 		return a.massFinalFactor > b.massFinalFactor
@@ -53,7 +53,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 				category = nil
 			end
 
-			if category then
+			if category and project.massRequested > 0 then
 				if category.massProduction then
 					project.prio = self.massProductionPriorityMultiplier * category['priority']
 				else
@@ -61,7 +61,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 				end
 
 				project.massMinStorage = category['storage']
-				project.massFinalFactor = project.massFinalFactor * project.prio - project.lastRatio - project.massMinStorage
+				project.massFinalFactor = project.massFinalFactor * project.prio --- project.lastRatio - project.massMinStorage
 
 				table.insert(self.projects, project)
 			end
