@@ -63,7 +63,7 @@ function PauseAll()
 
 	AllIsPause=not AllIsPause
 	pauser.Pause(units, AllIsPause, 'user')
-	ToggleScriptBit(units, 4, not AllIsPause)
+	ToggleScriptBit(Units.Get(categories.STRUCTURE - categories.MASSEXTRACTION), 4, not AllIsPause)
 	
 	if AllIsPause then
 		print("Paused all units except selection!")
@@ -133,6 +133,7 @@ function toggleEcomanager()
 	else
 		removeListener(managerThreadKey)
 		resetPauseStates({ecomanager =  true})
+		import(modPath .. "controlPannel/controlPannel.lua").hideButtons()
 		print('Throttler terminated!')
 	end
 end
