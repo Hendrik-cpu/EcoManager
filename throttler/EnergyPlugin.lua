@@ -6,21 +6,21 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		fabs = {name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1, storage = 0.2},
 		para = {name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, priority = 3},
 		lan3 = {name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 30},
-		lan2 = {name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 50},
-		lan1 = {name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 80},
+		lan2 = {name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 40},
+		lan1 = {name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 50},
 		air3 = {name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 30, storage = 0.2},
 		air2 = {name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 30},
 		air1 = {name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 30},
 		nav3 = {name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 30},
-		nav2 = {name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 50},
-		nav1 = {name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 80},
-		exp = {name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, priority = 90},
-		acu = {name="ACU upgrades", category = categories.LAND * categories.MOBILE * categories.COMMAND, priority = 100},
+		nav2 = {name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 40},
+		nav1 = {name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 50},
+		exp = {name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, priority = 60},
+		acu = {name="ACU upgrades", category = categories.LAND * categories.MOBILE * categories.COMMAND, priority = 90},
 		scu = {name="SCU upgrades", category = categories.LAND * categories.MOBILE * categories.SUBCOMMANDER, priority = 50},
-		mex = {name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 5, storage = 0.02},
+		mex = {name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 30, storage = 0.02},
 		stor = {name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 97},
-		prod = {name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
-		build = {name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION - categories.MASSFABRICATION, priority = 40},
+		power = {name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
+		build = {name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION - categories.ENERGYSTORAGE - categories.ENERGYPRODUCTION - categories.MASSFABRICATION, priority = 40},
 	},
 
 	_sortProjects = function(a, b)
@@ -40,14 +40,18 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		end
 
 		if category then
-			if project.isMassFabricator then 
-				project.prio = category.priority
-			else
-				project.prio = self.constructionCategories.build.priority
-			end
+			-- if project.isMassFabricator then 
+			-- 	project.prio = category.priority
+			-- else
+			-- 	project.prio = self.constructionCategories.build.priority
+			-- end
+			project.prio = category.priority
 			project.energyMinStorage = category.storage
-			project.energyFinalFactor = project.energyFinalFactor * project.prio - project.lastRatio - project.energyMinStorage
-
+			project.energyFinalFactor = project.energyFinalFactor * project.prio --- project.lastRatio - project.energyMinStorage
+			--print(category.name .. ": " .. project.energyFinalFactor .. " - " .. tostring(project.isMassFabricator))
+			-- if category == self.constructionCategories.power then
+			-- 	LOG(category.name .. ": " .. project.energyFinalFactor .. " Neutral Factor: " .. project.neutralFactor)
+			-- end
 			table.insert(self.projects, project)
 		end
 	end,
