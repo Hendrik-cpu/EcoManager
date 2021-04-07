@@ -20,7 +20,7 @@ local CanUnpause = import(modulesPath .. 'pause.lua').canPause
 local pause_queue = {}
 local overlays = {}
 
-function SetPaused(units, state)
+function setPaused(units, state)
     Pause(units, state, 'mexes')
 end
 
@@ -101,7 +101,7 @@ function upgradeMexes(mexes, unpause)
 	end
 
 	if unpause then
-		SetPaused(mexes, false)
+		setPaused(mexes, false)
 	end
 
 	return true
@@ -147,7 +147,7 @@ function pauseMexes()
 
 	if table.getsize(pause) > 0 then
 		triggerEvent('toggle_pause', pause, true)
-		SetPaused(pause, true)
+		setPaused(pause, true)
 	end
 end
 
