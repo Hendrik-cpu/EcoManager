@@ -74,9 +74,6 @@ EcoManager = Class({
 							project = Project(focus)
 							project.isConstruction = isConstruction
 							project.isMassFabricator = isMassFabricator
-							if isMassFabricator then
-								project.workProgress = 1
-							end
 							
 							-- map positions
 							local pos = focus:GetPosition()
@@ -171,7 +168,7 @@ EcoManager = Class({
 							end
 
 							if p.throttle ~= lastThrottle then
-								self.ProjectMetaData[p.id] = {lastAccess = GameTick(), lastRatio = p.throttle}
+								self.ProjectMetaData[p.id] = {lastRatio = p.throttle}
 							end
 
 							ratio_inc = p.throttle - last_ratio
@@ -186,6 +183,8 @@ EcoManager = Class({
 					end
 				end
 				
+				--update control pannel
+				import(modPath .. "controlPannel/controlPannel.lua").updateUI(plugin.projects,name)
 			end
 		end
 		--LOG("end: " .. eco.energyActual .. " mass:".. eco.massActual)
@@ -245,6 +244,7 @@ EcoManager = Class({
 				self:setPause(units, toggle, mode == 'pause')
 			end
 		end
+
 	end,
 	
 	setPause = function(self, units, toggle, pause)
