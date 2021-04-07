@@ -14,7 +14,8 @@ function init(isReplay)
 	CreateModUI(isReplay, parent)
 end
 function round(num, numDecimalPlaces)
-	return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num))
+	local mult = 10^(numDecimalPlaces or 0)
+	return math.floor(num * mult + 0.5) / mult
 end
 
 local rows = 2
@@ -23,7 +24,18 @@ local grid = {}
 local colorOptions = {energy = "yellow", mass = "green"}
 local columnAssignment = {energy = 1, mass = 2}
 
+local UIHidden = false
+
+function toggleUI()
+	UIHidden = not UIHidden
+end
+
 function updateUI(projects, pluginName)
+
+	if UIHidden then
+		hideButtons()
+		return
+	end
 
 	local color = colorOptions[pluginName]
 	local row = columnAssignment[pluginName]
@@ -45,7 +57,12 @@ function updateUI(projects, pluginName)
 			local button = grid[index][row]
 
 			-- assign units that will be selected when the button is clicked
-			-- button.units = project.getUnits()
+			local units = {}
+			for _, a in project.assisters do
+				table.insert(units, a.unit)
+			end
+
+			button.units = units
 
 			if project.throttle != 0 then
 				button.progress:SetValue(project.throttle)
@@ -54,21 +71,14 @@ function updateUI(projects, pluginName)
 				button.progress.Height:Set(0)
 			end
 
-			-- button.count:SetText(table.getsize(button.units))
+			button.count:SetText(table.getsize(units))
 
 			-- display the info
-			button.info1:SetText(round(project[pluginName .. "FinalFactor"]))
+			button.info1:SetText(round(project[pluginName .. "FinalFactor"],2))
 			button.info1:SetColor(color)
 
-			button.info2:SetText(round(project.neutralFactor))
+			button.info2:SetText(round(project.neutralFactor,2))
 			button.info2:SetColor(color)
-
-			button.info3:SetText(round(project.massReversePayoff))
-			button.info3:SetColor(color)
-
-			-- addLabel(button, "ff", 0)
-			-- button["ff"]:SetText(round(project[pluginName .. "FinalFactor"],2))
-			-- button["ff"]:SetColor(color)
 
 			-- set the texture that corresponds to the unit
 			local iconName1, iconName2, iconName3, iconName4 = GameCommon.GetCachedUnitIconFileNames(project.unit:GetBlueprint())
