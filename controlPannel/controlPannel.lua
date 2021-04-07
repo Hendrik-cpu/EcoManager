@@ -45,7 +45,7 @@ function updateUI(projects, pluginName)
 			local button = grid[index][row]
 
 			-- assign units that will be selected when the button is clicked
-			button.units = project.getUnits()
+			-- button.units = project.getUnits()
 
 			if project.throttle != 0 then
 				button.progress:SetValue(project.throttle)
