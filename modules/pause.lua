@@ -70,12 +70,25 @@ function Pause(units, pause, module)
 	SetPaused(changables, pause)
 end
 
+local unitFirstRegistered = {}
 function Toggle(units, pause, module, toggle)
 	local changables = {}
 	for _, u in units do
 		local id = u:GetEntityId()
-		if canToggle(u, module, pause, true, toggle) then
-			table.insert(changables, u)
+
+		local registeredUnit = unitFirstRegistered[id]
+		local firstAccess = nil
+		if registeredUnit then
+			if not unitFirstRegistered[id].unit:IsDead() then 
+				firstAccess = unitFirstRegistered[id].firstAccess
+			end
+		else
+			unitFirstRegistered[id] = {unit = u, firstAccess = GameTick()}
+		end
+		if firstAccess and GameTick() - firstAccess > 5 then
+			if canToggle(u, module, pause, true, toggle) then
+				table.insert(changables, u)
+			end
 		end
 	end
 	ToggleScriptBit(changables, 4, not pause)
