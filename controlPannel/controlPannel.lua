@@ -42,30 +42,46 @@ function updateUI(projects, pluginName)
 	-- hide all buttons
 	hideButtons(row)
 
-	local existingFactors = {}
 	local collapsedProjects = {}
+	local existingCollections = {}
+	local i = 1
 	for _, project in projects do
 		local k = project[pluginName .. "FinalFactor"] .. project.unitName .. project.throttle
-		if not existingFactors[k] then
-			existingFactors[k] = true
-			table.insert(collapsedProjects, project)
+		local index = existingCollections[k]
+		if index then
+			table.insert(collapsedProjects[index].throttle,project.throttle)
+			for _, a in project.assisters or {} do
+				table.insert(collapsedProjects[index].assisters,a)
+			end
+		else
+			existingCollections[k] = i
+			collapsedProjects[i] = {project = project, assisters = project.assisters, throttle = {project.throttle}}
+			i = i + 1
 		end
 	end
 
-	for index, project in collapsedProjects do
+	for index, set in collapsedProjects do
 		if index <= cols then
+			local project = set.project
 			local button = grid[index][row]
 
 			-- assign units that will be selected when the button is clicked
 			local units = {}
-			for _, a in project.assisters do
+			for _, a in set.assisters do
 				table.insert(units, a.unit)
 			end
 
 			button.units = units
+			local sum = 0
+			local count = 0
+			for _, t in set.throttle or {} do
+				sum = sum + t
+				count = count + 1
+			end
+			local averageThrottle = sum / count
 
-			if project.throttle != 0 then
-				button.progress:SetValue(project.throttle)
+			if averageThrottle > 0 then
+				button.progress:SetValue(averageThrottle)
 				button.progress.Height:Set(3)
 			else
 				button.progress.Height:Set(0)
@@ -77,8 +93,16 @@ function updateUI(projects, pluginName)
 			button.info1:SetText(round(project[pluginName .. "FinalFactor"],2))
 			button.info1:SetColor(color)
 
-			button.info2:SetText(round(project.neutralFactor,2))
-			button.info2:SetColor(color)
+			local constr = project.isConstruction
+			if constr then
+				button.info2:SetText("true") 
+				button.info2:SetColor('green')
+			else
+				button.info2:SetText("false") 
+				button.info2:SetColor('red')
+			end
+			-- button.info2:SetText(round(project.neutralFactor,2))
+			-- button.info2:SetColor('blue')
 
 			-- set the texture that corresponds to the unit
 			local iconName1, iconName2, iconName3, iconName4 = GameCommon.GetCachedUnitIconFileNames(project.unit:GetBlueprint())

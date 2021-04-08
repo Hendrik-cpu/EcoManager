@@ -148,43 +148,22 @@ function CreateManagerButton(parent)
 	
 	bg.progress = StatusBar(bg, 0, 1, false, false,
 							UIUtil.UIFile('/game/unit-over/health-bars-back-1_bmp.dds'),
-							UIUtil.UIFile('/game/unit-over/bar01_bmp.dds'), true, "Unit RO Health Status Bar")
+							UIUtil.UIFile('/game/unit-over/unit-bar_bmp_red.dds'), true, "Unit RO Health Status Bar")
 	
 	bg.progress.Width:Set(32)
     bg.progress.Height:Set(0)
     LayoutHelpers.AtLeftTopIn(bg.progress, bg, 6, 2)
 
-	-- bg.info1 = UIUtil.CreateText(bg.icon, '', 10, UIUtil.bodyFont)
-	-- bg.info1:SetColor('red')
-    -- bg.info1:SetDropShadow(true)
-	-- LayoutHelpers.AtTopIn(bg.info1, bg.icon, 0)
-    -- LayoutHelpers.AtRightIn(bg.info1, bg.icon, 2)
-	-- CreateTextBG(bg, bg.info1, '77000000')
-
-	-- bg.info2 = UIUtil.CreateText(bg.icon, '', 10, UIUtil.bodyFont)
-	-- bg.info2.SetColor('red')
-    -- bg.info2:SetDropShadow(true)
-	-- LayoutHelpers.AtTopIn(bg.info2, bg.icon, 10)
-    -- LayoutHelpers.AtRightIn(bg.info2, bg.icon, 2)
-	-- CreateTextBG(bg, bg.info2, '77000000')
-
-	-- bg.info3 = UIUtil.CreateText(bg.icon, '', 10, UIUtil.bodyFont)
-	-- bg.info3.SetColor('red')
-    -- bg.info3:SetDropShadow(true)
-	-- LayoutHelpers.AtTopIn(bg.info3, bg.icon, 20)
-    -- LayoutHelpers.AtRightIn(bg.info3, bg.icon, 2)
-	-- CreateTextBG(bg, bg.info3, '77000000')
 
 	addLabel(bg, "info1", 0)
 	addLabel(bg, "info2", 10)
-	addLabel(bg, "info3", 20)
 
-	-- bg.count = UIUtil.CreateText(bg.icon, '', 10, UIUtil.bodyFont)
-	-- bg.count:SetColor('ffffffff')
-    -- bg.count:SetDropShadow(true)
-	-- LayoutHelpers.AtBottomIn(bg.count, bg.icon, 0)
-    -- LayoutHelpers.AtRightIn(bg.count, bg.icon, 2)
-	-- CreateTextBG(bg, bg.count, '77000000')
+	bg.count = UIUtil.CreateText(bg.icon, '', 10, UIUtil.bodyFont)
+	bg.count:SetColor('ffffffff')
+    bg.count:SetDropShadow(true)
+	LayoutHelpers.AtBottomIn(bg.count, bg.icon, 0)
+    LayoutHelpers.AtRightIn(bg.count, bg.icon, 2)
+	CreateTextBG(bg, bg.count, '77000000')
 	
 	return bg
 end
