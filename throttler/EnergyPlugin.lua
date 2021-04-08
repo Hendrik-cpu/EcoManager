@@ -40,15 +40,15 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		end
 
 		if category then
-			project.prio = category.priority
-			project.energyMinStorage = category.storage
-			-- if category == self.constructionCategories.fabs and self.isConstruction then
-			-- 	project.prio = self.constructionCategories.build.priority
-			-- 	project.energyMinStorage = self.constructionCategories.build.storage
-			-- else
-			-- 	project.prio = category.priority
-			-- 	project.energyMinStorage = category.storage
-			-- end
+			-- project.prio = category.priority
+			-- project.energyMinStorage = category.storage
+			if category == self.constructionCategories.fabs and project.isConstruction then
+				project.prio = self.constructionCategories.build.priority
+				project.energyMinStorage = self.constructionCategories.build.storage
+			else
+				project.prio = category.priority
+				project.energyMinStorage = category.storage
+			end
 			project.energyFinalFactor = project.energyFinalFactor * project.prio --- project.energyMinStorage * 10000
 			table.insert(self.projects, project)
 		end
