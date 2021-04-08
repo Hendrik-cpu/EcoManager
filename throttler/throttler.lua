@@ -28,7 +28,8 @@ function init()
 	addCommand('mass', massPriority)
 	addCommand('printcats', printCategories)
 	addCommand('toggle', toggleAll)
-	
+	addCommand('debug', toggleDebugging)
+
 	addHotkey('Ctrl-V', throttler .. '.PauseAll')
 	addHotkey('Ctrl-B', EconomyPath .. '.PauseEcoM80_E90')
 	addHotkey('Ctrl-N', EconomyPath .. '.PauseEcoM10_E90')
@@ -37,6 +38,24 @@ function init()
 	addHotkey('Ctrl-P', throttler .. '.ToggleMexMode')
 	addHotkey('Ctrl-O', throttler .. '.increaseMexPrio')
 	addHotkey('Ctrl-L', throttler .. '.decreaseMexPrio')
+end
+
+function toggleEcomanager()
+	manager.Active = not manager.Active 
+	if manager.Active then
+		resetPauseStates()
+		addListener(manageEconomy, 0.3,'em_throttler',managerThreadKey)
+		print('Throttler started!')
+	else
+		removeListener(managerThreadKey)
+		resetPauseStates({ecomanager =  true})
+		import(modPath .. "controlPannel/controlPannel.lua").hideButtons()
+		print('Throttler terminated!')
+	end
+end
+
+function toggleDebugging()
+	import(modPath .. "controlPannel/controlPannel.lua").toggleUI()
 end
 
 local toggle = true
@@ -124,20 +143,6 @@ function adjustMexPrio(value)
 	print("multiplier set to: " .. newVal)
 end 
 
-function toggleEcomanager()
-	manager.Active = not manager.Active 
-	if manager.Active then
-		resetPauseStates()
-		addListener(manageEconomy, 0.3,'em_throttler',managerThreadKey)
-		print('Throttler started!')
-	else
-		removeListener(managerThreadKey)
-		resetPauseStates({ecomanager =  true})
-		import(modPath .. "controlPannel/controlPannel.lua").hideButtons()
-		print('Throttler terminated!')
-	end
-end
-
 function togglePlugin(args)
 	local str
 	local cmd
@@ -187,10 +192,15 @@ end
 function changePriority(args, plugin)
 	local category = args[2]
 	local priority = args[3]
-	
+	local storage = args[4]
+
 	if manager.plugins[plugin].constructionCategories[category].priority then
 		manager.plugins[plugin].constructionCategories[category].priority = tonumber(priority)
 		print(plugin .. " " ..  category .. " priority set to " .. priority)
+		if storage then 
+			manager.plugins[plugin].constructionCategories[category].storage = tonumber(storage)/100
+			print(plugin .. " " ..  category .. " priority set to " .. storage .. "%")
+		end
 	else
 		print("Invalid input!")
 	end
