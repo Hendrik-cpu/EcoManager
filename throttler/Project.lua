@@ -64,23 +64,27 @@ Project = Class({
     Position = nil,
     prio = 0,
     inactivityTicks = 0,
-
-    __init = function(self, unit)
+    
+    __init = function(self, unit, isConstruction)
         local bp = unit:GetBlueprint()
         local Eco = bp.Economy
+        self.isConstruction = isConstruction
         self.id = unit:GetEntityId()
         self.unit = unit
         self.assisters = {}
         self.throttle = 0
-        self.buildTime = Eco.BuildTime
-        self.massBuildCost = Eco.BuildCostMass
-        self.energyBuildCost = Eco.BuildCostEnergy
+        if self.isConstruction then
+            self.buildTime = Eco.BuildTime
+            self.massBuildCost = Eco.BuildCostMass
+            self.energyBuildCost = Eco.BuildCostEnergy
+        end
+        self.MaintenanceConsumptionPerSecondEnergy = Eco.MaintenanceConsumptionPerSecondEnergy or 0
+
         self.massProduction = Eco.ProductionPerSecondMass
         self.massProductionActual = econData(unit).massProduced
         if not self.massProductionActual then self.massProductionActual = 0 end
         self.energyProduction = Eco.ProductionPerSecondEnergy
         self.energyProductionActual = econData(unit).energyProduced
-        self.MaintenanceConsumptionPerSecondEnergy = Eco.MaintenanceConsumptionPerSecondEnergy or 0
         self.lastRatio = throttler.manager.ProjectMetaData[self.id].lastRatio
         if not self.lastRatio then self.lastRatio = 0 end
         self.unitName = bp.General.UnitName or bp.Description
@@ -125,8 +129,6 @@ Project = Class({
     LoadFinished = function(self, eco)
         self.workLeft = 1 - self.workProgress
         self.timeLeft = self.workLeft * self.buildTime
-        self.workTimeLeft = (self.timeLeft / self.buildRate) 
-        self.minTimeLeft = self.workTimeLeft * self:CalcMaxThrottle(eco)
 
         --mass storages
         if EntityCategoryContains(categories.MASSSTORAGE*categories.STRUCTURE, self.unit) then
@@ -146,28 +148,47 @@ Project = Class({
         	elseif mexMassProduction==6 then
 	        	self.massProduction=0.75
 	        end
-        --elseif EntityCategoryContains(categories.MASSFABRICATOR*categories.STRUCTURE, self.unit)
+        elseif EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE*categories.TECH2, self.unit) then
+            local adjacentCount=0
 
+            local pos = self.Position
+            local posX = pos[1]
+            local posY = pos[3]
+            for _, x in {posX, posX+2, posX-2} do
+                for _, y in {posY, posY+2, posY-2} do
+                    if (y == posY or x == posX) and not (y == posY and x == posX) then
+                        local someBuilding = throttler.manager.allBuildingsPostions[x][y]
+                        if someBuilding and EntityCategoryContains(categories.MASSSTORAGE*categories.STRUCTURE, someBuilding) then
+                            adjacentCount = adjacentCount +1
+                        end
+                    end
+                end
+            end
+            self.massProduction = (1 + adjacentCount * 0.125) 
         end
 
         local ot = {mass = "energy", energy = "mass"}
         for _, t in {'mass', 'energy'} do
             self[t .. 'CostRemaining'] = self[t .. 'BuildCost'] * self.workLeft
-            if self.timeLeft > 0 then
+            if self[t .. 'Drain'] > 0 then
                 self[t .. 'AdjacencyBonus'] = (self[t .. 'Drain'] - self[t .. 'Requested']) / self[t .. 'Drain']
+            else
+                self[t .. 'AdjacencyBonus'] = 0
             end
         end
 
         --prod score
-        if self.energyProduction > 0 then
-            self.energyReversePayoff = self.energyProduction / (self.timeLeft * self.energyProduction + self.energyCostRemaining)
-        else
-            self.energyReversePayoff  = 0
-        end
+        self.massReversePayoff = 0
         if self.massProduction > 0 then
-            self.massReversePayoff = self.massProduction / (self.timeLeft * self.massProduction + self.massCostRemaining + self.MaintenanceConsumptionPerSecondEnergy * 1.296)
-        else
-            self.massReversePayoff  = 0
+            if self.isConstruction then
+                self.massReversePayoff = self.massProduction / (self.timeLeft * self.massProduction + self.massCostRemaining + self.MaintenanceConsumptionPerSecondEnergy * 1.296)
+            else
+                self.massReversePayoff = self.massProduction / (self.energyRequested * 1.296)
+            end
+        end
+        self.energyReversePayoff = 0
+        if self.energyProduction > 0 and self.energyCostRemaining > 0 then
+            self.energyReversePayoff = self.energyProduction / (self.timeLeft * self.energyProduction + self.energyCostRemaining)
         end
 
         --resource proportion
@@ -175,16 +196,11 @@ Project = Class({
         self.energyProportion = self.energyRequested / (self.massRequested * 10 + self.energyRequested)
 
         --progress rating
-        if self.workProgress < 1 and self.timeLeft < 5 then
+        self.completionBonus = 0
+        if self.workProgress > 0 and self.timeLeft < 5 then
             self.completionBonus = (1 - self.timeLeft / 5) * 100 * self.workProgress
-        else
-            self.completionBonus = 0
         end
-        if self.workProgress == 1 then
-            self.progressBonus = 0 
-        else
-            self.progressBonus = self.workProgress
-        end
+        self.progressBonus = self.workProgress
 
         --adjacency
         self.energyAdjacencyBonus = self.energyAdjacencyBonus or 0
@@ -192,10 +208,10 @@ Project = Class({
         if self.MaintenanceConsumptionPerSecondEnergy > 0 then
             self.energyAdjacencyBonus = (self.MaintenanceConsumptionPerSecondEnergy + self.energyDrain - self.energyRequested) / self.MaintenanceConsumptionPerSecondEnergy
         end
-        local adjacency = (self.energyAdjacencyBonus +1) * (self.massAdjacencyBonus +1)
+        self.adjacency = (self.energyAdjacencyBonus +1) * (self.massAdjacencyBonus +1)
 
         --neutral factor
-        self.neutralFactor = adjacency + self.completionBonus + self.progressBonus 
+        self.neutralFactor = 1 + self.progressBonus + self.completionBonus
 
         --final factors
         self.energyFinalFactor = (self.neutralFactor + self.massReversePayoff * 100 + self.energyReversePayoff * 1000) * (1 + self.massProportion) 
@@ -244,8 +260,11 @@ Project = Class({
         self.workProgress = math.max(self.workProgress, u:GetWorkProgress())
         self.energyRequested = self.energyRequested + data.energyRequested
         self.massRequested = self.massRequested + data.massRequested
-        self.massDrain = self.massDrain + math.floor(self.massBuildCost / (self.buildTime/uBuildRate))
-        self.energyDrain = self.energyDrain + math.floor(self.energyBuildCost / (self.buildTime/uBuildRate))
+
+        if self.isConstruction and self.buildTime > 0 and uBuildRate > 0 then
+            self.massDrain = self.massDrain + math.floor(self.massBuildCost / (self.buildTime/uBuildRate))
+            self.energyDrain = self.energyDrain + math.floor(self.energyBuildCost / (self.buildTime/uBuildRate))
+        end
 
         if not isPaused(u) then
             eco.massActual = eco.massActual - data.massConsumed 
@@ -321,8 +340,8 @@ Project = Class({
 
             if not pause_list[key] then pause_list[key] = {pause={}, no_pause={}} end
 
-            local constructionLifeSupport = (self.isConstruction and (self.timeLeft < 0.5 or self.workProgress == 1 or (self.workProgress < 0.01 and not self.isMexUpgrade and not EntityCategoryContains(categories.STRUCTURE, u))))
-            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or (self.isConstruction and firstAssister) or constructionLifeSupport then
+            --local constructionLifeSupport = (self.isConstruction and (self.workProgress < 0.01 and not self.isMexUpgrade and not EntityCategoryContains(categories.STRUCTURE, u)))
+            if (currEnergyRequested + a.energyRequested) <= maxEnergyRequested or (self.isConstruction and firstAssister) then
                 if is_paused then
                     table.insert(pause_list[key]['no_pause'], u)
                 end

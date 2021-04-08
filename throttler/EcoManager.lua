@@ -32,6 +32,7 @@ EcoManager = Class({
 		local unpause = {}
 		self.mexPositions = {}
 		self.projects = {}
+		self.allBuildingsPostions = {}
 		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER)
 
 		for _, u in units do
@@ -44,6 +45,13 @@ EcoManager = Class({
 				if EntityCategoryContains(categories.STRUCTURE * categories.MASSEXTRACTION, u) then
 					table.insert(self.mexPositions, { position = u:GetPosition(), massProduction = u:GetBlueprint().Economy.ProductionPerSecondMass })
 				end
+
+				--all units positions
+				local pos = u:GetPosition()
+				if(not self.allBuildingsPostions[pos[1]]) then
+					self.allBuildingsPostions[pos[1]] = {}
+				end
+				self.allBuildingsPostions[pos[1]][pos[3]] = u
 
 				if pauser.canInvertState(u,moduleName) then
 
@@ -71,8 +79,7 @@ EcoManager = Class({
 						project = self.projects[id]
 						if not project then
 							--LOG("Adding new project " .. id)
-							project = Project(focus)
-							project.isConstruction = isConstruction
+							project = Project(focus, isConstruction)
 							project.isMassFabricator = isMassFabricator
 							
 							-- map positions
@@ -94,7 +101,7 @@ EcoManager = Class({
 		end
 
 		if unpause then
-			self:setPause(unpause, 'pause', false)
+			self:setPaused(unpause, 'pause', false)
 		end
 
 		for _, p in self.projects do
@@ -116,7 +123,8 @@ EcoManager = Class({
 		if not self.Active then
 			return false
 		end
-
+		pauser.cleanStates()
+		
 		local all_projects = {}
 		self.pause_list = {}
 		local eco = Economy()
@@ -127,11 +135,11 @@ EcoManager = Class({
 			table.insert(all_projects, p)
 		end
 
-		--print ("n_projects " .. table.getsize(all_projects))
+		-- print ("n_projects " .. table.getsize(all_projects))
 		--LOG("NEW BALANCE ROUND")
 
 		import(throttlerPath .. 'Project.lua').throttleIndex = 0
-		import(throttlerPath .. 'Project.lua').firstAssister = true
+		import(throttlerPath .. 'Project.lua').firstAssister = false
 		--LOG("start: " .. eco.energyActual .. " mass:".. eco.massActual)
 		local energyActual = eco.energyActual
 		local massActual = eco.massActual
@@ -193,37 +201,28 @@ EcoManager = Class({
 		--LOG(repr(all_projects)) --printing of a table?
 
 		--preemptive pausing of future assisters, add preemtive projects too? not possible because blueprint cant be retrieved from command queue?
+		--for factories it doesn't work, guess the project position is not the same as the engineers target
 		local engineers = Units.Get(categories.ENGINEER)
 		for _, e in engineers do
-			if not e:IsDead() then
-				local is_idle = e:IsIdle()
-				local focus = e:GetFocus()
+			if not e:IsDead() and not e:IsIdle() and not e:GetFocus() then
 				local pause = false
 	
-				if not (focus) then
-				-- engineer isn't focusing, walking towards mex?
-					local queue = e:GetCommandQueue()
-					local p = queue[1].position
-	
-					if(queue[1].type == 'Guard' or queue[1].type == 'Repair') then
-						--print("guarding engineer found")
-						if(self.ProjectPositions[p[1]] and self.ProjectPositions[p[1]][p[3]]) then
-							local unitID = self.ProjectPositions[p[1]][p[3]]:GetEntityId()
-							local project = self.projects[unitID]
+				local queue = e:GetCommandQueue()
+				local p = queue[1].position
+				if(queue[1].type == 'Guard' or queue[1].type == 'Repair') then
+					if(self.ProjectPositions[p[1]] and self.ProjectPositions[p[1]][p[3]]) then
+						local unitID = self.ProjectPositions[p[1]][p[3]]:GetEntityId()
+						local project = self.projects[unitID]
 
-							if (VDist3(p, e:GetPosition()) < 15) and (project.throttle > 0) then -- 10 -> buildrange of engineer maybe?
-								pause = true
-								--print("close range assister that needs to be paused found")
-							end
+						if (VDist3(p, e:GetPosition()) < 15) and (project.throttle > 0) then --engineer build range
+							pause = true
 						end
-					--elseif queue[1].type == "BuildMobile" then
-						--LOG(repr(queue))
 					end
 				end
 
 				if pause then
-					if not self.pause_list['pause'] then self.pause_list['pause'] = {pause={}, no_pause={}} end
-					table.insert(self.pause_list['pause']['pause'], e)
+					if not self.pause_list.pause then self.pause_list.pause = {pause={}, no_pause={}} end
+					table.insert(self.pause_list.pause.pause, e)
 				end
 			end
 		end
@@ -241,13 +240,13 @@ EcoManager = Class({
 			end
 
 			for mode, units in modes do
-				self:setPause(units, toggle, mode == 'pause')
+				self:setPaused(units, toggle, mode == 'pause')
 			end
 		end
 
 	end,
 	
-	setPause = function(self, units, toggle, pause)
+	setPaused = function(self, units, toggle, pause)
 		if toggle == 'pause' then
 			pauser.Pause(units, pause, moduleName)
 		else
