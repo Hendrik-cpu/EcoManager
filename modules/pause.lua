@@ -94,20 +94,26 @@ function canToggle(u, module, pause, update, toggle)
 	end
 
 	local pauseState = isPaused(u)
-	local prio = getPrio(module, not pauseState)
-
 	-- local changedByUser = toggleStates[id] and toggleStates[id].state ~= pauseState
 	-- if changedByUser and update then
-	-- 	module = "user"
-	-- 	prio = getPrio(module, not pauseState)
-	-- 	toggleStates[id] = {unit=u,prio=prio,module=module, state=pauseState, toggle = toggle}
+	-- 	toggleStates[id] = {unit=u,prio=100,module="user", state=pauseState, toggle = toggle}
 	-- end
+	local prio = getPrio(module, not pauseState)
+
 	--not changedByUser and
-	local canChangeState =  not toggleStates[id] or toggleStates[id]['module'] == module or prio >= toggleStates[id]['prio']
+	local canChangeState = not toggleStates[id] or toggleStates[id]['module'] == module or prio >= toggleStates[id]['prio']
 	if update and canChangeState then
 		toggleStates[id] = {unit=u,prio=prio,module=module, state=pause, toggle = toggle}
 	end
 	return canChangeState
+end
+
+function cleanStates()
+	for id, state in states do
+		if state.unit:IsDead() or ((GameTick() - state.lastAccess) > 20 and state.unit:GetFocus() == nil) then --2 seconds
+			states[id] = nil
+		end
+	end
 end
 
 function canPause(u, module, pause, update)
@@ -121,27 +127,11 @@ function canPause(u, module, pause, update)
 	local prio = getPrio(module, not pauseState)
 	local changeObsolete = update and pauseState == pause
 
-	--a change of focus resets the user introduced state, if there is a >1 second break
-	local focus = u:GetFocus()
-	local focusType = nil
-	local gameTick = GameTick()
-	if focus then focusType = focus:GetBlueprint().General.UnitName	end
-	if states[id] and states[id].module == "user" and states[id].focusType and states[id].focusType ~= focusType then 
-		if states[id].lastFocusChange and (gameTick-states[id].lastFocusChange) / 10 > 1 then
-			states[id] = nil
-		elseif states[id].lastFocusChange then
-		end
-		if states[id] then 
-			states[id].lastFocusChange = gameTick
-		end
-	end
-
 	local canChangeState = not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] and not changeObsolete
 	if update then
 		if canChangeState then
-			states[id] = {unit=u,prio=prio,module=module, state=pause}
+			states[id] = {unit=u,prio=prio,module=module, state=pause, lastAccess=GameTick()}
 		end
-		if states[id] then states[id].focusType=focusType end
 	end
 	return canChangeState
 end
