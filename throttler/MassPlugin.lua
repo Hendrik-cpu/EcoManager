@@ -6,7 +6,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
 		mex1 = {name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
 		mex2 = {name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
-		mstor = {name="Mass Storage", category = categories.STRUCTURE * categories.MASSSTORAGE, priority = 50, storage = 0.01, massProduction = true},
+		mstor = {name="Mass Storage", category = categories.STRUCTURE * categories.MASSSTORAGE, priority = 50, massProduction = true},
 		mex3 = {name="Mass Extractors T3", category = categories.STRUCTURE * categories.TECH3 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
 		fabs = {name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 50, massProduction = true},
 
@@ -61,7 +61,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 				end
 
 				project.massMinStorage = category['storage']
-				project.massFinalFactor = project.massFinalFactor * project.prio --- project.lastRatio - project.massMinStorage
+				project.massFinalFactor = project.massFinalFactor * project.prio -- project.lastRatio - project.massMinStorage * 10000
 
 				table.insert(self.projects, project)
 			end
