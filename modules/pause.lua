@@ -137,7 +137,7 @@ function canPause(u, module, pause, update)
 	end
 
 	local pauseState = isPaused(u)
-	local prio = getPrio(module, not pauseState)
+	local prio = getPrio(module, pause)
 	local changeObsolete = update and pauseState == pause
 
 	local canChangeState = not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] and not changeObsolete
