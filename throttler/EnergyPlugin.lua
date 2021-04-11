@@ -24,7 +24,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	},
 
 	_sortProjects = function(a, b)
-		return a.energyFinalFactor > b.energyFinalFactor
+		return a.energyFinalFactor > b.energyFinalFactor 
 	end,
 	
 	add = function(self, project)
@@ -49,7 +49,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 				project.prio = category.priority
 				project.energyMinStorage = category.storage
 			end
-			project.energyFinalFactor = project.energyFinalFactor * project.prio --- project.energyMinStorage * 10000
+			project.energyFinalFactor = project.energyFinalFactor * project.prio - project.energyMinStorage * 10000 --- project.lastRatio
 			table.insert(self.projects, project)
 		end
 	end,

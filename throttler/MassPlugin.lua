@@ -61,7 +61,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 				end
 
 				project.massMinStorage = category['storage']
-				project.massFinalFactor = project.massFinalFactor * project.prio -- project.lastRatio - project.massMinStorage * 10000
+				project.massFinalFactor = project.massFinalFactor * project.prio  - project.massMinStorage * 10000 --- project.lastRatio
 
 				table.insert(self.projects, project)
 			end
