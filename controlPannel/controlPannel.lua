@@ -54,8 +54,12 @@ function updateUI(projects, pluginName)
 				table.insert(collapsedProjects[index].assisters,a)
 			end
 		else
+			local assisters  = {}
+			for _, a in project.assisters or {} do
+				table.insert(assisters,a)
+			end
 			existingCollections[k] = i
-			collapsedProjects[i] = {project = project, assisters = project.assisters, throttle = {project.throttle}}
+			collapsedProjects[i] = {project = project, assisters = assisters, throttle = {project.throttle}}
 			i = i + 1
 		end
 	end
