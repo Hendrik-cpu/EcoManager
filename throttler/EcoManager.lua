@@ -38,8 +38,6 @@ EcoManager = Class({
 		for _, u in units do
 			local project
 			local id = u:GetEntityId()
-			local focusType = u:GetBlueprint().General.UnitName
-			local state = pauser.states[id]
 			
 			if not u:IsDead() then
 				if EntityCategoryContains(categories.STRUCTURE * categories.MASSEXTRACTION, u) then

@@ -73,7 +73,7 @@ Project = Class({
         self.unit = unit
         self.assisters = {}
         self.throttle = 0
-        if self.isConstruction then
+        if not self.isMassFabricator then
             self.buildTime = Eco.BuildTime
             self.massBuildCost = Eco.BuildCostMass
             self.energyBuildCost = Eco.BuildCostEnergy
