@@ -74,9 +74,9 @@ Economy = Class({
 		--set energy min storage
 		if energyMinStorage == 0 then
 			local energyMin = self.energyIncome --* (GetGameTimeSeconds() / 4000 + 1)
-			if self.energyMax > 5100 then 
-				energyMin = math.max(energyMin,5100)
-			end
+			-- if self.energyMax > 5100 then 
+			-- 	energyMin = math.max(energyMin,5100)
+			-- end
 
 			local minEnergyStorageLimit = self.energyMax * 0.6
 			if energyMin > minEnergyStorageLimit then
