@@ -4,7 +4,7 @@ local ThrottlerPlugin = import(modPath .. 'throttler/ThrottlerPlugin.lua').Throt
 
 MassPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {
-		mex1 = {name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
+		-- mex1 = {name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
 		mex2 = {name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
 		mstor = {name="Mass Storage", category = categories.STRUCTURE * categories.MASSSTORAGE, priority = 50, massProduction = true},
 		mex3 = {name="Mass Extractors T3", category = categories.STRUCTURE * categories.TECH3 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
