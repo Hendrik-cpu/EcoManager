@@ -123,7 +123,7 @@ end
 
 function cleanStates()
 	for id, state in states do
-		if state.unit:IsDead() or ((GameTick() - state.lastAccess) > 20 and state.unit:GetFocus() == nil) then --2 seconds
+		if state.unit:IsDead() then --or ((GameTick() - state.lastAccess) > 20 and state.unit:GetFocus() == nil) then --2 seconds
 			states[id] = nil
 		end
 	end
