@@ -25,6 +25,13 @@ local grid = {}
 local colorOptions = {energy = "yellow", mass = "green"}
 local columnAssignment = {energy = 1, mass = 2}
 
+function disp_time(ticks)
+	local minutes = math.floor(ticks/600)
+	local seconds = math.floor(math.mod(ticks,600)/10)
+	ticks = math.floor(math.mod(ticks,10))
+	return string.format("%02d:%02d:%02d",minutes,seconds,ticks)
+end
+
 function updateUI(projects, pluginName)
 
 	local color = colorOptions[pluginName]
@@ -97,7 +104,7 @@ function updateUI(projects, pluginName)
 			"\nmassConsumed: " .. project.massConsumed ..	
 			"\nenergyRequested: " .. project.energyRequested ..
 			"\nenergyConsumed: " .. project.energyConsumed ..
-			"\ntimeLeft: " .. project.timeLeft ..
+			"\ntimeLeft: " .. disp_time(project.secondsLeft * 10) ..
 			"\nbuildRate: " .. project.buildRate ..
 			"\nmassAdjacencyBonus: " .. project.massAdjacencyBonus ..
 			"\nenergyAdjacencyBonus: " .. project.energyAdjacencyBonus
