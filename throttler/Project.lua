@@ -129,6 +129,7 @@ Project = Class({
     LoadFinished = function(self, eco)
         self.workLeft = 1 - self.workProgress
         self.timeLeft = self.workLeft * self.buildTime
+        self.secondsLeft = self.timeLeft / self.buildRate
 
         --mass storages
         if EntityCategoryContains(categories.MASSSTORAGE*categories.STRUCTURE, self.unit) then
@@ -181,14 +182,14 @@ Project = Class({
         self.massReversePayoff = 0
         if self.massProduction > 0 then
             if self.isConstruction then
-                self.massReversePayoff = self.massProduction / (self.timeLeft * self.massProduction + self.massCostRemaining + self.MaintenanceConsumptionPerSecondEnergy * 1.296)
+                self.massReversePayoff = self.massProduction / (self.secondsLeft * self.massProduction + self.massCostRemaining + self.MaintenanceConsumptionPerSecondEnergy * 1.296)
             else
                 self.massReversePayoff = self.massProduction / (self.energyRequested * 1.296)
             end
         end
         self.energyReversePayoff = 0
         if self.energyProduction > 0 and self.energyCostRemaining > 0 then
-            self.energyReversePayoff = self.energyProduction / (self.timeLeft * self.energyProduction + self.energyCostRemaining)
+            self.energyReversePayoff = self.energyProduction / (self.secondsLeft * self.energyProduction + self.energyCostRemaining)
         end
 
         --resource proportion
@@ -197,8 +198,8 @@ Project = Class({
 
         --progress rating
         self.completionBonus = 0
-        if self.workProgress > 0 and self.timeLeft < 5 then
-            self.completionBonus = (1 - self.timeLeft / 5) * 100 * self.workProgress
+        if self.workProgress > 0 and self.secondsLeft < 5 then
+            self.completionBonus = (1 - self.secondsLeft / 5) * 100 * self.workProgress
         end
         self.progressBonus = self.workProgress
 
