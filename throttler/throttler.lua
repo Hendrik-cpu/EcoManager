@@ -21,7 +21,7 @@ function init()
 	manager = EcoManager()
 	manager:addPlugin('Mass')
 	manager:addPlugin('Energy')
-	addListener(manageEconomy, 0.3,'em_throttler', managerThreadKey)
+	addListener(manageEconomy, 0.6,'em_throttler', managerThreadKey)
 
 	addCommand('t', togglePlugin)
 	addCommand('energy', energyPriority)
@@ -55,7 +55,11 @@ function toggleEcomanager()
 end
 
 function toggleDebugging()
-	import(modPath .. "controlPannel/controlPannel.lua").toggleUI()
+	if manager.debuggingUI <= 0 then
+		manager.debuggingUI = 1
+	else
+		manager.debuggingUI = 0
+	end
 end
 
 local toggle = true

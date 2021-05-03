@@ -8,6 +8,7 @@ local CreateGrid = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGrid
 local CreateManagerButton = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateManagerButton
 local addLabel = import('/mods/' .. modFolder .. '/mcibuttons.lua').addLabel
 local GameMain = import('/lua/ui/game/gamemain.lua')
+local ToolTip = import('/lua/ui/game/tooltip.lua')
 
 function init(isReplay)
 	local parent = import('/lua/ui/game/borders.lua').GetMapGroup()
@@ -24,18 +25,7 @@ local grid = {}
 local colorOptions = {energy = "yellow", mass = "green"}
 local columnAssignment = {energy = 1, mass = 2}
 
-local UIHidden = false
-
-function toggleUI()
-	UIHidden = not UIHidden
-end
-
 function updateUI(projects, pluginName)
-
-	if UIHidden then
-		hideButtons()
-		return
-	end
 
 	local color = colorOptions[pluginName]
 	local row = columnAssignment[pluginName]
@@ -97,16 +87,22 @@ function updateUI(projects, pluginName)
 			button.info1:SetText(round(project[pluginName .. "FinalFactor"],2))
 			button.info1:SetColor(color)
 
-			local constr = project.isConstruction
-			if constr then
-				button.info2:SetText("true") 
-				button.info2:SetColor('green')
-			else
-				button.info2:SetText("false") 
-				button.info2:SetColor('red')
-			end
-			-- button.info2:SetText(round(project.neutralFactor,2))
-			-- button.info2:SetColor('blue')
+			-- button.info2:SetText(round(project.massRequested,2))
+			-- button.info2:SetColor('green')
+
+			-- setup the new tooltip
+			local tooltipText
+			tooltipText = 
+			"massRequested: " .. project.massRequested ..
+			"\nmassConsumed: " .. project.massConsumed ..	
+			"\nenergyRequested: " .. project.energyRequested ..
+			"\nenergyConsumed: " .. project.energyConsumed ..
+			"\ntimeLeft: " .. project.timeLeft ..
+			"\nbuildRate: " .. project.buildRate ..
+			"\nmassAdjacencyBonus: " .. project.massAdjacencyBonus ..
+			"\nenergyAdjacencyBonus: " .. project.energyAdjacencyBonus
+
+			ToolTip.AddControlTooltip(button, {text=project.unitName or "Unknown", body=tooltipText})
 
 			-- set the texture that corresponds to the unit
 			local iconName1, iconName2, iconName3, iconName4 = GameCommon.GetCachedUnitIconFileNames(project.unit:GetBlueprint())

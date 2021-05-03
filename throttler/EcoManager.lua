@@ -23,6 +23,7 @@ EcoManager = Class({
 	ProjectPositions = {},
 	mexPositions = {},
 	ProjectMetaData = {},
+	debuggingUI = 0,
 
 	__init = function(self)
 		--self.eco = Economy()
@@ -33,7 +34,7 @@ EcoManager = Class({
 		self.mexPositions = {}
 		self.projects = {}
 		self.allBuildingsPostions = {}
-		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER)
+		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER + categories.NUKE + categories.SILO)
 
 		for _, u in units do
 			local project
@@ -57,13 +58,17 @@ EcoManager = Class({
 					local isConstruction = false
 					local isMassFabricator = false
 					local isMassStorage = false
+					local isMissile = false
 
 					if not focus then
 						local is_paused = isPaused(u)
 
 						if EntityCategoryContains(categories.MASSFABRICATION*categories.STRUCTURE, u) then
 							isMassFabricator = true
-							focus = u					
+							focus = u
+						elseif EntityCategoryContains(categories.NUKE + categories.SILO, u) then
+							isMissile = true
+							focus = u
 						elseif is_paused and (u:IsIdle() or u:GetWorkProgress() == 0) then
 						 	table.insert(unpause, u)
 						end
@@ -190,7 +195,12 @@ EcoManager = Class({
 				end
 				
 				--update control pannel
-				import(modPath .. "controlPannel/controlPannel.lua").updateUI(plugin.projects,name)
+				if self.debuggingUI == 1 then
+					import(modPath .. "controlPannel/controlPannel.lua").updateUI(plugin.projects,name)
+				elseif self.debuggingUI == 0 then
+					import(modPath .. "controlPannel/controlPannel.lua").hideButtons()
+					self.debuggingUI = -1
+				end
 			end
 		end
 		--LOG("end: " .. eco.energyActual .. " mass:".. eco.massActual)
