@@ -18,6 +18,8 @@ EcoManager = Class({
 	plugins = {},
 
 	LoadProjects = function(self, eco)
+	
+		pauser.cleanStates()
 		local unpause = {}
 		self.projects = {}
 		self.ProjectPositions = {}
@@ -115,7 +117,6 @@ EcoManager = Class({
 		if not self.Active then
 			return false
 		end
-		pauser.cleanStates()
 		
 		local all_projects = {}
 		self.pause_list = {}
