@@ -20,6 +20,8 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		mex = {name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 30},
 		stor = {name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 97},
 		power = {name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
+		nukes = {name="Nukes", category = categories.NUKE, priority = 91},
+		tml = {name="TML", category = categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, priority = 91},
 		build = {name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION - categories.ENERGYSTORAGE - categories.ENERGYPRODUCTION - categories.MASSFABRICATION, priority = 40},
 	},
 
