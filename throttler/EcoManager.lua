@@ -6,33 +6,22 @@ local Units = import('/mods/common/units.lua')
 
 local pauser = import(modulesPath .. 'pause.lua')
 local isPaused = pauser.isPaused
-
-local econData = import(modulesPath .. 'units.lua').econData
-
-local Economy = import(throttlerPath .. 'Economy.lua').Economy
-local Project = import(throttlerPath .. 'Project.lua').Project
 local moduleName = "ecomanager"
 
 EcoManager = Class({
 
 	Active = true,
 	ActivationTimer = 5  * 60,
-	ActivationMessagePrinted = false,
-	projects = {},
-	plugins = {},
-	ProjectPositions = {},
-	mexPositions = {},
-	ProjectMetaData = {},
 	debuggingUI = 0,
-
-	__init = function(self)
-		--self.eco = Economy()
-	end,
+	ActivationMessagePrinted = false,
+	ProjectMetaData = {},
+	plugins = {},
 
 	LoadProjects = function(self, eco)
 		local unpause = {}
-		self.mexPositions = {}
 		self.projects = {}
+		self.ProjectPositions = {}
+		self.mexPositions = {}
 		self.allBuildingsPostions = {}
 		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER + categories.NUKE + categories.SILO)
 
@@ -82,7 +71,7 @@ EcoManager = Class({
 						project = self.projects[id]
 						if not project then
 							--LOG("Adding new project " .. id)
-							project = Project(focus, isConstruction)
+							project = import(throttlerPath .. 'Project.lua').Project(focus, isConstruction)
 							project.isMassFabricator = isMassFabricator
 							
 							-- map positions
@@ -116,7 +105,7 @@ EcoManager = Class({
 
 	addPlugin = function(self, name, active, timer)
 		FullName = name .. 'Plugin'
-		local plugin = import(throttlerPath .. FullName .. '.lua')[FullName](self.eco)
+		local plugin = import(throttlerPath .. FullName .. '.lua')[FullName]()
 		plugin.Active = active
 		self.plugins[string.lower(name)] = plugin
 	end,
@@ -130,8 +119,7 @@ EcoManager = Class({
 		
 		local all_projects = {}
 		self.pause_list = {}
-		local eco = Economy()
-		self.eco = eco 
+		local eco = import(throttlerPath .. 'Economy.lua').Economy()
 		self.ProjectPositions = {}
 
 		for _, p in self:LoadProjects(eco) do
