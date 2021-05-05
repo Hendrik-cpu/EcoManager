@@ -34,8 +34,9 @@ function init()
 	addHotkey('Ctrl-B', EconomyPath .. '.PauseEcoM80_E90')
 	addHotkey('Ctrl-N', EconomyPath .. '.PauseEcoM10_E90')
 	addHotkey('Ctrl-T', throttler .. '.toggleEcomanager')
+	addHotkey('Ctrl-P', throttler .. '.toggleEnergy')
 	addHotkey('Ctrl-M', throttler .. '.ToggleMassBalance')
-	addHotkey('Ctrl-P', throttler .. '.ToggleMexMode')
+	--addHotkey('Ctrl-P', throttler .. '.ToggleMexMode')
 	addHotkey('Ctrl-O', throttler .. '.increaseMexPrio')
 	addHotkey('Ctrl-L', throttler .. '.decreaseMexPrio')
 end
@@ -52,6 +53,12 @@ function toggleEcomanager()
 		import(modPath .. "controlPannel/controlPannel.lua").hideButtons()
 		print('Throttler terminated!')
 	end
+end
+
+function toggleEnergy()
+	local newState = not manager.plugins.energy.Active
+	manager.plugins.energy.Active = newState
+	print("Energy plugin set to: " .. tostring(newState))
 end
 
 function toggleDebugging()
