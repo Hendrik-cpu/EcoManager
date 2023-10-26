@@ -3,21 +3,21 @@ local modulesPath = modPath .. 'modules/'
 local queuePause = import(modulesPath .. 'mexes.lua').queuePause
 local Select = import('/lua/ui/game/selection.lua')
 
-local oldOnCommandIssued = OnCommandIssued
-function EndCommandMode(isCancel)
-    modeData.isCancel = isCancel or false
-    for i,v in endBehaviors do
-        v(commandMode, modeData)
-    end
+-- local oldOnCommandIssued = OnCommandIssued
+-- function EndCommandMode(isCancel)
+--     modeData.isCancel = isCancel or false
+--     for i,v in endBehaviors do
+--         v(commandMode, modeData)
+--     end
 
-    if commandMode == 'build' and modeData.isCancel then
-        ClearBuildTemplates()
-    end
+--     if commandMode == 'build' and modeData.isCancel then
+--         ClearBuildTemplates()
+--     end
 
-    commandMode = false
-    modeData = false
-    issuedOneCommand = false
-end
+--     commandMode = false
+--     modeData = false
+--     issuedOneCommand = false
+-- end
 
 function UpgradeMex(mex, bp)
 	Select.Hidden(function()

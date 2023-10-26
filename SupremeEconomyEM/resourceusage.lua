@@ -80,61 +80,60 @@ function UpdateResourceUsage()
 
 	for index, unit in units do
 		if(unit:IsDead()) then
-			continue
-		end
-		econData = unit:GetEconData()
+			econData = unit:GetEconData()
 
-		-- filter out units that do not use resources
-		local usesResources = false
-		for dataType, unitTable in topUnitsData do
-			if econData[dataType] != 0 then
-				usesResources = true
-			end
-		end
-
-		if usesResources then
-			-- assign a proper key and other misc stuff related to the construction/consumption difference
-
-			local unitToGetDataFrom
-			local prefix
-			local consType
-
-			if unit:GetFocus() then
-				prefix = "-CONSTR- "
-				unitToGetDataFrom = unit:GetFocus()
-				consType = CONSTRUCTION
-				workProgressOnUnit[unit:GetFocus():GetEntityId()] = unit:GetWorkProgress() --it should be only set in the context of the "name" generated"
-			else
-				prefix = ""
-				unitToGetDataFrom = unit
-				consType = CONSUMPTION
-				workProgressOnUnit[unit:GetEntityId()] = unit:GetWorkProgress() --it should be only set in the context of the "name" generated"
-			end
-
-			local unitclass = GetClassForUnit(unitToGetDataFrom)
-			if unitclass then
-				name = prefix .. unitclass
-				unitNames[name] = unitclass
-			else
-				name = prefix .. getNameFromBp(unitToGetDataFrom:GetBlueprint())
-				unitNames[name] = getNameFromBp(unitToGetDataFrom:GetBlueprint())
-			end
-			if not unitsWorkedUpon[name] then
-				unitsWorkedUpon[name] = {}
-			end
-			table.insert(unitsWorkedUpon[name], unitToGetDataFrom)
-			consumptionTypes[name] = consType
-
-			-- insert the unit as to be selected when the corresponding button is pressed
-			if unitsToBeSelected[name] == nil then
-				unitsToBeSelected[name] = {}
-			end
-			table.insert(unitsToBeSelected[name], unit)
-
-			-- fill out the table that will be used to display the resource using units
+			-- filter out units that do not use resources
+			local usesResources = false
 			for dataType, unitTable in topUnitsData do
-				if econData[dataType] != 0 then
-					topUnitsData[dataType][name] = (topUnitsData[dataType][name] or 0) + econData[dataType]
+				if econData[dataType] ~= 0 then
+					usesResources = true
+				end
+			end
+
+			if usesResources then
+				-- assign a proper key and other misc stuff related to the construction/consumption difference
+
+				local unitToGetDataFrom
+				local prefix
+				local consType
+
+				if unit:GetFocus() then
+					prefix = "-CONSTR- "
+					unitToGetDataFrom = unit:GetFocus()
+					consType = CONSTRUCTION
+					workProgressOnUnit[unit:GetFocus():GetEntityId()] = unit:GetWorkProgress() --it should be only set in the context of the "name" generated"
+				else
+					prefix = ""
+					unitToGetDataFrom = unit
+					consType = CONSUMPTION
+					workProgressOnUnit[unit:GetEntityId()] = unit:GetWorkProgress() --it should be only set in the context of the "name" generated"
+				end
+
+				local unitclass = GetClassForUnit(unitToGetDataFrom)
+				if unitclass then
+					name = prefix .. unitclass
+					unitNames[name] = unitclass
+				else
+					name = prefix .. getNameFromBp(unitToGetDataFrom:GetBlueprint())
+					unitNames[name] = getNameFromBp(unitToGetDataFrom:GetBlueprint())
+				end
+				if not unitsWorkedUpon[name] then
+					unitsWorkedUpon[name] = {}
+				end
+				table.insert(unitsWorkedUpon[name], unitToGetDataFrom)
+				consumptionTypes[name] = consType
+
+				-- insert the unit as to be selected when the corresponding button is pressed
+				if unitsToBeSelected[name] == nil then
+					unitsToBeSelected[name] = {}
+				end
+				table.insert(unitsToBeSelected[name], unit)
+
+				-- fill out the table that will be used to display the resource using units
+				for dataType, unitTable in topUnitsData do
+					if econData[dataType] ~= 0 then
+						topUnitsData[dataType][name] = (topUnitsData[dataType][name] or 0) + econData[dataType]
+					end
 				end
 			end
 		end
@@ -182,7 +181,7 @@ function UpdateResourceUsage()
 					end
 				end
 
-				if maxWorkProgress != 0 then
+				if maxWorkProgress ~= 0 then
 					button.progress:SetValue(maxWorkProgress)
 					button.progress.Height:Set(3)
 				else
