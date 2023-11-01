@@ -20,8 +20,7 @@ manager = nil
 function init()
 	manager = EcoManager()
 	manager:addPlugin('Mass')
-	manager:addPlugin('Energy')
-	--manager.plugins.energy.Active = false
+	manager:addPlugin('Energy',false)
 	addListener(manageEconomy, 0.6,'em_throttler', managerThreadKey)
 
 	addCommand('t', togglePlugin)
