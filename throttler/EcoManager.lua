@@ -184,7 +184,7 @@ EcoManager = Class({
 				
 				--update control pannel
 				if self.debuggingUI == 1 then
-					import(modPath .. "controlPannel/controlPannel.lua").updateUI(plugin.projects,name)
+					import(modPath .. "controlPannel/controlPannel.lua").debugProjectStats(plugin.projects,name)
 				elseif self.debuggingUI == 0 then
 					import(modPath .. "controlPannel/controlPannel.lua").hideButtons()
 					self.debuggingUI = -1

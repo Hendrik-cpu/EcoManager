@@ -1,5 +1,6 @@
 local modPath = '/mods/EM/'
 local modulesPath = modPath .. 'modules/'
+local round = import(modulesPath .. 'math.lua').round
 
 --local getCurrentThrottle = import(modulesPath .. 'throttle.lua').getCurrentThrottle
 
@@ -10,14 +11,6 @@ function CreateUI()
     for _, t in {'mass', 'energy'} do
         GUI[t].overflow = UIUtil.CreateText(GUI.energy, '', 18, UIUtil.bodyFont)
         GUI[t].overflow:SetDropShadow(true)
-    end
-end
-
-function round(num, idp)
-    if(idp > 0) then
-        return string.format("%."..idp.. "f", num)
-    else
-        return string.format("%d", num)
     end
 end
 

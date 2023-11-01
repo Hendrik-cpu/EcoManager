@@ -28,9 +28,7 @@ function boolstr(bool)
 	end
 end
 
-function round(num, idp)
-  return tonumber(string.format("%." .. (idp or 0) .. "f", num))
-end
+
 
 function unum(n, unit)
 	local units = {"", "k", "m", "g"}

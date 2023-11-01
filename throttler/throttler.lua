@@ -21,6 +21,7 @@ function init()
 	manager = EcoManager()
 	manager:addPlugin('Mass')
 	manager:addPlugin('Energy')
+	--manager.plugins.energy.Active = false
 	addListener(manageEconomy, 0.6,'em_throttler', managerThreadKey)
 
 	addCommand('t', togglePlugin)
@@ -39,13 +40,14 @@ function init()
 	--addHotkey('Ctrl-P', throttler .. '.ToggleMexMode')
 	addHotkey('Ctrl-O', throttler .. '.increaseMexPrio')
 	addHotkey('Ctrl-L', throttler .. '.decreaseMexPrio')
+	
 end
 
 function toggleEcomanager()
 	manager.Active = not manager.Active 
 	if manager.Active then
 		resetPauseStates()
-		addListener(manageEconomy, 0.3,'em_throttler',managerThreadKey)
+		addListener(manageEconomy, 0.6,'em_throttler',managerThreadKey)
 		print('Throttler started!')
 	else
 		removeListener(managerThreadKey)

@@ -4,6 +4,7 @@ local UIUtil = import('/lua/ui/uiutil.lua')
 local GameCommon = import('/lua/ui/game/gamecommon.lua')
 
 local modFolder = 'EM/SupremeEconomyEM'
+local round = import('/mods/EM/modules/math.lua').round
 local CreateGrid = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGrid
 local CreateManagerButton = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateManagerButton
 local addLabel = import('/mods/' .. modFolder .. '/mcibuttons.lua').addLabel
@@ -13,10 +14,6 @@ local ToolTip = import('/lua/ui/game/tooltip.lua')
 function init(isReplay)
 	local parent = import('/lua/ui/game/borders.lua').GetMapGroup()
 	CreateModUI(isReplay, parent)
-end
-function round(num, numDecimalPlaces)
-	local mult = 10^(numDecimalPlaces or 0)
-	return math.floor(num * mult + 0.5) / mult
 end
 
 local rows = 2
@@ -32,7 +29,8 @@ function disp_time(ticks)
 	return string.format("%02d:%02d:%02d",minutes,seconds,ticks)
 end
 
-function updateUI(projects, pluginName)
+
+function debugProjectStats(projects, pluginName)
 
 	local color = colorOptions[pluginName]
 	local row = columnAssignment[pluginName]
@@ -172,5 +170,5 @@ function CreateModUI(isReplay, parent)
 	img:SetTexture(UIUtil.UIFile('/game/resources/energy_btn_up.dds'))
 	LayoutHelpers.CenteredAbove(img, grid[2][1], 0)
 
-	--GameMain.AddBeatFunction(updateUI)
+	--GameMain.AddBeatFunction(debugProjectStats)
 end

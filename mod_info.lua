@@ -1,9 +1,9 @@
-name = "NewEcomanager"
+name = "Supreme Ecomanager"
 uid = "ecbf6277-24e3-597a-b968-EcoManager-Re0.01"
-version = 13
-copyright = "SC-Account"
+version = 14
+copyright = "MisterX"
 description = ""
-author = "SC-Account"
+author = "MisterX"
 url = ""
 selectable = true
 enabled = true
