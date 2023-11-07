@@ -1,5 +1,5 @@
 local originalUpdateScoreData = UpdateScoreData
-local modFolder = 'EM/SupremeEconomyEM'
+local modFolder = 'EM/SE'
 
 function UpdateScoreData(newData) 
   originalUpdateScoreData(newData)

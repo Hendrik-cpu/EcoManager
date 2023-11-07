@@ -8,16 +8,32 @@ local GameCommon = import('/lua/ui/game/gamecommon.lua')
 local ToolTip = import('/lua/ui/game/tooltip.lua')
 local GameMain = import('/lua/ui/game/gamemain.lua')
 
-local modFolder = 'EM/SupremeEconomyEM'
+local modFolder = 'EM/SE'
 local GetScore = import('/mods/' .. modFolder .. '/mciscore.lua').GetScore
 local GetAllUnits = import('/mods/common/units.lua').Get
 local CreateGrid = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGrid
 local CreateGenericButton = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGenericButton
 local round = import('/mods/EM/modules/math.lua').round
 
+local maxImages = 5
+local grid = {}
+
+--Thread handling
+local addListener = import('/mods/EM/modules/init.lua').addListener
+local removeListener = import('/mods/EM/modules/init.lua').removeListener
+initialized = false
 function init(isReplay) 
 	local parent = import('/lua/ui/game/borders.lua').GetMapGroup()
 	CreateModUI(isReplay, parent)
+	addListener(UpdateResourceUsage, 0.2,'se_usage', 'se_usage')
+	
+	initialized = true
+end
+function exit()
+	hideButtons()
+	removeListener('se_usage')
+
+	initialized =  false
 end
 
 function getNameFromBp(bp)
@@ -35,9 +51,6 @@ function getNameFromBp(bp)
 		return LOC(bp.Description)
     end
 end
-
-local maxImages = 5
-local grid = {}
 
 local unitClasses = {
 	{name="T1 Land Units",  category = categories.LAND * categories.BUILTBYTIER1FACTORY * categories.MOBILE - categories.ENGINEER },
@@ -255,5 +268,20 @@ function CreateModUI(isReplay, parent)
 	img:SetTexture(UIUtil.UIFile('/game/resources/energy_btn_up.dds'))
 	LayoutHelpers.CenteredAbove(img, grid[2][1], 0)
 
-	GameMain.AddBeatFunction(UpdateResourceUsage)
+end
+
+function hideButtons(s,e)
+	-- hide all buttons
+	if not s then
+		s = 1
+		e = maxImages
+	end
+	if not e then e = s end
+	
+	for r = s, e do
+		for c = 1, 2 do
+			local button = grid[c][r]
+			button:Hide()
+		end
+	end
 end

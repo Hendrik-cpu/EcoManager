@@ -9,15 +9,29 @@ local ToolTip = import('/lua/ui/game/tooltip.lua')
 local TooltipInfo = import('/lua/ui/help/tooltips.lua').Tooltips
 local GameMain = import('/lua/ui/game/gamemain.lua')
 
-local modFolder = 'EM/SupremeEconomyEM'
+local modFolder = 'EM/SE'
 local GetAllUnits = import('/mods/common/units.lua').Get
 local CreateGrid = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGrid
 local CreateGenericButton = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGenericButton
 
-function init(isReplay) 
-	local parent = import('/lua/ui/game/borders.lua').GetMapGroup()
-	CreateModUI(isReplay, parent)
-end
+
+--Thread handling
+	local addListener = import('/mods/EM/modules/init.lua').addListener
+	local removeListener = import('/mods/EM/modules/init.lua').removeListener
+	initialized = false
+	function init(isReplay) 
+		local parent = import('/lua/ui/game/borders.lua').GetMapGroup()
+		CreateModUI(isReplay, parent)
+		addListener(UpdateMexes, 0.3,'se_mexes', 'se_mexes')
+		
+		initialized = true
+	end
+	function exit()
+		hideButtons()
+		removeListener('se_mexes')
+
+		initialized =  false
+	end
 
 function getNameFromBp(bp)
 	local techLevel = false
@@ -134,11 +148,12 @@ function updateButton(mexTable, button, enableMarker, tooltipText, countBeingBui
 	end
 end
 
+local buttons
 function CreateModUI(isReplay, parent)
 	local xPosition = 20
 	local yPosition = 420
 
-	local buttons = CreateGrid(parent, xPosition, yPosition, 3, 3, CreateGenericButton)
+	buttons = CreateGrid(parent, xPosition, yPosition, 3, 3, CreateGenericButton)
 
 	for tech = 1, 3 do
 		img = Bitmap(parent)
@@ -179,5 +194,13 @@ function CreateModUI(isReplay, parent)
 		updateButton(mexes[categories.TECH3].MS.N, buttons[3][3], false, "Select T3 Mexes that are not surrounded by mass storage", true)
 	end
 
-	GameMain.AddBeatFunction(UpdateMexes)
+end
+
+function hideButtons()
+	for tech = 1, 3 do
+		for c = 1, 3 do
+			local button = buttons[c][tech]
+			button:Hide()
+		end
+	end
 end

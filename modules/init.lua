@@ -74,7 +74,29 @@ function watchdogThread()
 	end
 end
 
+function toggleListener(args)
+	local folder = args[2]
+	local moduleName = args[3]
+	local module = import(modPath .. folder ..'/' .. moduleName .. '.lua')
+	
+	if module then
+		if module.initialized then
+			module.exit()
+			print(moduleName .. " terminated!")
+		else
+			module.init()
+			print(moduleName .. " started!")
+		end
+	else
+		print(moduleName .. " does not exist!")
+	end
+end
+
+local addCommand = import(modulesPath .. 'commands.lua').addCommand
 function setup(isReplay, parent)
+
+	--Add general Commands
+	addCommand('thread', toggleListener)
 
 	local mods = {
 		modules = {
@@ -83,11 +105,13 @@ function setup(isReplay, parent)
 			'buildoverlay', 
 		},
 		throttler = {'throttler'}, 
-		SupremeEconomyEM = {
+		SE = {
 			'resourceusage',
 			'mexes'
 		}, 
-		controlPannel = {'controlPannel'}
+		controlPannel = {
+			'controlPannel'
+		}
 	}
 
 	if not isReplay then

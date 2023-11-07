@@ -3,7 +3,7 @@ local Bitmap = import('/lua/maui/bitmap.lua').Bitmap
 local UIUtil = import('/lua/ui/uiutil.lua')
 local GameCommon = import('/lua/ui/game/gamecommon.lua')
 
-local modFolder = 'EM/SupremeEconomyEM'
+local modFolder = 'EM/SE'
 local round = import('/mods/EM/modules/math.lua').round
 local CreateGrid = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGrid
 local CreateManagerButton = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateManagerButton
