@@ -4,13 +4,9 @@ local Bitmap = import('/lua/maui/bitmap.lua').Bitmap
 local ItemList = import('/lua/maui/itemlist.lua').ItemList
 local Group = import('/lua/maui/group.lua').Group
 local UIUtil = import('/lua/ui/uiutil.lua')
-local GameCommon = import('/lua/ui/game/gamecommon.lua')
 local ToolTip = import('/lua/ui/game/tooltip.lua')
-local TooltipInfo = import('/lua/ui/help/tooltips.lua').Tooltips
 local AvatarsClickFunc = import('/lua/ui/game/avatars.lua').ClickFunc
 local StatusBar = import('/lua/maui/statusbar.lua').StatusBar
-
-local modFolder = 'EM/SE'
 
 function PrintUnitDebugInfo(unit)
 	LOG("GetArmy " .. repr(unit:GetArmy()))

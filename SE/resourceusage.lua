@@ -6,10 +6,8 @@ local Group = import('/lua/maui/group.lua').Group
 local UIUtil = import('/lua/ui/uiutil.lua')
 local GameCommon = import('/lua/ui/game/gamecommon.lua')
 local ToolTip = import('/lua/ui/game/tooltip.lua')
-local GameMain = import('/lua/ui/game/gamemain.lua')
 
 local modFolder = 'EM/SE'
-local GetScore = import('/mods/' .. modFolder .. '/mciscore.lua').GetScore
 local GetAllUnits = import('/mods/common/units.lua').Get
 local CreateGrid = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGrid
 local CreateGenericButton = import('/mods/' .. modFolder .. '/mcibuttons.lua').CreateGenericButton
@@ -19,22 +17,22 @@ local maxImages = 5
 local grid = {}
 
 --Thread handling
-local addListener = import('/mods/EM/modules/init.lua').addListener
-local removeListener = import('/mods/EM/modules/init.lua').removeListener
-initialized = false
-function init(isReplay) 
-	local parent = import('/lua/ui/game/borders.lua').GetMapGroup()
-	CreateModUI(isReplay, parent)
-	addListener(UpdateResourceUsage, 0.2,'se_usage', 'se_usage')
-	
-	initialized = true
-end
-function exit()
-	hideButtons()
-	removeListener('se_usage')
+	local addListener = import('/mods/EM/modules/init.lua').addListener
+	local removeListener = import('/mods/EM/modules/init.lua').removeListener
+	initialized = false
+	function init(isReplay) 
+		local parent = import('/lua/ui/game/borders.lua').GetMapGroup()
+		CreateModUI(isReplay, parent)
+		addListener(UpdateResourceUsage, 0.2,'se_usage', 'se_usage')
+		
+		initialized = true
+	end
+	function exit()
+		hideButtons()
+		removeListener('se_usage')
 
-	initialized =  false
-end
+		initialized =  false
+	end
 
 function getNameFromBp(bp)
 	local techLevel = false

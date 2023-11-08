@@ -6,8 +6,7 @@ local Group = import('/lua/maui/group.lua').Group
 local UIUtil = import('/lua/ui/uiutil.lua')
 local GameCommon = import('/lua/ui/game/gamecommon.lua')
 local ToolTip = import('/lua/ui/game/tooltip.lua')
-local TooltipInfo = import('/lua/ui/help/tooltips.lua').Tooltips
-local GameMain = import('/lua/ui/game/gamemain.lua')
+--local TooltipInfo = import('/lua/ui/help/tooltips.lua').Tooltips
 
 local modFolder = 'EM/SE'
 local GetAllUnits = import('/mods/common/units.lua').Get
