@@ -107,10 +107,6 @@ function canToggle(u, module, pause, update, toggle)
 	end
 
 	local pauseState = isPaused(u)
-	-- local changedByUser = toggleStates[id] and toggleStates[id].state ~= pauseState
-	-- if changedByUser and update then
-	-- 	toggleStates[id] = {unit=u,prio=100,module="user", state=pauseState, toggle = toggle}
-	-- end
 	local prio = getPrio(module, not pauseState)
 
 	--not changedByUser and
@@ -123,7 +119,7 @@ end
 
 function cleanStates()
 	for id, state in states do
-		if state.unit:IsDead() then --or ((GameTick() - state.lastAccess) > 20 and state.unit:GetFocus() == nil) then --2 seconds
+		if state.unit:IsDead() then
 			states[id] = nil
 		end
 	end
