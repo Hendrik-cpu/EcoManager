@@ -141,9 +141,19 @@ function canPause(u, module, pause, update)
 	local changeObsolete = update and pauseState == pause
 
 	local canChangeState = not states[id] or states[id]['module'] == module or prio >= states[id]['prio'] and not changeObsolete
-	if update then
-		if canChangeState then
+	if canChangeState then
+		if update then
 			states[id] = {unit=u,prio=prio,module=module, state=pause, lastAccess=GameTick()}
+		end
+	else
+		if states[id]['lastChangeDenied'] then
+			if GameTick() - states[id]['lastChangeDenied'] > 10 then
+				if states[id]['module'] == 'user' then states[id]['module'] = module end
+			else
+				states[id]['lastChangeDenied'] = GameTick()
+			end
+		else
+			states[id]['lastChangeDenied'] = GameTick()
 		end
 	end
 	return canChangeState
