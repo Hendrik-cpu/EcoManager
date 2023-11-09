@@ -67,26 +67,34 @@ EcoManager = Class({
 
 					if focus then
 						local id = focus:GetEntityId()
-
-						project = self.projects[id]
-						if not project then
-							--LOG("Adding new project " .. id)
-							project = import(throttlerPath .. 'Project.lua').Project(focus, isConstruction)
-							project.isMassFabricator = isMassFabricator
-							
-							-- map positions
-							local pos = focus:GetPosition()
-							if(not self.ProjectPositions[pos[1]]) then
-								self.ProjectPositions[pos[1]] = {}
+						if id == u:GetEntityId() then
+							--LOG(u:GetBlueprint().Description .. " is focusing itself, something went wrong here! Let's not add it to the project list.")
+							if isPaused(u) then
+								table.insert(unpause, u)
 							end
-					
-							self.ProjectPositions[pos[1]][pos[3]] = focus
-							project.Position = pos
+						else
 
-							self.projects[id] = project
+							project = self.projects[id]
+							if not project then
+								--LOG("Adding new project " .. id)
+								project = import(throttlerPath .. 'Project.lua').Project(focus, isConstruction)
+								project.isMassFabricator = isMassFabricator
+								
+								-- map positions
+								local pos = focus:GetPosition()
+								if(not self.ProjectPositions[pos[1]]) then
+									self.ProjectPositions[pos[1]] = {}
+								end
+						
+								self.ProjectPositions[pos[1]][pos[3]] = focus
+								project.Position = pos
+
+								self.projects[id] = project
+							end
+							--LOG("Entity " .. u:GetEntityId() .. " is an assister")
+							project:AddAssister(eco, u)
+
 						end
-						--LOG("Entity " .. u:GetEntityId() .. " is an assister")
-						project:AddAssister(eco, u)
 					end
 				end
 			end
