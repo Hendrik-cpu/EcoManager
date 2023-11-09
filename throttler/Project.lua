@@ -90,41 +90,41 @@ Project = Class({
         self.unitName = bp.General.UnitName or bp.Description
     end,
 
-    MassPerEnergy = function(self)
-        local massProd = self.massProduction
-        if massProd then
-            if self.massProductionActual > massProd then 
-                massProd = self.massProductionActual 
-            end
-        else
-            massProd = 0
-        end
-        local energyDrain = self.energyRequested 
+    -- MassPerEnergy = function(self)
+    --     local massProd = self.massProduction
+    --     if massProd then
+    --         if self.massProductionActual > massProd then 
+    --             massProd = self.massProductionActual 
+    --         end
+    --     else
+    --         massProd = 0
+    --     end
+    --     local energyDrain = self.energyRequested 
         
-        if energyDrain then
-            return massProd / energyDrain
-        else
-            return 0
-        end
-    end,
+    --     if energyDrain then
+    --         return massProd / energyDrain
+    --     else
+    --         return 0
+    --     end
+    -- end,
 
-    ResourceProportion = function(self, a, b)
-        local prod = self[a .. 'Production']
-        if prod then
-            local prodActual = self[a .. 'ProductionActual']
-            if prodActual > prod then
-                prod = prodActual
-            end
-        else
-            prod = 0
-        end
-        local cost = self[b .. 'CostRemaining']
-        if cost then
-            return prod / cost
-        else
-            return 0
-        end
-    end,
+    -- ResourceProportion = function(self, a, b)
+    --     local prod = self[a .. 'Production']
+    --     if prod then
+    --         local prodActual = self[a .. 'ProductionActual']
+    --         if prodActual > prod then
+    --             prod = prodActual
+    --         end
+    --     else
+    --         prod = 0
+    --     end
+    --     local cost = self[b .. 'CostRemaining']
+    --     if cost then
+    --         return prod / cost
+    --     else
+    --         return 0
+    --     end
+    -- end,
 
     LoadFinished = function(self, eco)
         self.workLeft = 1 - self.workProgress
@@ -225,25 +225,25 @@ Project = Class({
 
     end,
 
-    CalcMaxThrottle = function(self, eco)
-        local maxThrottleE = 0
-        local maxThrottleM = 0
-        if eco.energyIncome > self.energyRequested then
-            maxThrottleE = 1
-        else
-            maxThrottleE = eco.energyIncome / self.energyRequested
-        end
-        if eco.massIncome > self.massRequested then 
-            maxThrottleM = 1
-        else
-            maxThrottleM = eco.massIncome / self.massRequested
-        end
-        return math.min(maxThrottleE,maxThrottleM)
-    end,
+    -- CalcMaxThrottle = function(self, eco)
+    --     local maxThrottleE = 0
+    --     local maxThrottleM = 0
+    --     if eco.energyIncome > self.energyRequested then
+    --         maxThrottleE = 1
+    --     else
+    --         maxThrottleE = eco.energyIncome / self.energyRequested
+    --     end
+    --     if eco.massIncome > self.massRequested then 
+    --         maxThrottleM = 1
+    --     else
+    --         maxThrottleM = eco.massIncome / self.massRequested
+    --     end
+    --     return math.min(maxThrottleE,maxThrottleM)
+    -- end,
 
-    GetConsumption = function()
-        return {mass=self.massRequested, energy=energyRequested}
-    end,
+    -- GetConsumption = function()
+    --     return {mass=self.massRequested, energy=energyRequested}
+    -- end,
 
     _sortAssister = function(a, b)
         return a.unit:GetBuildRate() > b.unit:GetBuildRate()
@@ -290,13 +290,13 @@ Project = Class({
         end
     end,
 
-    SetTypeDrain = function(self, type, value)
-        if type == "mass" then
-            self:SetMassDrain(value)
-        elseif type == "energy" then
-            self:SetEnergyDrain(value)
-        end
-    end,
+    -- SetTypeDrain = function(self, type, value)
+    --     if type == "mass" then
+    --         self:SetMassDrain(value)
+    --     elseif type == "energy" then
+    --         self:SetEnergyDrain(value)
+    --     end
+    -- end,
 
     SetDrain = function(self, energy, mass)
         local ratio = 1-math.min(1, math.min(energy / self.energyRequested,  mass / self.massRequested))
