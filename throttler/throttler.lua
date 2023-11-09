@@ -36,7 +36,7 @@ function init()
 	addHotkey('Ctrl-T', throttler .. '.toggleEcomanager')
 	addHotkey('Ctrl-P', throttler .. '.toggleEnergy')
 	addHotkey('Ctrl-M', throttler .. '.ToggleMassBalance')
-	--addHotkey('Ctrl-P', throttler .. '.ToggleMexMode')
+	addHotkey('Ctrl-I', throttler .. '.ToggleMexMode')
 	addHotkey('Ctrl-O', throttler .. '.increaseMexPrio')
 	addHotkey('Ctrl-L', throttler .. '.decreaseMexPrio')
 	
