@@ -68,7 +68,7 @@ EcoManager = Class({
 					if focus then
 						local id = focus:GetEntityId()
 						if id == u:GetEntityId() then
-							--LOG(u:GetBlueprint().Description .. " is focusing itself, something went wrong here! Let's not add it to the project list.")
+							LOG(u:GetBlueprint().Description .. " is focusing itself, something went wrong here! Let's not add it to the project list.")
 							if isPaused(u) then
 								table.insert(unpause, u)
 							end
@@ -111,10 +111,10 @@ EcoManager = Class({
 		return self.projects
 	end,
 
-	addPlugin = function(self, name, active, timer)
+	addPlugin = function(self, name, throttleMode, timer)
 		FullName = name .. 'Plugin'
 		local plugin = import(throttlerPath .. FullName .. '.lua')[FullName]()
-		plugin.Active = active
+		plugin:setThrottleMode(throttleMode)
 		self.plugins[string.lower(name)] = plugin
 	end,
 
@@ -143,8 +143,8 @@ EcoManager = Class({
 		local energyActual = eco.energyActual
 		local massActual = eco.massActual
 		for name, plugin in pairs(self.plugins) do
-			if plugin.Active then
-
+			if plugin.throttleMode > 0 then
+				LOG("Plugin " .. name .. " cycle started.")
 				eco.energyActual = energyActual
 				eco.massActual = massActual
 				local pause = false

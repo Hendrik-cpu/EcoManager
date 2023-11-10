@@ -17,13 +17,19 @@ local resetPauseStates = import(modulesPath .. 'pause.lua').resetPauseStates
 
 manager = nil
 
+local energyMode = 1
+local massMode = 1
+
+function manageEconomy()
+	manager:manageEconomy()
+end
 function init()
 	manager = EcoManager()
-	manager:addPlugin('Mass')
-	manager:addPlugin('Energy',false)
+	manager:addPlugin('Mass', massMode)
+	manager:addPlugin('Energy', energyMode)
 	addListener(manageEconomy, 0.6,'em_throttler', managerThreadKey)
 
-	addCommand('t', togglePlugin)
+	--addCommand('t', togglePlugin)
 	addCommand('energy', energyPriority)
 	addCommand('mass', massPriority)
 	addCommand('printcats', printCategories)
@@ -34,12 +40,11 @@ function init()
 	addHotkey('Ctrl-B', EconomyPath .. '.PauseEcoM80_E90')
 	addHotkey('Ctrl-N', EconomyPath .. '.PauseEcoM10_E90')
 	addHotkey('Ctrl-T', throttler .. '.toggleEcomanager')
-	addHotkey('Ctrl-P', throttler .. '.toggleEnergy')
-	addHotkey('Ctrl-M', throttler .. '.ToggleMassBalance')
+	addHotkey('Ctrl-P', throttler .. '.changeEnergyMode')
+	addHotkey('Ctrl-M', throttler .. '.changeMassMode')
 	addHotkey('Ctrl-I', throttler .. '.ToggleMexMode')
 	addHotkey('Ctrl-O', throttler .. '.increaseMexPrio')
 	addHotkey('Ctrl-L', throttler .. '.decreaseMexPrio')
-	
 end
 
 function toggleEcomanager()
@@ -56,10 +61,48 @@ function toggleEcomanager()
 	end
 end
 
-function toggleEnergy()
-	local newState = not manager.plugins.energy.Active
-	manager.plugins.energy.Active = newState
-	print("Energy plugin set to: " .. tostring(newState))
+-- function toggleEnergy()
+-- 	local newState = not manager.plugins.energy.Active
+-- 	manager.plugins.energy.Active = newState
+-- 	print("Energy plugin set to: " .. tostring(newState))
+-- end
+
+function changeEnergyMode()
+	if energyMode > 1 then
+		energyMode = 0
+	else
+		energyMode = energyMode + 1
+	end
+
+	if energyMode == 0 then --energy throttling disabled
+		manager.plugins.energy:setThrottleMode(0)
+		print('Energy throttling has been turned off!')
+	elseif energyMode == 1 then--throttle only mass production to assist the mass plugin
+		manager.plugins.energy:setThrottleMode(1)
+		print('Energy throttling now only throttles mass production!')
+	elseif energyMode == 2 then --throttle everything
+		manager.plugins.energy:setThrottleMode(2)
+		print('Energy throttling now throttles all projects that drain power and can be throttled!')
+	end
+end
+
+function changeMassMode()
+	if massMode > 1 then
+		massMode = 0
+	else
+		massMode = massMode + 1
+	end
+
+	if massMode == 0 then --mass throttling disabled
+		manager.plugins.mass:setThrottleMode(0)
+		print('mass throttling has been turned off!')
+	elseif massMode == 1 then--throttle only mass production to assist the mass plugin
+		manager.plugins.mass:setThrottleMode(1)
+		print('mass throttling now only throttles mass production!')
+	elseif massMode == 2 then --throttle everything
+		manager.plugins.mass:setThrottleMode(2)
+		print('mass throttling now throttles all projects that drain power and can be throttled!')
+	end
 end
 
 function toggleDebugging()
@@ -104,19 +147,17 @@ function PauseAll()
 	end
 end
 
-function manageEconomy()
-	manager:manageEconomy()
-end
 
-function ToggleMassBalance()
-	local NewStatus = not manager.plugins["mass"].massProductionOnly
-	manager.plugins["mass"].massProductionOnly = NewStatus
-	print("MassThrottle = " .. tostring(not NewStatus))
-end
+
+-- function ToggleMassBalance()
+-- 	local NewStatus = not manager.plugins["mass"].massProductionOnly
+-- 	manager.plugins["mass"].massProductionOnly = NewStatus
+-- 	print("MassThrottle = " .. tostring(not NewStatus))
+-- end
 
 local mexMode = 0
 function ToggleMexMode()
-	if mexMode > 1 then
+	if mexMode > 2 then
 		mexMode = 0
 	else
 		mexMode = mexMode + 1
@@ -155,44 +196,44 @@ function adjustMexPrio(value)
 	print("multiplier set to: " .. newVal)
 end 
 
-function togglePlugin(args)
-	local str
-	local cmd
-	local argsCount = table.getsize(args)
-	local InvalidInput = false
+-- function togglePlugin(args)
+-- 	local str
+-- 	local cmd
+-- 	local argsCount = table.getsize(args)
+-- 	local InvalidInput = false
 
-	if argsCount < 2 then
-		toggleEcomanager()
-	else
-		local pluginName = args[2]
-		if  manager.plugins[pluginName] then 
+-- 	if argsCount < 2 then
+-- 		toggleEcomanager()
+-- 	else
+-- 		local pluginName = args[2]
+-- 		if  manager.plugins[pluginName] then 
 
-			local pluginState = manager.plugins[pluginName].Active 
-			local state
-			if argsCount > 2 then
-				state = args[3]
-			end
+-- 			local pluginState = manager.plugins[pluginName].mode
+-- 			local state
+-- 			if argsCount > 2 then
+-- 				state = args[3]
+-- 			end
 
-			if not state then
-				pluginState =  not pluginState
-			else
-				if state == "on" then
-					pluginState = true 
-				elseif state == "off" then
-					pluginState = false 
-				else
-					print("Invalid parameter!")
-				end
-			end
+-- 			if not state then
+-- 				pluginState =  not pluginState
+-- 			else
+-- 				if state == "on" then
+-- 					pluginState = true 
+-- 				elseif state == "off" then
+-- 					pluginState = false 
+-- 				else
+-- 					print("Invalid parameter!")
+-- 				end
+-- 			end
 
-			manager.plugins[pluginName].Active = pluginState
-			print(pluginName .. "Plugin set to " .. tostring(pluginState))
+-- 			manager.plugins[pluginName].Active = pluginState
+-- 			print(pluginName .. "Plugin set to " .. tostring(pluginState))
 
-		else
-			print("Plugin name doesn't exist!")
-		end
-	end
-end
+-- 		else
+-- 			print("Plugin name doesn't exist!")
+-- 		end
+-- 	end
+-- end
 
 function energyPriority(args)
 	changePriority(args, "energy")

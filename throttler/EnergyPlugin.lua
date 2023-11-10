@@ -2,31 +2,48 @@ local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'throttler/ThrottlerPlugin.lua').ThrottlerPlugin
 
 EnergyPlugin = Class(ThrottlerPlugin) {
-	constructionCategories = {
-		--fabs = {name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1},
-		para = {name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, priority = 3},
-		lan3 = {name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 30},
-		lan2 = {name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 40},
-		lan1 = {name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 50},
-		air3 = {name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 30},
-		air2 = {name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 30},
-		air1 = {name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 30},
-		nav3 = {name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 30},
-		nav2 = {name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 40},
-		nav1 = {name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 50},
-		exp = {name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, priority = 60},
-		acu = {name="ACU upgrades", category = categories.LAND * categories.MOBILE * categories.COMMAND, priority = 90},
-		scu = {name="SCU upgrades", category = categories.LAND * categories.MOBILE * categories.SUBCOMMANDER, priority = 50},
-		mex = {name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 30},
-		stor = {name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 97},
-		power = {name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
-		nukes = {name="Nukes", category = categories.NUKE, priority = 91},
-		tml = {name="TML", category = categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, priority = 91},
-		build = {name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION - categories.ENERGYSTORAGE - categories.ENERGYPRODUCTION - categories.MASSFABRICATION, priority = 40},
-	},
+	constructionCategories = {},
 
 	_sortProjects = function(a, b)
 		return a.energyFinalFactor > b.energyFinalFactor 
+	end,
+
+	setThrottleMode = function (self, throttleMode)
+		self.throttleMode = throttleMode
+		if throttleMode == 0 then
+			LOG('Energy throttle is turned off.')
+		elseif throttleMode == 1 then --throttle only mass production
+			self.constructionCategories = {
+				mex = {name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 30},
+				mstor = {name="Mass Storage", category = categories.STRUCTURE * categories.MASSSTORAGE, priority = 50, massProduction = true},
+				fabs = {name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 50, massProduction = true},
+			}
+			LOG('Energy throttle is set to throttle only mass production.')
+		elseif throttleMode == 2 then -- throttle all
+			self.constructionCategories = {
+				--fabs = {name="T2/T3 Mass fabrication", category = (categories.TECH2 + categories.TECH3) * categories.STRUCTURE * categories.MASSFABRICATION, priority = 1},
+				para = {name="Paragon", category = categories.STRUCTURE * categories.ENERGYPRODUCTION * categories.EXPERIMENTAL, priority = 3},
+				lan3 = {name="T3 Land Units",  category = categories.LAND * categories.TECH3 * categories.MOBILE, priority = 30},
+				lan2 = {name="T2 Land Units",  category = categories.LAND * categories.TECH2 * categories.MOBILE, priority = 40},
+				lan1 = {name="T1 Land Units",  category = categories.LAND * categories.TECH1 * categories.MOBILE, priority = 50},
+				air3 = {name="T3 Air Units",   category = categories.AIR * categories.TECH3 * categories.MOBILE, priority = 30},
+				air2 = {name="T2 Air Units",   category = categories.AIR * categories.TECH2 * categories.MOBILE, priority = 30},
+				air1 = {name="T1 Air Units",   category = categories.AIR * categories.TECH1 * categories.MOBILE, priority = 30},
+				nav3 = {name="T3 Naval Units", category = categories.NAVAL * categories.TECH3 * categories.MOBILE, priority = 30},
+				nav2 = {name="T2 Naval Units", category = categories.NAVAL * categories.TECH2 * categories.MOBILE, priority = 40},
+				nav1 = {name="T1 Naval Units", category = categories.NAVAL * categories.TECH1 * categories.MOBILE, priority = 50},
+				exp = {name="Experimental unit", category = categories.MOBILE * categories.EXPERIMENTAL, priority = 60},
+				acu = {name="ACU upgrades", category = categories.LAND * categories.MOBILE * categories.COMMAND, priority = 90},
+				scu = {name="SCU upgrades", category = categories.LAND * categories.MOBILE * categories.SUBCOMMANDER, priority = 50},
+				mex = {name="Mass Extractors T2/T3", category = categories.STRUCTURE * (categories.TECH2 + categories.TECH3) * categories.MASSEXTRACTION, priority = 30},
+				stor = {name="Energy Storage", category = categories.STRUCTURE * categories.ENERGYSTORAGE, priority = 97},
+				power = {name="Energy Production", category = categories.STRUCTURE * categories.ENERGYPRODUCTION, priority = 100},
+				nukes = {name="Nukes", category = categories.NUKE, priority = 91},
+				tml = {name="TML", category = categories.STRUCTURE * categories.TACTICALMISSILEPLATFORM, priority = 91},
+				build = {name="Building", category = categories.STRUCTURE - categories.MASSEXTRACTION - categories.ENERGYSTORAGE - categories.ENERGYPRODUCTION - categories.MASSFABRICATION, priority = 40},
+			}
+			LOG('Energy throttle is set to throttle everything.')
+		end
 	end,
 	
 	add = function(self, project)
@@ -47,9 +64,9 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 			if category == self.constructionCategories.fabs and project.isConstruction then
 				project.prio = self.constructionCategories.build.priority
 				project.energyMinStorage = self.constructionCategories.build.storage
-			else
-				project.prio = category.priority
-				project.energyMinStorage = category.storage
+			-- else (disabled because it has been implented into FAF)
+			-- 	project.prio = category.priority
+			-- 	project.energyMinStorage = category.storage
 			end
 			project.energyFinalFactor = project.energyFinalFactor * project.prio - project.energyMinStorage * 10000 --- project.lastRatio
 			table.insert(self.projects, project)
