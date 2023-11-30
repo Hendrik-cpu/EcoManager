@@ -70,7 +70,6 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 			end
 			project.energyFinalFactor = project.energyFinalFactor * project.prio - project.energyMinStorage * 10000 --- project.lastRatio
 			table.insert(self.projects, project)
-			self.countProjects = countProjects + 1 
 		end
 	end,
 
