@@ -106,6 +106,10 @@ function debugProjectStats(projects, pluginName)
 			"\nbuildRate: " .. project.buildRate ..
 			"\nmassAdjacencyBonus: " .. project.massAdjacencyBonus ..
 			"\nenergyAdjacencyBonus: " .. project.energyAdjacencyBonus ..
+			"\nAssisters: " .. project.totalAssisters ..
+			"\nAssistersPaused: " .. project.pausedAsssisters ..
+			"\nAssistersUnpaused: " .. project.unpausedAssisters ..
+			"\nPriority: " .. project.prio ..
 			"\nUnitName: " .. project.unitName
 
 			ToolTip.AddControlTooltip(button, {text=project.unitName or "Unknown", body=tooltipText})
