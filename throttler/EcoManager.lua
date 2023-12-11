@@ -68,7 +68,7 @@ EcoManager = Class({
 					if focus then
 						local id = focus:GetEntityId()
 						if id == u:GetEntityId() then
-							LOG(u:GetBlueprint().Description .. " is focusing itself, something went wrong here! Let's not add it to the project list.")
+							--LOG(u:GetBlueprint().Description .. " is focusing itself, something went wrong here! Let's not add it to the project list.")
 							if isPaused(u) then
 								table.insert(unpause, u)
 							end
@@ -144,7 +144,7 @@ EcoManager = Class({
 		local massActual = eco.massActual
 		for name, plugin in pairs(self.plugins) do
 			if plugin.throttleMode > 0 then
-				LOG("Plugin " .. name .. " cycle started.")
+				--LOG("Plugin " .. name .. " cycle started.")
 				eco.energyActual = energyActual
 				eco.massActual = massActual
 				local pause = false
@@ -231,10 +231,11 @@ EcoManager = Class({
 			end
 		end
 
-		for _, p in all_projects do
-			p:pause(self.pause_list)
+		for _, plugin in pairs(self.plugins) do
+			for _, p in plugin.projects do
+				p:pause(self.pause_list)
+			end
 		end
-
 
 		for toggle_key, modes in self.pause_list do
 			local toggle = toggle_key
@@ -244,6 +245,7 @@ EcoManager = Class({
 			end
 
 			for mode, units in modes do
+				
 				self:setPaused(units, toggle, mode == 'pause')
 			end
 		end
