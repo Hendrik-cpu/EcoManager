@@ -14,14 +14,14 @@ local ItemList = import('/lua/maui/itemlist.lua').ItemList
 local Group = import('/lua/maui/group.lua').Group
 local UIUtil = import('/lua/ui/uiutil.lua')
 
-local Pause = import(modulesPath .. 'pause.lua').Pause
+local Pauser = import(modulesPath .. 'pause.lua')
 local CanUnpause = import(modulesPath .. 'pause.lua').canPause
 
 local pause_queue = {}
 local overlays = {}
 
-function setPaused(units, state)
-    Pause(units, state, 'mexes')
+function pause(units, state)
+    Pauser.Pause(units, state, 'mexes')
 end
 
 function isMexBeingBuilt(mex)
@@ -101,7 +101,7 @@ function upgradeMexes(mexes, unpause)
 	end
 
 	if unpause then
-		setPaused(mexes, false)
+		pause(mexes, false)
 	end
 
 	return true
@@ -146,8 +146,8 @@ function pauseMexes()
 	end
 
 	if table.getsize(pause) > 0 then
-		triggerEvent('toggle_pause', pause, true)
-		setPaused(pause, true)
+		--triggerEvent('toggle_pause', pause, true)
+		pause(pause, true)
 	end
 end
 
@@ -266,7 +266,7 @@ function checkMexes()
 	end
 
 	if table.getsize(mexes['assisted']) > 0 then
-		Pause(mexes['assisted'], false, 'mexes') -- unpause assisted mexes
+		--pause(mexes['assisted'], false, 'mexes') -- unpause assisted mexes
 	end
 end
 
