@@ -166,11 +166,11 @@ function setPauseStates(units, pause, requestingModule)
 			local requestingModulePrio = getPrio(requestingModule, pause)
 			local changeState = false
 
-			LOG(tostring(pause))
+			--LOG(tostring(pause))
 			if not unitState and not pause then
 				--if unpause command is issued but pause state was never registered, that means it was paused by a unregistered third party script, let's give it a prio only second to the user
 				--probably a mex duo to new implementation of eco manager function into FAF
-				LOG("if unpause command is issued but pause state was never registered, that means it was paused by a unregistered third party script, let's give it a prio only second to the user probably a mex duo to new implementation of eco manager function into FAF")
+				--LOG("if unpause command is issued but pause state was never registered, that means it was paused by a unregistered third party script, let's give it a prio only second to the user probably a mex duo to new implementation of eco manager function into FAF")
 				unitState =  {unit = u, module = "unknownModule", state = true}
 				states[unitID] = unitState
 			end
@@ -178,21 +178,21 @@ function setPauseStates(units, pause, requestingModule)
 			local currentPrio = getPrio(unitState.module, pause)
 			if not unitState then
 				--there is no information about the pause state or it belonged to a different unit, state can be altered for sure!
-				LOG("there is no information about the pause state or it belonged to a different unit, state can be altered for sure!")
+				--LOG("there is no information about the pause state or it belonged to a different unit, state can be altered for sure!")
 				changeState = true
 			else 
 				--so we have information about a previous pause state, let's see if it can be altered
-				LOG("so we have information about a previous pause state, let's see if it can be altered")
+				--LOG("so we have information about a previous pause state, let's see if it can be altered")
 				if unitState.module == requestingModule then 
 					--if the module is the same, state can be altered!
-					LOG("if the module is the same, state can be altered! --> " .. unitState.module .. " == " .. requestingModule)
+					--LOG("if the module is the same, state can be altered! --> " .. unitState.module .. " == " .. requestingModule)
 					changeState = true
 				else 
 					--so it was a different module, let's check the prio of the lock
-					LOG("so it was a different module, let's check the prio of the lock --> Previous module: " .. unitState.module .. "Prio: " .. currentPrio)
+					--LOG("so it was a different module, let's check the prio of the lock --> Previous module: " .. unitState.module .. "Prio: " .. currentPrio)
 					if requestingModulePrio > currentPrio then
 						--requesting module has a higher prio, let's change the state
-						LOG("requesting module has a higher prio, let's change the state --> Requesting prio: " .. requestingModulePrio .. " is higher than previous " .. currentPrio .. "by module: " .. unitState.module)
+						--LOG("requesting module has a higher prio, let's change the state --> Requesting prio: " .. requestingModulePrio .. " is higher than previous " .. currentPrio .. "by module: " .. unitState.module)
 						changeState = true
 					end
 				end
@@ -201,7 +201,7 @@ function setPauseStates(units, pause, requestingModule)
 			if changeState then
 				states[unitID] = {unit=u,module=requestingModule, state=pause}
 				table.insert(changables, u)
-				LOG("Unit" .. unitID .. " state changed to paused = " .. tostring(pause))
+				--LOG("Unit" .. unitID .. " state changed to paused = " .. tostring(pause))
 				--LOG("Unit" .. unitID .. " changed state to paused = " .. pause .. " by request of " .. requestingModule .. "(" .. unitState.prio .. ")" .. " previously owned by " .. unitState.module .. "(" .. unitState.prio .. ")")
 			end
 			
