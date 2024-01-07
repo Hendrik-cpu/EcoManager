@@ -6,6 +6,7 @@ local pause_prios = {
 	ecomanager={pause=70},
 	user={pause=100},
 	unpause={pause=90, unpause=90},
+	unknownModule={pause=80, unpause=50},
 }
 
 function isPaused(unit)
@@ -48,9 +49,9 @@ end
 function getPrio(module, pause)
 	local prio
 	if pause then
-		prio = pause_prios[module]['pause']
-	else
 		prio = pause_prios[module]['unpause'] or pause_prios[module]['pause']
+	else
+		prio = pause_prios[module]['pause']
 	end
 
 	if not prio then
@@ -59,16 +60,6 @@ function getPrio(module, pause)
 	return prio
 end
 
-function Pause(units, pause, module)
-	local changables = {}
-	for _, u in units do
-		local id = u:GetEntityId()
-		if canPause(u, module, pause, true) then
-			table.insert(changables, u)
-		end
-	end
-	SetPaused(changables, pause)
-end
 
 local unitFirstRegistered = {}
 function Toggle(units, pause, module, toggle)
@@ -147,4 +138,73 @@ function canPause(u, module, pause, update)
 		end
 	end
 	return canChangeState
+end
+
+function Pause(units, pause, requestingModule)
+	-- local changables = {}
+	-- for _, u in units do
+	-- 	local id = u:GetEntityId()
+	-- 	if canPause(u, requestingModule, pause, true) then
+	-- 		table.insert(changables, u)
+	-- 	end
+	-- end
+	-- SetPaused(changables, pause)
+	setPauseStates(units, pause, requestingModule)
+end
+function setPauseStates(units, pause, requestingModule)
+	local changables = {}
+	for _, u in units do
+
+			local unitID = u:GetEntityId()
+			local unitState = nil
+			if states[unitID] and states[unitID].unit:IsDead() then
+				states[unitID] = nil
+			else
+				unitState = states[unitID]
+			end
+
+			local requestingModulePrio = getPrio(requestingModule, pause)
+			local changeState = false
+
+			LOG(tostring(pause))
+			if not unitState and not pause then
+				--if unpause command is issued but pause state was never registered, that means it was paused by a unregistered third party script, let's give it a prio only second to the user
+				--probably a mex duo to new implementation of eco manager function into FAF
+				LOG("if unpause command is issued but pause state was never registered, that means it was paused by a unregistered third party script, let's give it a prio only second to the user probably a mex duo to new implementation of eco manager function into FAF")
+				unitState =  {unit = u, module = "unknownModule", state = true}
+				states[unitID] = unitState
+			end
+
+			local currentPrio = getPrio(unitState.module, pause)
+			if not unitState then
+				--there is no information about the pause state or it belonged to a different unit, state can be altered for sure!
+				LOG("there is no information about the pause state or it belonged to a different unit, state can be altered for sure!")
+				changeState = true
+			else 
+				--so we have information about a previous pause state, let's see if it can be altered
+				LOG("so we have information about a previous pause state, let's see if it can be altered")
+				if unitState.module == requestingModule then 
+					--if the module is the same, state can be altered!
+					LOG("if the module is the same, state can be altered! --> " .. unitState.module .. " == " .. requestingModule)
+					changeState = true
+				else 
+					--so it was a different module, let's check the prio of the lock
+					LOG("so it was a different module, let's check the prio of the lock --> Previous module: " .. unitState.module .. "Prio: " .. currentPrio)
+					if requestingModulePrio > currentPrio then
+						--requesting module has a higher prio, let's change the state
+						LOG("requesting module has a higher prio, let's change the state --> Requesting prio: " .. requestingModulePrio .. " is higher than previous " .. currentPrio .. "by module: " .. unitState.module)
+						changeState = true
+					end
+				end
+			end
+
+			if changeState then
+				states[unitID] = {unit=u,module=requestingModule, state=pause}
+				table.insert(changables, u)
+				LOG("Unit" .. unitID .. " state changed to paused = " .. tostring(pause))
+				--LOG("Unit" .. unitID .. " changed state to paused = " .. pause .. " by request of " .. requestingModule .. "(" .. unitState.prio .. ")" .. " previously owned by " .. unitState.module .. "(" .. unitState.prio .. ")")
+			end
+			
+	end
+	SetPaused(changables, pause)
 end
