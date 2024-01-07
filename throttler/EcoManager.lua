@@ -23,6 +23,8 @@ EcoManager = Class({
 		self.ProjectPositions = {}
 		self.mexPositions = {}
 		self.allBuildingsPostions = {}
+		self.countAssisters = 0
+		self.countProjects = 0
 		local units = Units.Get(categories.STRUCTURE + categories.ENGINEER + categories.NUKE + categories.SILO)
 
 		for _, u in units do
@@ -73,7 +75,6 @@ EcoManager = Class({
 								table.insert(unpause, u)
 							end
 						else
-
 							project = self.projects[id]
 							if not project then
 								--LOG("Adding new project " .. id)
@@ -90,10 +91,11 @@ EcoManager = Class({
 								project.Position = pos
 
 								self.projects[id] = project
+								self.countProjects = self.countProjects + 1
 							end
 							--LOG("Entity " .. u:GetEntityId() .. " is an assister")
 							project:AddAssister(eco, u)
-
+							self.countAssisters = self.countAssisters + 1
 						end
 					end
 				end
@@ -108,6 +110,7 @@ EcoManager = Class({
 			p:LoadFinished(eco)
 		end
 
+		LOG("Projects: " .. self.countProjects .. "Assisters: " .. self.countAssisters)
 		return self.projects
 	end,
 
