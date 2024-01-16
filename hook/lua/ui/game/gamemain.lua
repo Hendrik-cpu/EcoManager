@@ -18,7 +18,7 @@ function OnSelectionChanged(oldSelection, newSelection, added, removed)
             local mex = mexes[1]
             local data = Units.Data(mex)
 
-            if options['em_mexes'] == 'click' and (EntityCategoryContains(categories.TECH1, mex) or data['bonus'] >= 1.5) then
+            if options['em_mexes'] == 'click' and EntityCategoryContains(categories.TECH1, mex) then --or data['bonus'] >= 1.5) 
                 import(modPath ..'modules/mexes.lua').upgradeMexes(mexes, true)
 			end
 		end
