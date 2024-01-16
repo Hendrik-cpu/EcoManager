@@ -20,7 +20,7 @@ local CanUnpause = import(modulesPath .. 'pause.lua').canPause
 local pause_queue = {}
 local overlays = {}
 
-function pause(units, state)
+function pauseMexes(units, state)
     Pauser.Pause(units, state, 'mexes')
 end
 
@@ -50,7 +50,6 @@ function getMexes()
 				for _, category in {categories.TECH1, categories.TECH2} do
 					if EntityCategoryContains(category, mex) then
 						if category == categories.TECH1 or data['bonus'] >= 1.5 then -- upgrade T1 and T2 with MS
-							--table.insert(mexes['idle'][category], mex)
 							table.insert(mexes['idle'], mex)
 						end
 					end
@@ -101,35 +100,35 @@ function upgradeMexes(mexes, unpause)
 	end
 
 	if unpause then
-		pause(mexes, false)
+		--pauseMexes(mexes, false)
 	end
 
 	return true
 end
 
-function upgradeMexById(id)
-	local units = Units.Get()
+-- function upgradeMexById(id)
+-- 	local units = Units.Get()
 
-	for k, u in units do
-		if u:IsDead() then
-			units[k] = nil
-		end
-	end
+-- 	for k, u in units do
+-- 		if u:IsDead() then
+-- 			units[k] = nil
+-- 		end
+-- 	end
 
-	if not units then return end
+-- 	if not units then return end
 
-	local all_mexes = EntityCategoryFilterDown(categories.MASSEXTRACTION * categories.STRUCTURE, units)
+-- 	local all_mexes = EntityCategoryFilterDown(categories.MASSEXTRACTION * categories.STRUCTURE, units)
 
-	for _, m in all_mexes do
-		if m:GetEntityId() == id then
-			if not m:GetFocus() then
-				upgradeMexes({m})
-			end
+-- 	for _, m in all_mexes do
+-- 		if m:GetEntityId() == id then
+-- 			if not m:GetFocus() then
+-- 				upgradeMexes({m})
+-- 			end
 
-			return
-		end
-	end
-end
+-- 			return
+-- 		end
+-- 	end
+-- end
 
 function queuePause(mex)
 	table.insert(pause_queue, mex)
@@ -147,7 +146,7 @@ function pauseMexes()
 
 	if table.getsize(pause) > 0 then
 		--triggerEvent('toggle_pause', pause, true)
-		pause(pause, true)
+		pauseMexes(pause, true)
 	end
 end
 
@@ -250,22 +249,23 @@ function checkMexes()
 
 	mexes = getMexes()
 
-	options = import(modulesPath .. 'utils.lua').getOptions(true)
+	-- options = import(modulesPath .. 'utils.lua').getOptions(true)
 
-	if table.getsize(mexes['idle']) > 0 then
-		local auto_upgrade = options['em_mexes'] == 'auto';
+	-- if table.getsize(mexes['idle']) > 0 then
+	-- 	local auto_upgrade = options['em_mexes'] == 'auto';
 
-		if not auto_upgrade then
-			--local eco = getEconomy()
-			local tps = GetSimTicksPerSecond()
-		end
+	-- 	if not auto_upgrade then
+	-- 		--local eco = getEconomy()
+	-- 		local tps = GetSimTicksPerSecond()
+	-- 	end
 
-		if auto_upgrade then
-			upgradeMexes(mexes['idle'])
-		end
-	end
+	-- 	if auto_upgrade then
+	-- 		upgradeMexes(mexes['idle'])
+	-- 	end
+	-- end
 
 	if table.getsize(mexes['assisted']) > 0 then
+		upgradeMexes(mexes['assisted'])
 		--pause(mexes['assisted'], false, 'mexes') -- unpause assisted mexes
 	end
 end
