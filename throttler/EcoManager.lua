@@ -158,7 +158,7 @@ EcoManager = Class({
 								local eID = e:GetEntityId()
 								self.projects[unitID]:AddAssister(eco, e)
 								--print("Egnineer" .. eID .. " added to " .. self.projects[unitID].unitName .. "[" .. unitID .. "]")
-								pause = true
+								--pause = true
 							end
 						end
 					end
