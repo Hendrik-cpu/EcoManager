@@ -43,7 +43,7 @@ EcoManager = Class({
 				end
 				self.allBuildingsPostions[pos[1]][pos[3]] = u
 
-				if pauser.canInvertState(u,moduleName) then
+				--if pauser.canInvertState(u,moduleName) then
 
 					local focus = u:GetFocus()
 					local isConstruction = false
@@ -61,7 +61,7 @@ EcoManager = Class({
 							isMissile = true
 							focus = u
 						elseif is_paused and (u:IsIdle() or u:GetWorkProgress() == 0) then
-						 	table.insert(unpause, u)
+						 	--table.insert(unpause, u)
 						end
 					else
 						isConstruction = true
@@ -72,7 +72,7 @@ EcoManager = Class({
 						if id == u:GetEntityId() then
 							--LOG(u:GetBlueprint().Description .. " is focusing itself, something went wrong here! Let's not add it to the project list.")
 							if isPaused(u) then
-								table.insert(unpause, u)
+								--table.insert(unpause, u)
 							end
 						else
 							project = self.projects[id]
@@ -98,13 +98,10 @@ EcoManager = Class({
 							self.countAssisters = self.countAssisters + 1
 						end
 					end
-				end
+				--end
 			end
 		end
 
-		if unpause then
-			self:setPaused(unpause, 'pause', false)
-		end
 
 		for _, p in self.projects do
 			p:LoadFinished(eco)
@@ -128,13 +125,56 @@ EcoManager = Class({
 		end
 		pauser.cleanStates()
 		
-		local all_projects = {}
+		--local all_projects = {}
 		self.pause_list = {}
 		local eco = import(throttlerPath .. 'Economy.lua').Economy()
-		self.ProjectPositions = {}
+		--self.ProjectPositions = {}
 
-		for _, p in self:LoadProjects(eco) do
-			table.insert(all_projects, p)
+		self:LoadProjects(eco)
+		-- for _, p in self:LoadProjects(eco) do
+		-- 	table.insert(all_projects, p)
+		-- end
+
+		--preemptive pausing of future assisters, add preemtive projects too? not possible because blueprint cant be retrieved from command queue?
+		--for factories it doesn't work, guess the project position is not the same as the engineers target
+		local engineers = Units.Get(categories.ENGINEER)
+		for _, e in engineers do
+			local is_paused = isPaused(e)
+			if not e:IsDead() then
+				if e:GetFocus() then
+
+				elseif not e:IsIdle() then
+					
+					local pause = false
+		
+					local queue = e:GetCommandQueue()
+					local p = queue[1].position
+					if(queue[1].type == 'Guard' or queue[1].type == 'Repair') then
+						if(self.ProjectPositions[p[1]] and self.ProjectPositions[p[1]][p[3]]) then
+							local unitID = self.ProjectPositions[p[1]][p[3]]:GetEntityId()
+							local project = self.projects[unitID]
+
+							if (VDist3(p, e:GetPosition()) < 15) then --and (project.throttle > 0) then --engineer build range
+								local eID = e:GetEntityId()
+								self.projects[unitID]:AddAssister(eco, e)
+								--print("Egnineer" .. eID .. " added to " .. self.projects[unitID].unitName .. "[" .. unitID .. "]")
+								pause = true
+							end
+						end
+					end
+
+					if pause then
+						if not self.pause_list.pause then self.pause_list.pause = {pause={}, no_pause={}} end
+						table.insert(self.pause_list.pause.pause, e)
+					else
+						if not self.pause_list.pause then self.pause_list.pause = {pause={}, no_pause={}} end
+						table.insert(self.pause_list.pause.no_pause, e)
+					end
+				else
+					if not self.pause_list.pause then self.pause_list.pause = {pause={}, no_pause={}} end
+					table.insert(self.pause_list.pause.no_pause, e)	
+				end
+			end
 		end
 
 		-- print ("n_projects " .. table.getsize(all_projects))
@@ -152,7 +192,7 @@ EcoManager = Class({
 				eco.massActual = massActual
 				local pause = false
 				plugin:resetCycle()
-				for _, p in all_projects do
+				for _, p in self.projects do
 					plugin:add(p)
 				end
 
@@ -204,35 +244,8 @@ EcoManager = Class({
 		end
 		--LOG("end: " .. eco.energyActual .. " mass:".. eco.massActual)
 
-		table.sort(all_projects, function(a, b) return a.index < b.index end)
+		table.sort(self.projects, function(a, b) return a.index < b.index end)
 		--LOG(repr(all_projects)) --printing of a table?
-
-		--preemptive pausing of future assisters, add preemtive projects too? not possible because blueprint cant be retrieved from command queue?
-		--for factories it doesn't work, guess the project position is not the same as the engineers target
-		local engineers = Units.Get(categories.ENGINEER)
-		for _, e in engineers do
-			if not e:IsDead() and not e:IsIdle() and not e:GetFocus() then
-				local pause = false
-	
-				local queue = e:GetCommandQueue()
-				local p = queue[1].position
-				if(queue[1].type == 'Guard' or queue[1].type == 'Repair') then
-					if(self.ProjectPositions[p[1]] and self.ProjectPositions[p[1]][p[3]]) then
-						local unitID = self.ProjectPositions[p[1]][p[3]]:GetEntityId()
-						local project = self.projects[unitID]
-
-						if (VDist3(p, e:GetPosition()) < 15) and (project.throttle > 0) then --engineer build range
-							pause = true
-						end
-					end
-				end
-
-				if pause then
-					if not self.pause_list.pause then self.pause_list.pause = {pause={}, no_pause={}} end
-					table.insert(self.pause_list.pause.pause, e)
-				end
-			end
-		end
 
 		for _, plugin in pairs(self.plugins) do
 			for _, p in plugin.projects do
