@@ -110,7 +110,7 @@ EcoManager = Class({
 			p:LoadFinished(eco)
 		end
 
-		LOG("Projects: " .. self.countProjects .. "Assisters: " .. self.countAssisters)
+		--LOG("Projects: " .. self.countProjects .. "Assisters: " .. self.countAssisters)
 		return self.projects
 	end,
 
