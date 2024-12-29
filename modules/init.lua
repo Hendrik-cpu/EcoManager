@@ -106,7 +106,7 @@ function setup(isReplay, parent)
 		},
 		throttler = {'throttler'}, 
 		SE = {
-			--'resourceusage',
+			'resourceusage',
 			'mexes'
 		}, 
 		controlPannel = {
