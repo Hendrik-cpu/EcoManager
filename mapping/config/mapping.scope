@@ -1,0 +1,2 @@
+# Entry point configuration
+entrypoint: .github/workflows/test-e2e.yml

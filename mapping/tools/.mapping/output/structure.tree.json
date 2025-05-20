@@ -1,0 +1,11 @@
+[
+  {"type":"directory","name":".","contents":[
+    {"type":"file","name":"deep-map.sh"},
+    {"type":"directory","name":"mapping","contents":[
+      {"type":"directory","name":"raw"}
+    ]},
+    {"type":"file","name":"resolve-refs.sh"}
+  ]}
+,
+  {"type":"report","directories":3,"files":2}
+]
