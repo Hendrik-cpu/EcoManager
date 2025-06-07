@@ -1,8 +1,9 @@
 local modPath = '/mods/EM/'
 local modulesPath = modPath .. 'modules/'
 local throttlerPath = modPath .. 'throttler/'
-local EconomyPath = throttlerPath .. 'Economy.lua")'
-local throttler = throttlerPath .. 'throttler.lua")'
+-- Paths used for hotkey actions
+local EconomyPath = throttlerPath .. 'Economy.lua'
+local throttler = throttlerPath .. 'throttler.lua'
 
 local pauser = import(modulesPath .. 'pause.lua')
 local Units = import('/mods/common/units.lua')
