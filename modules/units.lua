@@ -23,15 +23,15 @@ function econData(unit)
 
 		if bp.Economy then
 
-			if bp.Economy.ProductionPerSecondMass > 0 then
+			if (bp.Economy.ProductionPerSecondMass or 0) > 0 then
 				econ['massProduced'] = bp.Economy.ProductionPerSecondMass
 			end
 
-			if bp.Economy.MaintenanceConsumptionPerSecondEnergy > 0 then
+			if (bp.Economy.MaintenanceConsumptionPerSecondEnergy or 0) > 0 then
 				econ['energyRequested'] = bp.Economy.MaintenanceConsumptionPerSecondEnergy
 			end
 
-			if bp.Economy.MaintenanceConsumptionPerSecondMass > 0 then
+			if (bp.Economy.MaintenanceConsumptionPerSecondMass or 0) > 0 then
 				econ['massRequested'] = bp.Economy.MaintenanceConsumptionPerSecondMass
 			end
 		end
