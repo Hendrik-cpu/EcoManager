@@ -1,5 +1,6 @@
 local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'throttler/ThrottlerPlugin.lua').ThrottlerPlugin
+local CALIBRATION = import(modPath .. 'throttler/Project.lua').CALIBRATION
 
 
 MassPlugin = Class(ThrottlerPlugin) {
@@ -14,6 +15,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 
 	setThrottleMode = function (self, throttleMode)
 		self.throttleMode = throttleMode
+		self.categoryCache = {} -- unit->category matches are static per mode; invalidate on mode switch
 		if throttleMode == 0 then
 			LOG('Mass throttle is turned off.')
 		elseif throttleMode == 1 then
@@ -61,16 +63,19 @@ MassPlugin = Class(ThrottlerPlugin) {
 
 	add = function(self, project)
 		if project.massRequested > 0 then 
-			local category
-			local u = project.unit
-
-			local cats = self.constructionCategories
-			for _, c in cats do
-				if EntityCategoryContains(c.category, u) then
-					category = c
-					break
+			local cache = self.categoryCache
+			local category = cache[project.id]
+			if category == nil then
+				local u = project.unit
+				for _, c in self.constructionCategories do
+					if EntityCategoryContains(c.category, u) then
+						category = c
+						break
+					end
 				end
+				cache[project.id] = category or false -- false = known no-match
 			end
+			if category == false then category = nil end
 
 			if category and self.massProductionOnly and not category.massProduction then
 				category = nil
@@ -84,7 +89,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 				end
 
 				project.massMinStorage = category.storage or 0
-				project.massFinalFactor = project.massFinalFactor * project.prio  - project.massMinStorage * 10000 --- project.lastRatio
+				project.massFinalFactor = project.massFinalFactor * project.prio  - project.massMinStorage * CALIBRATION.minStoragePenalty --- project.lastRatio
 
 				table.insert(self.projects, project)
 			end

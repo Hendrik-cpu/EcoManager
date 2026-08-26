@@ -8,6 +8,12 @@ local pauser = import(modulesPath .. 'pause.lua')
 local isPaused = pauser.isPaused
 local moduleName = "ecomanager"
 
+-- lazy-memoized module refs — top-level import would cycle (Project.lua imports
+-- throttler.lua which imports this file); resolving once instead of per tick.
+local ProjectModule
+local EconomyModule
+local ControlPannel
+
 EcoManager = Class({
 
 	Active = true,
@@ -78,7 +84,8 @@ EcoManager = Class({
 							project = self.projects[id]
 							if not project then
 								--LOG("Adding new project " .. id)
-								project = import(throttlerPath .. 'Project.lua').Project(focus, isConstruction)
+								ProjectModule = ProjectModule or import(throttlerPath .. 'Project.lua')
+								project = ProjectModule.Project(focus, isConstruction)
 								project.isMassFabricator = isMassFabricator
 								
 								-- map positions
@@ -127,7 +134,8 @@ EcoManager = Class({
 		
 		--local all_projects = {}
 		self.pause_list = {}
-		local eco = import(throttlerPath .. 'Economy.lua').Economy()
+		EconomyModule = EconomyModule or import(throttlerPath .. 'Economy.lua')
+		local eco = EconomyModule.Economy()
 		--self.ProjectPositions = {}
 
 		self:LoadProjects(eco)
@@ -181,8 +189,9 @@ EcoManager = Class({
 		-- print ("n_projects " .. table.getsize(all_projects))
 		--LOG("NEW BALANCE ROUND")
 
-		import(throttlerPath .. 'Project.lua').throttleIndex = 0
-		import(throttlerPath .. 'Project.lua').firstAssister = false
+		ProjectModule = ProjectModule or import(throttlerPath .. 'Project.lua')
+		ProjectModule.throttleIndex = 0
+		ProjectModule.firstAssister = false
 		--LOG("start: " .. eco.energyActual .. " mass:".. eco.massActual)
 		local energyActual = eco.energyActual
 		local massActual = eco.massActual
@@ -237,9 +246,11 @@ EcoManager = Class({
 				
 				--update control pannel
 				if self.debuggingUI == 1 then
-					import(modPath .. "controlPannel/controlPannel.lua").debugProjectStats(plugin.projects,name)
+					ControlPannel = ControlPannel or import(modPath .. "controlPannel/controlPannel.lua")
+					ControlPannel.debugProjectStats(plugin.projects,name)
 				elseif self.debuggingUI == 0 then
-					import(modPath .. "controlPannel/controlPannel.lua").hideButtons()
+					ControlPannel = ControlPannel or import(modPath .. "controlPannel/controlPannel.lua")
+					ControlPannel.hideButtons()
 					self.debuggingUI = -1
 				end
 			end

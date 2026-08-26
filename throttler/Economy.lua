@@ -1,37 +1,29 @@
 
+-- eco-pause: ONE toggle mechanism, presets are just parameter pairs.
 local EcoIsPaused=false
 local massMinStorage=0
 local energyMinStorage=0
-function PauseEcoM10_E90()
+
+local function toggleEcoPause(massMin, energyMin)
 	if EcoIsPaused then
 		massMinStorage=0
 		energyMinStorage=0
 		EcoIsPaused=false
 		print("Mass upgrades have been unpaused.")
 	else
-		massMinStorage=0.10
-		energyMinStorage=0.90
+		massMinStorage=massMin
+		energyMinStorage=energyMin
 		preventM_Stall=0
 		preventE_Stall=0
 		EcoIsPaused=true
-		print("Mass upgrades have been paused and will resume when storages are filling up (10%m/90%e).")
+		print("Mass upgrades have been paused and will resume when storages are filling up ("
+			.. math.floor(massMin*100) .. "%m/" .. math.floor(energyMin*100) .. "%e).")
 	end
 end
-function PauseEcoM80_E90()
-	if EcoIsPaused then
-		massMinStorage=0
-		energyMinStorage=0
-		EcoIsPaused=false
-		print("Mass upgrades have been unpaused.")
-	else
-		massMinStorage=0.8
-		energyMinStorage=0.9
-		preventM_Stall=0
-		preventE_Stall=0
-		EcoIsPaused=true
-		print("Mass upgrades have been paused and will resume when storages are filling up (80%m/90%e).")
-	end
-end
+
+-- hotkey-visible presets (names are bound in throttler.lua)
+function PauseEcoM10_E90() toggleEcoPause(0.10, 0.90) end
+function PauseEcoM80_E90() toggleEcoPause(0.80, 0.90) end
 
 Economy = Class({
 	data = {},
@@ -116,22 +108,22 @@ Economy = Class({
 		return drain + stored
 	end,
 
-	massNet = function(self, massMin, prio, buffer)
-		if prio == 100 then 
-			massMin = 0
+	-- one rule for both resources: prio 100 ignores min-storage, else floor at the eco-wide min
+	resourceNet = function(self, type, min, prio, buffer)
+		if prio == 100 then
+			min = 0
 		else
-			massMin = math.max(self['massMinStored'],massMin)
+			min = math.max(self[type .. 'MinStored'], min)
 		end
-		return self:net('mass', massMin, buffer)
+		return self:net(type, min, buffer)
+	end,
+
+	massNet = function(self, massMin, prio, buffer)
+		return self:resourceNet('mass', massMin, prio, buffer)
 	end,
 
 	energyNet = function(self, energyMin, prio, buffer)
-		if prio == 100 then 
-			energyMin = 0
-		else
-			energyMin = math.max(self['energyMinStored'],energyMin)
-		end
-		return self:net('energy', energyMin, buffer)
+		return self:resourceNet('energy', energyMin, prio, buffer)
 	end,
 
 	setStallFactor = function(self)

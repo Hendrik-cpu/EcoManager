@@ -9,6 +9,22 @@ local throttler = import(modPath .. 'throttler/throttler.lua')
 throttleIndex = 0
 firstAssister = true
 
+-- CALIBRATION — the measured residue of this system. None of these constants is
+-- derivable from first principles; each was earned by play-testing against the
+-- live FA economy. Tune HERE, nowhere else. (The overlay/harness can import this
+-- table to explain which term dominated a unit's ranking.)
+CALIBRATION = {
+	energyPerMass = 1.296,      -- energy<->mass exchange rate used to normalize payoffs
+	completionWindow = 5,       -- seconds-to-done under which the completion bonus ramps in
+	completionBonusMax = 100,   -- completion bonus scale at the moment of completion
+	minStoragePenalty = 10000,  -- final-factor penalty per unit of min-storage requirement
+	massRequestWeight = 10,     -- mass counts 10x energy in the resource-proportion split
+	finalFactor = {             -- (neutral + other*otherPayoff + own*ownPayoff) * (1 + otherProportion)
+		mass   = {own = 5000, other = 100},
+		energy = {own = 1000, other = 100},
+	},
+}
+
 --bininsert
 do
    local fcomp_default = function( a,b ) return a < b end
@@ -182,9 +198,9 @@ Project = Class({
         self.massReversePayoff = 0
         if self.massProduction > 0 then
             if self.isConstruction then
-                self.massReversePayoff = self.massProduction / (self.secondsLeft * self.massProduction + self.massCostRemaining + self.MaintenanceConsumptionPerSecondEnergy * 1.296)
+                self.massReversePayoff = self.massProduction / (self.secondsLeft * self.massProduction + self.massCostRemaining + self.MaintenanceConsumptionPerSecondEnergy * CALIBRATION.energyPerMass)
             else
-                self.massReversePayoff = self.massProduction / (self.energyRequested * 1.296)
+                self.massReversePayoff = self.massProduction / (self.energyRequested * CALIBRATION.energyPerMass)
             end
         end
         self.energyReversePayoff = 0
@@ -193,13 +209,14 @@ Project = Class({
         end
 
         --resource proportion
-        self.massProportion = self.massRequested * 10 / (self.massRequested * 10 + self.energyRequested)
-        self.energyProportion = self.energyRequested / (self.massRequested * 10 + self.energyRequested)
+        local mw = CALIBRATION.massRequestWeight
+        self.massProportion = self.massRequested * mw / (self.massRequested * mw + self.energyRequested)
+        self.energyProportion = self.energyRequested / (self.massRequested * mw + self.energyRequested)
 
         --progress rating
         self.completionBonus = 0
-        if self.workProgress > 0 and self.secondsLeft < 5 then
-            self.completionBonus = (1 - self.secondsLeft / 5) * 100 * self.workProgress
+        if self.workProgress > 0 and self.secondsLeft < CALIBRATION.completionWindow then
+            self.completionBonus = (1 - self.secondsLeft / CALIBRATION.completionWindow) * CALIBRATION.completionBonusMax * self.workProgress
         end
         self.progressBonus = self.workProgress
 
@@ -214,9 +231,14 @@ Project = Class({
         --neutral factor
         self.neutralFactor = 1 + self.progressBonus + self.completionBonus
 
-        --final factors
-        self.energyFinalFactor = (self.neutralFactor + self.massReversePayoff * 100 + self.energyReversePayoff * 1000) * (1 + self.massProportion) 
-        self.massFinalFactor = (self.neutralFactor + self.energyReversePayoff * 100 + self.massReversePayoff * 5000) * (1 + self.energyProportion)
+        --final factors — one formula, weights from CALIBRATION (ot maps each resource to its counterpart)
+        for res, w in CALIBRATION.finalFactor do
+            local o = ot[res]
+            self[res .. 'FinalFactor'] = (self.neutralFactor
+                + self[o .. 'ReversePayoff'] * w.other
+                + self[res .. 'ReversePayoff'] * w.own)
+                * (1 + self[o .. 'Proportion'])
+        end
 
         --debug
         -- if self.isMexUpgrade then

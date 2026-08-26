@@ -1,5 +1,6 @@
 local modPath = '/mods/EM/'
 local ThrottlerPlugin = import(modPath .. 'throttler/ThrottlerPlugin.lua').ThrottlerPlugin
+local CALIBRATION = import(modPath .. 'throttler/Project.lua').CALIBRATION
 
 EnergyPlugin = Class(ThrottlerPlugin) {
 	constructionCategories = {},
@@ -10,6 +11,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 
 	setThrottleMode = function (self, throttleMode)
 		self.throttleMode = throttleMode
+		self.categoryCache = {} -- unit->category matches are static per mode; invalidate on mode switch
 		if throttleMode == 0 then
 			LOG('Energy throttle is turned off.')
 		elseif throttleMode == 1 then --throttle only mass production
@@ -47,16 +49,19 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 	end,
 	
 	add = function(self, project)
-		local category
-		local u = project.unit
-
-		local cats = self.constructionCategories
-		for _, c in cats do
-			if EntityCategoryContains(c.category, u) then
-				category = c
-				break
+		local cache = self.categoryCache
+		local category = cache[project.id]
+		if category == nil then
+			local u = project.unit
+			for _, c in self.constructionCategories do
+				if EntityCategoryContains(c.category, u) then
+					category = c
+					break
+				end
 			end
+			cache[project.id] = category or false -- false = known no-match
 		end
+		if category == false then category = nil end
 
 		if category then
 			if category == self.constructionCategories.fabs and project.isConstruction then
@@ -67,7 +72,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 			 	project.prio = category.priority
 			 	project.energyMinStorage = category.storage or 0
 			end
-			project.energyFinalFactor = project.energyFinalFactor * project.prio - project.energyMinStorage * 10000 --- project.lastRatio
+			project.energyFinalFactor = project.energyFinalFactor * project.prio - project.energyMinStorage * CALIBRATION.minStoragePenalty --- project.lastRatio
 			table.insert(self.projects, project)
 		end
 	end,
