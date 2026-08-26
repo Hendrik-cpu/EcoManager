@@ -1,5 +1,0 @@
-🧠 Deep mapping from entry point: 
-./deep-map.sh:grep -rE 'include|require|import|FROM|COPY|RUN|exec|source|uses:|run:' . >> "$RAW_LOG"
-./resolve-refs.sh:grep -rE 'require\(|import |source |COPY |ADD |RUN |CMD |exec |uses: |run:' "$START_PATH"   --exclude-dir=node_modules   --exclude-dir=.git   --exclude-dir=mapping   --exclude=*.lock   --exclude=*.png   --exclude=*.jpg   --exclude=*.gif   --exclude-dir=coverage   --exclude-dir=dist   --binary-files=without-match   > "$TMPFILE"
-./deep-map.sh
-./resolve-refs.sh
