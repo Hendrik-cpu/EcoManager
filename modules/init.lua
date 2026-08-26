@@ -41,7 +41,10 @@ function mainThread()
 				end
 
 				if math.mod(current_second*10, l['wait']*10) == 0 and (not l.option or options[l.option] ~= 0) then
-					l['callback']()
+					local ok, err = pcall(l['callback'])
+					if not ok then
+						LOG("EM: listener '" .. key .. "' crashed: " .. tostring(err))
+					end
 				end
 
 			else
@@ -104,7 +107,7 @@ function setup(isReplay, parent)
 			'mexes',
 			'buildoverlay', 
 		},
-		throttler = {'throttler'}, 
+		throttler = {}, 
 		SE = {
 			'resourceusage',
 			'mexes'

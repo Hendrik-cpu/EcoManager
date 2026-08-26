@@ -112,8 +112,8 @@ EcoManager = Class({
 	end,
 
 	addPlugin = function(self, name, throttleMode, timer)
-		FullName = name .. 'Plugin'
-		local plugin = import(throttlerPath .. FullName .. '.lua')[FullName]()
+		local fullName = name .. 'Plugin'
+		local plugin = import(throttlerPath .. fullName .. '.lua')[fullName]()
 		plugin:setThrottleMode(throttleMode)
 		self.plugins[string.lower(name)] = plugin
 	end,
@@ -148,8 +148,9 @@ EcoManager = Class({
 					local pause = false
 		
 					local queue = e:GetCommandQueue()
-					local p = queue[1].position
-					if(queue[1].type == 'Guard' or queue[1].type == 'Repair') then
+					local first = queue[1]
+					if first and (first.type == 'Guard' or first.type == 'Repair') then
+						local p = first.position
 						if(self.ProjectPositions[p[1]] and self.ProjectPositions[p[1]][p[3]]) then
 							local unitID = self.ProjectPositions[p[1]][p[3]]:GetEntityId()
 							local project = self.projects[unitID]
@@ -205,7 +206,8 @@ EcoManager = Class({
 					if p.throttle < 1 then
 						if not pause then
 							local last_ratio = p.throttle
-							local lastThrottle = self.ProjectMetaData[p.id].lastRatio
+							local meta = self.ProjectMetaData[p.id]
+							local lastThrottle = meta and meta.lastRatio
 							plugin:throttle(eco, p)
 							if p.throttle > 0 and p.throttle < 1 then
 								--LOG("ADJUST THIS SHIT")
@@ -243,9 +245,6 @@ EcoManager = Class({
 			end
 		end
 		--LOG("end: " .. eco.energyActual .. " mass:".. eco.massActual)
-
-		table.sort(self.projects, function(a, b) return a.index < b.index end)
-		--LOG(repr(all_projects)) --printing of a table?
 
 		for _, plugin in pairs(self.plugins) do
 			for _, p in plugin.projects do

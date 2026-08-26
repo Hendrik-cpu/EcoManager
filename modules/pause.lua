@@ -175,21 +175,17 @@ function setPauseStates(units, pause, requestingModule)
 				states[unitID] = unitState
 			end
 
-			local currentPrio = getPrio(unitState.module, pause)
 			if not unitState then
-				--there is no information about the pause state or it belonged to a different unit, state can be altered for sure!
-				--LOG("there is no information about the pause state or it belonged to a different unit, state can be altered for sure!")
+				--there is no information about the pause state, state can be altered for sure!
 				changeState = true
 			else 
 				--so we have information about a previous pause state, let's see if it can be altered
-				--LOG("so we have information about a previous pause state, let's see if it can be altered")
 				if unitState.module == requestingModule then 
 					--if the module is the same, state can be altered!
-					--LOG("if the module is the same, state can be altered! --> " .. unitState.module .. " == " .. requestingModule)
 					changeState = true
 				else 
 					--so it was a different module, let's check the prio of the lock
-					--LOG("so it was a different module, let's check the prio of the lock --> Previous module: " .. unitState.module .. "Prio: " .. currentPrio)
+					local currentPrio = getPrio(unitState.module, pause)
 					if requestingModulePrio > currentPrio then
 						--requesting module has a higher prio, let's change the state
 						--LOG("requesting module has a higher prio, let's change the state --> Requesting prio: " .. requestingModulePrio .. " is higher than previous " .. currentPrio .. "by module: " .. unitState.module)

@@ -85,8 +85,8 @@ Project = Class({
         if not self.massProductionActual then self.massProductionActual = 0 end
         self.energyProduction = Eco.ProductionPerSecondEnergy
         self.energyProductionActual = econData(unit).energyProduced
-        self.lastRatio = throttler.manager.ProjectMetaData[self.id].lastRatio
-        if not self.lastRatio then self.lastRatio = 0 end
+        local meta = throttler.manager.ProjectMetaData[self.id]
+        self.lastRatio = meta and meta.lastRatio or 0
         self.unitName = bp.General.UnitName or bp.Description
     end,
 

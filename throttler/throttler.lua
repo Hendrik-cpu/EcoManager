@@ -1,8 +1,8 @@
 local modPath = '/mods/EM/'
 local modulesPath = modPath .. 'modules/'
 local throttlerPath = modPath .. 'throttler/'
-local EconomyPath = throttlerPath .. 'Economy.lua")'
-local throttler = throttlerPath .. 'throttler.lua")'
+local EconomyPath = throttlerPath .. 'Economy.lua'
+local throttlerFilePath = throttlerPath .. 'throttler.lua'
 
 local pauser = import(modulesPath .. 'pause.lua')
 local Units = import('/mods/common/units.lua')
@@ -36,15 +36,15 @@ function init()
 	addCommand('toggle', toggleAll)
 	addCommand('debug', toggleDebugging)
 
-	addHotkey('Ctrl-V', throttler .. '.PauseAll')
-	addHotkey('Ctrl-B', EconomyPath .. '.PauseEcoM80_E90')
-	addHotkey('Ctrl-N', EconomyPath .. '.PauseEcoM10_E90')
-	addHotkey('Ctrl-T', throttler .. '.toggleEcomanager')
-	addHotkey('Ctrl-P', throttler .. '.changeEnergyMode')
-	addHotkey('Ctrl-M', throttler .. '.changeMassMode')
-	addHotkey('Ctrl-I', throttler .. '.ToggleMexMode')
-	addHotkey('Ctrl-O', throttler .. '.increaseMexPrio')
-	addHotkey('Ctrl-L', throttler .. '.decreaseMexPrio')
+	addHotkey('Ctrl-V', throttlerFilePath, 'PauseAll')
+	addHotkey('Ctrl-B', EconomyPath, 'PauseEcoM80_E90')
+	addHotkey('Ctrl-N', EconomyPath, 'PauseEcoM10_E90')
+	addHotkey('Ctrl-T', throttlerFilePath, 'toggleEcomanager')
+	addHotkey('Ctrl-P', throttlerFilePath, 'changeEnergyMode')
+	addHotkey('Ctrl-M', throttlerFilePath, 'changeMassMode')
+	addHotkey('Ctrl-I', throttlerFilePath, 'ToggleMexMode')
+	addHotkey('Ctrl-O', throttlerFilePath, 'increaseMexPrio')
+	addHotkey('Ctrl-L', throttlerFilePath, 'decreaseMexPrio')
 end
 
 function toggleEcomanager()
@@ -167,15 +167,15 @@ function ToggleMexMode()
 
 	if mexMode == 0 then
 		mass.massProductionPriorityMultiplier = 350 --balanced
-		energy.constructionCategories.fabs.priority = 1
+		if energy.constructionCategories.fabs then energy.constructionCategories.fabs.priority = 1 end
 		print("Balanced mex upgrading activated (multiplier = 350)")
 	elseif mexMode == 1 then
 		mass.massProductionPriorityMultiplier = 1 --pause eco
-		energy.constructionCategories.fabs.priority = 1
+		if energy.constructionCategories.fabs then energy.constructionCategories.fabs.priority = 1 end
 		print("Low priority mex upgrading activated (multiplier = 1)")
 	elseif mexMode == 2 then
 		mass.massProductionPriorityMultiplier = 1000 --power eco
-		energy.constructionCategories.fabs.priority = 99
+		if energy.constructionCategories.fabs then energy.constructionCategories.fabs.priority = 99 end
 		print("High priority mex upgrading activated (multiplier = 1000), fabs won't pause")
 	end
 end

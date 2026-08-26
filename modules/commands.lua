@@ -16,10 +16,11 @@ function runCommand(args)
 	return false
 end
 
-function addHotkey(hotkey, f)
-	LOG('ui_lua import("' .. f .. "()")
-	IN_AddKeyMapTable({[hotkey] = {action = 'ui_lua import("' .. f .. "()"},})
-	hotkeys[hotkey] = f
+function addHotkey(hotkey, path, fn)
+	local action = 'ui_lua import("' .. path .. '").' .. fn .. '()'
+	LOG(action)
+	IN_AddKeyMapTable({[hotkey] = {action = action},})
+	hotkeys[hotkey] = path .. '.' .. fn
 end
 
 function printCommands()

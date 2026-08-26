@@ -17,7 +17,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 		if throttleMode == 0 then
 			LOG('Mass throttle is turned off.')
 		elseif throttleMode == 1 then
-			massProductionOnly = true
+			self.massProductionOnly = true
 			self.constructionCategories = {
 				-- mex1 = {name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
 				mex2 = {name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
@@ -27,7 +27,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 			}
 			LOG('Mass throttle is set to throttle only mass production.')
 		elseif throttleMode == 2 then -- throttle all
-			massProductionOnly = false
+			self.massProductionOnly = false
 			self.constructionCategories = {
 				-- mex1 = {name="Mass Extractors T1", category = categories.STRUCTURE * categories.TECH1 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
 				mex2 = {name="Mass Extractors T2", category = categories.STRUCTURE * categories.TECH2 * categories.MASSEXTRACTION, priority = 50, massProduction = true},
@@ -64,7 +64,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 			local category
 			local u = project.unit
 
-			cats = self.constructionCategories
+			local cats = self.constructionCategories
 			for _, c in cats do
 				if EntityCategoryContains(c.category, u) then
 					category = c
@@ -72,7 +72,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 				end
 			end
 
-			if self.massProductionOnly and not category.massProduction then
+			if category and self.massProductionOnly and not category.massProduction then
 				category = nil
 			end
 
@@ -83,7 +83,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 					project.prio = category['priority']
 				end
 
-				project.massMinStorage = category['storage']
+				project.massMinStorage = category.storage or 0
 				project.massFinalFactor = project.massFinalFactor * project.prio  - project.massMinStorage * 10000 --- project.lastRatio
 
 				table.insert(self.projects, project)
@@ -92,7 +92,7 @@ MassPlugin = Class(ThrottlerPlugin) {
 	end,
 
 	throttle = function(self, eco, project)
-		local prio = project.priority
+		local prio = project.prio
 		local net = eco:massNet(0, prio, 5)
 		local new_net
 

@@ -50,7 +50,7 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		local category
 		local u = project.unit
 
-		cats = self.constructionCategories
+		local cats = self.constructionCategories
 		for _, c in cats do
 			if EntityCategoryContains(c.category, u) then
 				category = c
@@ -59,14 +59,13 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		end
 
 		if category then
-			project.prio = category.priority
-			project.energyMinStorage = category.storage
 			if category == self.constructionCategories.fabs and project.isConstruction then
-				project.prio = self.constructionCategories.build.priority
-				project.energyMinStorage = self.constructionCategories.build.storage
+				local build = self.constructionCategories.build
+				project.prio = build and build.priority or category.priority
+				project.energyMinStorage = build and build.storage or 0
 			else --(disabled because it has been implented into FAF)
 			 	project.prio = category.priority
-			 	project.energyMinStorage = category.storage
+			 	project.energyMinStorage = category.storage or 0
 			end
 			project.energyFinalFactor = project.energyFinalFactor * project.prio - project.energyMinStorage * 10000 --- project.lastRatio
 			table.insert(self.projects, project)
@@ -81,16 +80,16 @@ EnergyPlugin = Class(ThrottlerPlugin) {
 		local new_net
 
 		local new_net = net - math.min(project.energyRequested, project.energyCostRemaining) 
-		if new_net < 0 and (project.pio < 100 or UnpausedCount > 0) then
+		if new_net < 0 and (project.prio < 100 or self.UnpausedCount > 0) then
 			project:SetEnergyDrain(math.max(0, net))
 		else
 			project:SetEnergyDrain(project.energyRequested)
-			UnpausedCount = UnpausedCount + 1
+			self.UnpausedCount = self.UnpausedCount + 1
 		end
 	end,
 
 	resetCycle = function(self)
 		self.projects = {}
-		UnpausedCount = 0
+		self.UnpausedCount = 0
 	end,
 }
